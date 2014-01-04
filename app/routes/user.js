@@ -1,17 +1,18 @@
 var passport = require('passport');
 
-var init=function(app){
+exports.init = function(app){
 	app.get('/logout', function(req, res){
 		req.logout();
 		res.redirect('/');
 	});
 	app.get('/login', function(req, res){
-		res.renderPage('user_login');
+		if(req.hasOwnProperty('user')){
+			res.redirect('/');
+		}else{
+			res.renderPage('userlogin');
+		}
 	});
-	app.post('/login', passport.authenticate('local', { failureRedirect: '/login' }), function (req, res) {
+	app.post('/login', passport.authenticate('local', { failureRedirect: '/login?err=1' }), function(req, res){
 		res.redirect('/');
 	});
-
 };
-
-exports.init=init;

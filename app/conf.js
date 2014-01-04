@@ -1,8 +1,8 @@
 var conf = {
 	viewsDir: __dirname + '/../static/views',
-	viewCache: true,
+	viewCache: false,
 	port: 8000,
-	mongoConnect: 'mongodb://127.0.0.1:27017/merch',
+	mongoConnect: 'mongodb://127.0.0.1:27017/bydlocms',
 	session: {
 		secret: "Fj549t=_s-4g-dfh34uyHdfy54&3450hfgjslfsgfgnpsggpoag0JFj54834thK)=",
 		redis: {
@@ -29,11 +29,5 @@ var conf = {
 		user:['ass', 'user access']
 	}
 };
-
-
-if (process.env.NODE_ENV == 'development') {
-	conf.viewCache = false;
-}
-
 
 module.exports = conf;

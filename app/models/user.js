@@ -7,13 +7,20 @@ var User = function (fields) {
 	for (var key in fields) {
 		this[key] = fields[key];
 	}
-	this.permissions = [];
-	this.roles.forEach(function (roleName) {
-		conf.roles[roleName].forEach(function (permissionString) {
-			_this.permissions.push(permissionString);
+	if(this.hasOwnProperty('roles')){
+		this.permissions = [];
+		this.roles.forEach(function (roleName) {
+			if(conf.roles.hasOwnProperty(roleName)){
+				conf.roles[roleName].forEach(function (permissionString) {
+					_this.permissions.push(permissionString);
+				});				
+			}
 		});
-	});
-	this.permissions = _.unique(this.permissions);
+		this.permissions = _.unique(this.permissions);
+	}else{
+		this.roles=[];
+		this.permissions=[];
+	}
 };
 
 User.prototype.permission = function (permissionString) {

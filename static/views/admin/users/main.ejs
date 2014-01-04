@@ -1,0 +1,120 @@
+<div id='users'>
+	<div class='row'>
+		<div class='col-md-3'>
+			<div class='form-group'>
+				<a class='btn btn-info' href='#u/new'><span class='glyphicon glyphicon-plus'></span> New</a>
+			</div>
+			<div class='list'></div>
+		</div>
+		<div class='col-md-9 form'></div>
+	</div>
+</div>
+
+
+<script src="/schemas/user.js"></script>
+<script>
+/*
+	require(['/schemas/user.js'], function(userSchema){
+		console.log(userSchema);
+	});
+*/
+
+
+	var UserModel = Backbone.Model.extend({
+		idAttribute:'_id'
+	});
+	var UsersCollection = Backbone.Collection.extend({
+		model: UserModel,
+		url: '/admin/rest/users'
+	});
+
+	var UsersViewExemplar = Backbone.View.extend({
+		initialize: function (options) {
+			this.template = options.template;
+			this.collection.bind('sync', this.render, this);
+			this.collection.bind('destroy', this.render, this);
+			//this.collection.fetch();
+		},
+		render: function () {
+			var listHtml = "<ul class='list-group'>";
+			var _this = this;
+			this.collection.toJSON().forEach(function (user) {
+				if(user.hasOwnProperty('_id')){
+					listHtml += _this.template(user);
+				}
+			});
+			listHtml += "</ul>";
+			this.$el.find('.list').html(listHtml);
+			return this;
+		}
+	});
+
+
+	var WorkspaceRouter = Backbone.Router.extend({
+		initialize:function(input){
+			this.options={
+				users:input.users
+			};
+		},
+		routes: {
+			'u/:id': function (id) {
+				var user;
+				if(id=='new'){
+					user=this.options.users.add(new UserModel());
+				}else{
+					user=this.options.users.get(id);
+				}
+				if(user){
+					var userView=new FormRowView({
+						model:user,
+						options:{
+							template:function(obj){
+								var buttons=[];
+								if(obj.hasOwnProperty('_id')){
+									buttons.push("<button type='button' class='btn btn-danger delete'><span class='glyphicon glyphicon-minus'></span> Delete</button>");
+								}
+								buttons.push("<button type='button' class='btn btn-primary save'><span class='glyphicon glyphicon-save'></span> Save</button>");
+								return schemaHelper.formPart(userSchema, obj) +"<div class='btn-group'>"+buttons.join('')+"</div>";
+							},
+							presave:function(user){
+								console.log('presave');
+								if(user.attributes.hasOwnProperty('roles')){
+									var roles=user.attributes.roles.toString().split(',');
+									user.attributes.roles=[];
+									roles.forEach(function(role){
+										user.attributes.roles.push(role.trim());
+									});
+								}
+								return user;
+							},
+							saveSuccess:function(user){
+								window.location.hash='u/'+user.id;
+							}
+						}
+					});
+					$('#users .form').html(userView.render().el);
+				}else{
+					$('#users .form').html("<div class='alert alert-danger'>User is not exists</div>");
+				}
+
+			}
+		}
+	});
+
+
+	loadTemplates({
+		userListItem: '/views/admin/users/list-item.ejs'
+	}, function (templates) {
+		var usersView = new UsersViewExemplar({
+			collection: new UsersCollection(),
+			el: $('#users'),
+			template: templates.userListItem
+		});
+		usersView.collection.fetch({
+			success:function(collection){
+				var app = new WorkspaceRouter({ users:collection });
+				Backbone.history.start();
+			}
+		});
+	});
+</script>

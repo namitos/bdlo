@@ -48,11 +48,24 @@ app.use(function (req, res, next) {
 	res.renderPage = function (template, parameters) {
 		res.render(template, parameters, function (err, html) {
 			res.render('page', {
-				html: html
+				html: html,
+				user: req.hasOwnProperty('user')?req.user:false
 			});
 		});
 	};
 	next();
+});
+app.use(function (req, res, next) {
+	var url=req.url.split('/');
+	if(url[1]=='admin'){
+		if(req.hasOwnProperty('user') && req.user.permission('full access')){
+			next();
+		}else{
+			res.send(403 ,'access denied');
+		}
+	}else{
+		next();
+	}
 });
 
 app.http().io();
@@ -62,76 +75,88 @@ app.io.set('heartbeat interval', 20);
 app.io.set('browser client minification', true);
 app.io.set('store', new express.io.RedisStore(conf.ioStore));
 
-app.io.set('authorization', function (data, accept) {
+/*app.io.set('authorization', function (data, accept) {
 	require('passport.socketio').authorize(sessionConfiguration)(data, accept);
-});
+});*/
 
-require('express.io-middleware')(app);
+/*require('express.io-middleware')(app);
 app.io.use(function (req, next) {
 	console.log('middleware');
 	next();
-});
+});*/
 
 logger.info('Initialized io');
 
 
 var mongoConnectPromise = function () {
-	var promise = vow.promise();
-	var MongoClient = mongodb.MongoClient;
-	MongoClient.connect(conf.mongoConnect, function (err, db) {
-		if (err) {
-			throw err;
-		}
-		app.set('db', db);
+	return new vow.Promise(function(resolve, reject, notify) {
+		mongodb.MongoClient.connect(conf.mongoConnect, function (err, db) {
+			if (err) {
+				reject(err);
+			}
+			app.set('db', db);
 
-		var User = require('./models/user');
-		passport.use(new LocalStrategy(
-			function (username, password, done) {
-				//console.log('trying', username, password);
-				//todo: crypto.createHash('sha512').update(password).digest("hex")
-				db.collection('users').find({username: username, password:password}).toArray(function(err, result){
-					//console.log('result', err, result);
-					if(result.length){
-						done(null, new User(result[0]));
+			//MMMMM, SPAGHETTI!
+			var User = require('./models/user');
+			passport.use(new LocalStrategy(
+				function (username, password, done) {
+					console.log('trying', username, password);
+					password = require('crypto').createHash('sha512').update(password).digest("hex");
+					db.collection('users').find({username: username, password:password}).toArray(function(err, result){
+						if(err){
+							done(err, null);
+						}else{
+							if(result.length){
+								console.log('user exists');
+								done(null, new User(result[0]));
+							}else{
+								console.log('user not exists');
+								done(null, null);
+							}
+						}
+					});
+				}
+			));
+			passport.serializeUser(function (user, done) {
+				console.log('user serialize', user);
+				done(null, user._id.toString());
+			});
+			passport.deserializeUser(function (id, done) {
+				console.log('user deserialize', id);
+				db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function(err, result){
+					if(err){
+						done(err, null);
 					}else{
-						done(true, null);
+						if(result.length){
+							done(null, new User(result[0]));
+						}else{
+							console.log('user not exists');
+							done(null, null);
+						}
 					}
 				});
-			}
-		));
-		passport.serializeUser(function (user, done) {
-			//console.log('user', user);
-			done(null, user._id.toString());
-		});
-		passport.deserializeUser(function (id, done) {
-			//console.log('user deserialize', id);
-			db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function(err, result){
-				//console.log('user deserialized', err, result);
-				if(result.length){
-					done(null, new User(result[0]));
-				}else{
-					done(true, null);
-				}
 			});
+
+			logger.info('Mongo connected');
+			resolve();
 		});
-		logger.info('Mongo connected');
-		promise.fulfill();
 	});
-	return promise;
 };
+
+
 var routesPromise = function () {
-	var promise = vow.promise();
-	fs.readdir('./routes', function (err, files) {
-		if (err) {
-			throw err;
-		}
-		files.forEach(function (file) {
-			require('./routes/' + file).init(app);
+	return new vow.Promise(function(resolve, reject, notify){
+		fs.readdir('./routes', function (err, files) {
+			if (err) {
+				reject(err);
+			}
+			files.forEach(function (file) {
+				require('./routes/' + file).init(app);
+			});
+			logger.info('Routes loaded');
+			resolve();
 		});
-		logger.info('Routes loaded');
-		promise.fulfill();
 	});
-	return promise;
 };
 
 
