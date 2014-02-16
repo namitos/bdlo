@@ -1,0 +1,2 @@
+#!/bin/sh
+cd app/ && NODE_ENV=testing nodejs app > /dev/null 2>&1 &

@@ -1,0 +1,2 @@
+#!/bin/sh
+cd app/ && nodejs app > /dev/null 2>&1 &
