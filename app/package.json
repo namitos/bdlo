@@ -9,6 +9,7 @@
 		"express.io": "1.1.x",
 		"express.io-middleware": "0.9.x",
 		"vow": "0.4.x",
+		"vow-fs": "0.3.x",
 		"lodash": "2.x",
 		"mongodb": "1.x",
 		"ejs": "0.8.x",
