@@ -1,3 +1,6 @@
+window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
+
+
 /** jQuery плагин для отсыла форм без перехода *********************************************/
 (function ($) {
 	jQuery.fn.ajaxform = function (callback, action_new) {
@@ -51,6 +54,7 @@ var load = function (urls, onLoad) {
 
 
 
+
 /** Backbone вьюха для мультизначений форм *********************************************/
 
 var FormRowModel = Backbone.Model.extend({
@@ -77,7 +81,7 @@ var FormRowView = Backbone.View.extend({
 		'keyup input': 'changeField',
 		'change input': 'changeField',
 		'change select': 'changeField',
-		'click .delete': function () {
+		'click .delete': function () {//обработка удаления модели
 			if(
 				(this.options.deleteConfirm==false) ||
 				(this.options.deleteConfirm==true && confirm('Are you sure?'))
@@ -86,119 +90,132 @@ var FormRowView = Backbone.View.extend({
 				this.model.destroy();
 			}
 		},
+		'click .btn-multi-delete': function (e) {//обработка удаления мультиполя(элемента из массива) из модели
+			var instance = this;
+			var $el = instance.$(e.currentTarget).parent();
+			var i = $el.data('i');
+			var newModel = instance.model.toJSON();
+			var headObj = instance._headObj($el.data('field'), newModel);
+			delete headObj[i];
+			instance.model.set(newModel);
+			if (instance.options.hasOwnProperty('presave')) {
+				instance.model = instance.options.presave(instance.model);
+			}
+			if (instance.options.hasOwnProperty('autosave') && instance.options.autosave == true) {
+				instance.saveModel();
+			}
+		},
+		'click .btn-file-delete': function(e){
+			var instance = this;
+			var $el = instance.$(e.currentTarget).parent();
+			var i = $el.data('i');
+			var newModel = instance.model.toJSON();
+			var headObj = instance._headObj($el.data('field'), newModel);
+			delete headObj[i];
+			instance.model.set(newModel);
+			if (instance.options.hasOwnProperty('presave')) {
+				instance.model = instance.options.presave(instance.model);
+			}
+			if (instance.options.hasOwnProperty('autosave') && instance.options.autosave == true) {
+				instance.saveModel();
+			}
+		},
 		'click .save': function () {
 			this.saveModel();
 		}
 	},
 	changeField: function (e) {
-		var $input = jQuery(e.currentTarget);
-		var keys = $input.attr('name').split('.');
-		var update = {};
-		var headObject = update;
-		for (var i = 0; i < keys.length; i++) {
-			var key = keys[i];
-			if (i == keys.length - 1) {//если последний
-				headObject[key] = $input.val();
-			} else if (!update.hasOwnProperty(keys[i])) {
-				if (key.indexOf('[') == -1) {
-					update[key] = {};
-					headObject = update[key];
-				} else {
-					key=key.split(/[\[,\]]/);
-					update[key[0]] = [];
-					update[key[0]][parseInt(key[1])] = {};
-					headObject = update[key[0]][parseInt(key[1])];
+		var fileReadPromise = function(file){
+			return new vow.Promise(function(resolve, reject, notify) {
+				var reader = new FileReader();
+				reader.onload = function (a) {
+					console.log(a.target.result);
+					resolve(a.target.result);
+				};
+				reader.readAsDataURL(file);
+			});
+
+		};
+		var filesRead = function (files, callback) {
+			var promises = [];
+			for (var i = 0; i < files.length; ++i) {
+				promises.push(fileReadPromise(files[i]));
+			}
+			vow.all(promises).then(function (result) {
+				callback(result);
+			});
+		};
+		var changeField = function(input, callback){//@TODO возможно получится упростить получение самого верхнего объекта как тут 'click .btn-multi-delete'
+			var $input = jQuery(input);
+			var keys = $input.attr('name').split('.');
+			var update = {};
+			var headObject = update;
+
+			for (var i = 0; i < keys.length; ++i) {
+				var key = keys[i];
+				if (i == keys.length - 1) {//если последний
+					if (input.type == 'file') {
+						filesRead(input.files, function(result){
+							headObject[key] = result;
+							callback(update);
+						});
+					} else {
+						headObject[key] = $input.val();
+						callback(update);
+					}
+				} else if (!update.hasOwnProperty(keys[i])) {
+					if (key.indexOf('[') == -1) {
+						update[key] = {};
+						headObject = update[key];
+					} else {
+						key = key.split(/[\[,\]]/);
+						update[key[0]] = [];
+						update[key[0]][parseInt(key[1])] = {};
+						headObject = update[key[0]][parseInt(key[1])];
+					}
 				}
 			}
-		}
-		console.log(update);
-		this.model.set(_.merge(this.model.toJSON(), update));
-		console.log(this.model.toJSON());
-		if (this.options.hasOwnProperty('presave')) {
-			this.model = this.options.presave(this.model);
-		}
-		if (this.options.hasOwnProperty('autosave') && this.options.autosave == true) {
-			this.saveModel();
-		}
+		};
+
+		var instance = this;
+		changeField(e.currentTarget, function(update){
+			instance.model.set(_.merge(instance.model.toJSON(), update));
+			//console.log('instance.model.toJSON()', instance.model.toJSON());
+			if (instance.options.hasOwnProperty('presave')) {
+				instance.model = instance.options.presave(instance.model);
+			}
+			if (instance.options.hasOwnProperty('autosave') && instance.options.autosave == true) {
+				instance.saveModel();
+			}
+		});
 	},
 	saveModel:function(){
 		var _this=this;
+		//console.log('saving... instance.model.toJSON()', this.model.toJSON());
 		this.model.save({}, {
 			success:function(model){
 				if(_this.options.hasOwnProperty('saveSuccess')){
+					_this.model = model;
+					_this.render();
 					_this.options.saveSuccess(model);
 				}
-			}
-		});
-	}
-});
-
-var FormRowsView = Backbone.View.extend({
-	initialize: function (input) {
-		this.options = {
-			min: input.min,
-			max: input.max,
-			defaults: input.defaults,
-			renderRow: input.renderRow,
-			template: input.template,
-			additional:input.additional
-		};
-		//todo: тут надо ещё сдеть проверку, если хранилище - локалсторадж.
-		if (this.collection.size()) {//если мы передали уже заполненную коллекцию
-			var models = this.collection.toJSON();
-			this.collection.fetch();
-			var size = this.collection.size();
-			for (var i = size - 1; i >= 0; i--) {//удаляем всё из локалстораджа
-				this.collection.models[i].destroy();
-			}
-			for (var key in models) {//заполняем его переданными данными. если forEach юзать, то контекст не тот и соси хуй получается
-				this.collection.create(models[key]);
-			}
-		} else {
-			console.log('передана пустая коллекция, забираем из хранилища');
-			this.collection.fetch();
-			if (this.options.min && this.options.min > this.collection.size()) {
-				for (var i = this.collection.size(); i < this.options.min; i++) {
-					this.collection.create(this.options.defaults);
+			},
+			error: function(model){
+				if(_this.options.hasOwnProperty('saveError')){
+					_this.options.saveError(model);
 				}
 			}
-		}
-		this.render();
-	},
-	events: {
-		'click .add': 'addRow'
-	},
-	render: function () {
-		this.$el.html("<div class='rows'></div><button type='button' class='btn btn-info add' value='Ещё'><span class='glyphicon glyphicon-plus'></span></button>");
-		for (var key in this.collection.models) {
-			this.renderRow(this.collection.models[key]);
-		}
-	},
-	addRow: function (e) {
-		if (this.options.max && this.options.max <= this.collection.size()) {
-		} else {
-			var object = this.collection.create(this.options.defaults);
-			this.renderRow(object);
-		}
-	},
-	renderRow: function (model) {
-		var row = new FormRowView({
-			model: model,
-			options: {
-				template: this.options.template,
-				autosave: true,
-				deleteConfirm: false,
-				additional: this.options.additional
-			}
 		});
-		var el = row.render().$el;
-		this.$el.find('.rows').append(el);
-		if (this.options.renderRow) {
-			this.options.renderRow(el);
-		}
+	},
+	_headObj:function(fieldString, obj){
+		var fieldParts = fieldString.split('.');
+		var headObj = obj;
+		fieldParts.forEach(function (fieldPart) {
+			headObj = headObj[fieldPart];
+		});
+		return headObj;
 	}
 });
-
 
 
 /** Помощь по схемам и генератор форм из них *********************************************/
@@ -225,32 +242,65 @@ var schemaHelper = {
 	},
 	formPartPrimitive: function (fieldSchema, value, name) {
 		var inputTypes = {
-			any: 'text',
 			string: 'text',
 			number: 'number',
 			integer: 'number',
 			boolean: 'number'
 		};
 		var attributes = {
-			type: inputTypes[fieldSchema.type],
 			value: value,
 			name: name,
 			placeholder: name,
 			'class': 'form-control',
 			required: fieldSchema.hasOwnProperty('required') && fieldSchema.required == true ? true : false
 		};
-		return "<div class='form-group'><label>" + attributes.placeholder + "</label><input " + this.htmlAttributes(attributes) + "></div>";
+		var input='';
+		var label=name;
+		if (fieldSchema.type == 'any') {
+			if (fieldSchema.hasOwnProperty('info')) {
+				if(fieldSchema.info.hasOwnProperty('type')){
+					attributes.type = fieldSchema.info.type;
+				}
+				if(fieldSchema.info.hasOwnProperty('label')){
+					label=fieldSchema.info.label;
+				}
+			}
+		} else {
+			attributes.type = inputTypes[fieldSchema.type];
+		}
 
+		if(attributes.type=='file' && value && value.length){
+			input+="<ul class='file-list'>";
+			var fileName='';
+			for(var i=0;i<value.length;++i){
+				if(value[i]!=null){
+					fileName=value[i].split('/');
+					fileName=fileName[fileName.length-1];
+					input+="<li data-i='"+i+"' data-field='"+name+"'><a class='btn-file-delete'><span class='glyphicon glyphicon-remove'></span><span class='text'>Delete</span></a><a style='display:inline-block;width:100px;overflow:hidden;text-overflow:ellipsis;' target='_blank' href='/"+value[i]+"'>"+fileName+"</a></li>";
+				}
+			}
+			input+="</ul>";
+		}
+		if(attributes.type=='select'){
+			input+="<select " + this.htmlAttributes(attributes) + "><option></option>";
+			for(var key in fieldSchema.info.options){
+				input+="<option value='"+key+"' "+(key==attributes.value?'selected':'')+">"+fieldSchema.info.options[key]+"</option>";
+			}
+			input+="</select>";
+		}else{
+			input+="<input " + this.htmlAttributes(attributes) + ">";
+		}
+
+		return "<div class='form-group'><label>" + label + "</label>"+input+"</div>";
 	},
-	formPartMulti:function (schema, obj, parentKeyName){
-		return "<div class='multi-item'>"+this.formPart(schema, obj, parentKeyName)+"<button class='btn btn-danger btn-multi-delete'><span class='glyphicon glyphicon-minus'></span></button></div>";
+	formPartMulti:function (schema, obj, parentKeyName, i){
+		return "<div class='multi-item' data-i='"+i+"' data-field='"+parentKeyName+"'>"+this.formPart(schema, obj, parentKeyName+'['+i+']')+"<button class='btn btn-danger btn-multi-delete'><span class='glyphicon glyphicon-minus'></span><span class='text'>Delete</span></button></div>";
 	},
 	formPart: function (schema, obj, parentKeyName) {
 		var html = '';
 		if (!obj) {
 			obj = {};
 		}
-
 		var propKey = 'properties';
 		if (schema.hasOwnProperty('items')) {
 			propKey = 'items';
@@ -269,14 +319,14 @@ var schemaHelper = {
 				if(obj.hasOwnProperty(key) && obj[key].length){
 					for(i=0;i<obj[key].length;++i){
 						if(fieldSchema.items.type=='object'){
-							html += this.formPartMulti(fieldSchema.items, obj[key][i], keyName+'['+i+']');
+							html += this.formPartMulti(fieldSchema.items, obj[key][i], keyName, i);
 						}else{
 							html += 'массивы из примитивов пока не поддерживаются';
 							//html += this.formPartPrimitive(fieldSchema.items, obj.hasOwnProperty(key) ? obj[key] : '', keyName);
 						}
 					}
 				}
-				html += "<button class='btn btn-info btn-multi-add' data-schema='"+JSON.stringify(fieldSchema.items)+"' data-keyname='"+keyName+"' data-i='"+i+"'><span class='glyphicon glyphicon-plus'></span></button></div>";
+				html += "<button class='btn btn-info btn-multi-add' data-schema='"+JSON.stringify(fieldSchema.items)+"' data-keyname='"+keyName+"' data-i='"+i+"'><span class='glyphicon glyphicon-plus'></span><span class='text'>Add</span></button></div>";
 
 			} else {
 				keyName = parentKeyName ? parentKeyName + '.' + key : key;
@@ -330,7 +380,7 @@ jQuery(document).on('click', '.btn-multi-add', function(e){
 	var schema=$el.data('schema');
 	var keyName=$el.data('keyname');
 	var i = $el.data('i');
-	$el.before(schemaHelper.formPartMulti(schema, {}, keyName+'['+i+']'));
+	$el.before(schemaHelper.formPartMulti(schema, {}, keyName, i));
 	$el.data('i', ++i);
 	e.preventDefault();
 });
@@ -340,9 +390,11 @@ jQuery(document).on('click', '.btn-multi-delete', function(e){
 	$row.remove();
 	e.preventDefault();
 });
+jQuery(document).on('click', '.btn-file-delete', function(e){
+	var $el=jQuery(this);
+	var $row=$el.parent();
+	$row.remove();
+	e.preventDefault();
+});
 
-
-
-/** Socket.io *********************************************/
-io = io.connect();
 

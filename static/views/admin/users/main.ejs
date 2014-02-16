@@ -11,11 +11,11 @@
 </div>
 
 
-<script src="/schemas/user.js"></script>
+<script src="/schemas/users.js"></script>
 <script>
 /*
-	require(['/schemas/user.js'], function(userSchema){
-		console.log(userSchema);
+	require(['/schemas/user.js'], function(usersSchema){
+		console.log(usersSchema);
 	});
 */
 
@@ -74,7 +74,7 @@
 									buttons.push("<button type='button' class='btn btn-danger delete'><span class='glyphicon glyphicon-minus'></span> Delete</button>");
 								}
 								buttons.push("<button type='button' class='btn btn-primary save'><span class='glyphicon glyphicon-save'></span> Save</button>");
-								return schemaHelper.formPart(userSchema, obj) +"<div class='btn-group'>"+buttons.join('')+"</div>";
+								return schemaHelper.formPart(usersSchema, obj) +"<div class='btn-group'>"+buttons.join('')+"</div>";
 							},
 							presave:function(user){
 								console.log('presave');

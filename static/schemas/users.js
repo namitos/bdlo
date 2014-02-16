@@ -1,4 +1,4 @@
-var userSchema = {
+var usersSchema = {
 	properties: {
 		username:{
 			type: 'string',
@@ -22,5 +22,5 @@ var userSchema = {
 	}
 };
 try{
-	module.exports = userSchema;
+	module.exports = usersSchema;
 }catch(e){}
