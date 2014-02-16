@@ -398,3 +398,5 @@ jQuery(document).on('click', '.btn-file-delete', function(e){
 });
 
 
+/** Socket.io *********************************************/
+io = io.connect();
