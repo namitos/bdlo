@@ -1,6 +1,6 @@
 {
 	"name": "Bydlocms",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"private": true,
 	"scripts": {
 		"start": "node app.js"
@@ -18,6 +18,7 @@
 		"passport.socketio": "2.2.x",
 		"revalidator":"0.1.x",
 		"base64": "2.1.x",
-		"connect-redis": "1.4.x"
+		"connect-redis": "1.4.x",
+		"drev": "0.1.x"
 	}
 }
