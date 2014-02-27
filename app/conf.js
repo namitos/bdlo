@@ -1,5 +1,7 @@
+var staticPath = __dirname+'/../static';
 var conf = {
-	viewsDir: __dirname + '/../static/views',
+	staticPath: staticPath,
+	viewsDir: staticPath + '/views',
 	viewCache: false,
 	port: 8000,
 	mongoConnect: 'mongodb://127.0.0.1:27017/bydlocms',
@@ -27,7 +29,20 @@ var conf = {
 	roles:{
 		admin:['full access', 'ass'],
 		user:['ass', 'user access']
-	}
+	},
+	fileUpload: {
+		mimes: {
+			'image/jpeg': 'jpg',
+			'image/png': 'png'
+		},
+		storages: {
+			filesystem: {
+				pub: 'files',
+				pri: 'files_private'
+			}
+		}
+
+	},
 };
 
 module.exports = conf;
