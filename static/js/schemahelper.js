@@ -30,23 +30,25 @@ var schemaHelper = {
 		var attributes = {
 			value: value,
 			name: name,
-			//placeholder: name,
 			'class': 'form-control',
 			required: fieldSchema.hasOwnProperty('required') && fieldSchema.required == true ? true : false
 		};
 		var input='';
 		var label=name;
-		if(fieldSchema.hasOwnProperty('info') && fieldSchema.info.hasOwnProperty('label')){
-			label=fieldSchema.info.label;
+		if(fieldSchema.hasOwnProperty('info')){
+			if(fieldSchema.info.hasOwnProperty('label')){
+				label=fieldSchema.info.label;
+			}
+			if(fieldSchema.info.hasOwnProperty('placeholder')){
+				attributes.placeholder=fieldSchema.info.placeholder;
+			}
+			if(fieldSchema.info.hasOwnProperty('pattern')){
+				attributes.pattern=fieldSchema.info.pattern;
+			}
 		}
-		//attributes.placeholder=label;
-
 		if(fieldSchema.hasOwnProperty('minimum')){
 			attributes.min = fieldSchema.minimum;
 		}
-
-
-
 		if (fieldSchema.type == 'any') {
 			if (fieldSchema.hasOwnProperty('info')) {
 				if(fieldSchema.info.hasOwnProperty('type')){
