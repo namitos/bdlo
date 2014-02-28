@@ -1,4 +1,8 @@
 body{
-	padding-top: 70px;
+	padding-top: 60px;
 	background: rgba(0,0,0,0.05);
+}
+
+.list-schemas .nav{
+	margin-bottom: 15px;
 }

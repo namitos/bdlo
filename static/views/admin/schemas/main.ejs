@@ -1,0 +1,176 @@
+<div class='row'>
+	<div class='col-md-12 list-schemas'></div>
+</div>
+
+<div class='row'>
+	<div class='col-md-3 collection-list'></div>
+	<div class='col-md-9'>
+		<div class='form-group form-schema-new'></div>
+		<div class='form-schema'></div>
+	</div>
+</div>
+
+<script src='/schemas/pages.js'></script>
+<script src='/schemas/users.js'></script>
+
+<script>
+	var schemas = {
+		pages: {
+			schema: pagesSchema,
+			titleField: 'title'
+		},
+		users: {
+			schema: usersSchema,
+			titleField: 'username',
+			presave:function(user){
+				console.log('presave');
+				if(user.attributes.hasOwnProperty('roles')){
+					var roles=user.attributes.roles.toString().split(',');
+					user.attributes.roles=[];
+					roles.forEach(function(role){
+						user.attributes.roles.push(role.trim());
+					});
+				}
+				return user;
+			}
+		}
+	};
+
+	var schemasMenuHtml="<ul class='nav nav-tabs'>";
+	for(var key in schemas){
+		schemasMenuHtml+="<li><a href='#s/"+key+"'>"+key+"</a></li>";
+	}
+	schemasMenuHtml+="</ul>";
+	$('.list-schemas').html(schemasMenuHtml);
+
+
+	var ObjModel = Backbone.Model.extend({
+		idAttribute:'_id'
+	});
+	var ObjCollectionList = Backbone.View.extend({
+		className: "collection-list",
+		fetchCollection: function(){
+			var fieldsToFetch = {};
+			fieldsToFetch[schemas[this.options.schemaName].titleField]=true;
+			this.collection.fetch({
+				data:{
+					fields:fieldsToFetch
+				}
+			});
+		},
+		initialize: function(input) {
+			this.options = input.options;
+			var _this = this;
+			var ObjCollection = Backbone.Collection.extend({
+				model: ObjModel,
+				url: function(){
+					return '/admin/rest/'+_this.options.schemaName;
+				}
+			});
+			this.collection = new ObjCollection();
+			this.collectionFullObj= new ObjCollection();
+
+			this.collection.bind('sync', this.render, this);
+			this.collection.bind('destroy', this.render, this);
+			this.collectionFullObj.bind('sync', this.fetchCollection, this);
+			this.collectionFullObj.bind('destroy', this.fetchCollection, this);
+		},
+		render: function() {
+			var schemaName = this.options.schemaName;
+			var listHtml="<ul class='list-group'>";
+			this.collection.toJSON().forEach(function (obj) {
+				if(obj.hasOwnProperty('_id')){
+					listHtml += "<li class='list-group-item'><a href='#s/"+schemaName+"/"+obj._id+"'>"+obj[schemas[schemaName].titleField]+"</a></li>";
+				}
+			});
+			listHtml += "</ul>";
+			this.$el.html(listHtml);
+		}
+	});
+
+
+
+
+
+
+
+	var views = {};
+
+	var schemasRoute = Backbone.Router.extend({
+		listView: function(schemaName) {
+			var list = new ObjCollectionList({
+				el: $('.collection-list'),
+				options:{
+					schemaName: schemaName
+				}
+			});
+			list.fetchCollection();
+			$('.form-schema-new').html("<a class='btn btn-info' href='#s/"+schemaName+"/new'><span class='glyphicon glyphicon-plus'></span> New</a>");
+			return list;
+		},
+		routes: {
+			's/:schemaName': function(schemaName){
+				views[schemaName] = this.listView(schemaName);
+
+			},
+			's/:schemaName/:id': function(schemaName, id){
+				if(views.hasOwnProperty(schemaName)){
+				}else{
+					views[schemaName] = this.listView(schemaName);
+				}
+				var view = views[schemaName];
+				var getObj = function(id, callback){
+					var obj;
+					if(id=='new'){
+						obj = view.collectionFullObj.add(new ObjModel())
+						callback(obj);
+					}else{
+						view.collectionFullObj.fetch({
+							data:{
+								_id: id
+							},
+							complete: function(){
+								obj = view.collectionFullObj.get(id);
+								callback(obj?obj:false);
+							}
+						});
+					}
+				};
+				getObj(id, function(obj){
+					var html;
+					if(obj){
+						var options = {
+							template:function(obj){
+								var buttons=[];
+								if(obj.hasOwnProperty('_id')){
+									buttons.push("<button type='button' class='btn btn-danger delete'><span class='glyphicon glyphicon-minus'></span> Delete</button>");
+								}
+								buttons.push("<button type='button' class='btn btn-primary save'><span class='glyphicon glyphicon-save'></span> Save</button>");
+								return schemaHelper.formPart(schemas[schemaName].schema, obj) +"<div class='btn-group'>"+buttons.join('')+"</div>";
+							},
+							saveSuccess:function(obj){
+								window.location.hash='s/'+schemaName+'/'+obj.id;
+							}
+						};
+						if(schemas[schemaName].hasOwnProperty('presave')){
+							options.presave = schemas[schemaName].presave;
+						}
+						var formView = new FormRowView({
+							model: obj,
+							options: options
+						});
+						html = formView.render().el;
+					}else{
+						html = "<div class='alert alert-danger'>Object is not exists</div>";
+					}
+					$('.form-schema').html(html);
+				});
+
+				console.log(schemaName, id);
+			}
+		}
+	});
+	var app = new schemasRoute();
+	Backbone.history.start();
+
+</script>

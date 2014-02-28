@@ -1,20 +1,35 @@
+/**
+ * @author Artem Tankayan <namit@yandex.ru>
+ */
+
 var mongodb = require('mongodb');
 var _ = require('lodash');
 var vow = require('vow');
 var vowFs = require('vow-fs');
 
-var conf = require('../conf');
+var conf = require('../../conf');
 
-
+/**
+ * Пытается достать схему, если не получается, то возвращает false
+ *
+ * @param collectionName
+ * @returns {object|boolean}
+ */
 function getSchema(collectionName){
 	var schema = false;
 	try{
-		schema = require('../../static/schemas/'+collectionName);
+		schema = require(conf.staticPath+'/schemas/'+collectionName);
 	}catch(e){
 		console.log(e);
 	}
 	return schema;
 }
+
+/**
+ * рекурсивная функция, которая приводит аттрибуты объекта автоматически к нужному типу. на сей момент нужна только для поиска и приводит только к числу, чтобы искало и по чистам тоже
+ *
+ * @param obj
+ */
 function autoType(obj){
     var digitValue;
     for(var key in obj){
@@ -29,6 +44,12 @@ function autoType(obj){
     }
 }
 
+/**
+ * проверка на то, файл ли к нам пришёл в строке (она должна быть base64 файла, а если нет, то это не файл)
+ *
+ * @param str
+ * @returns {boolean}
+ */
 function isFile(str){
 	if(!str){
 		return false;
@@ -40,6 +61,14 @@ function isFile(str){
 		return false;
 	}
 }
+
+/**
+ * возвращает промис на сохранение файлового поля
+ *
+ * @param schemaPart часть схемы (схема конкретного поля)
+ * @param input само поле
+ * @returns {vow.Promise}
+ */
 function saveFilePromise(schemaPart, input){
 	return new vow.Promise(function(resolve, reject, notify) {
 		var promises=[];
@@ -81,6 +110,14 @@ function saveFilePromise(schemaPart, input){
 
 
 }
+
+/**
+ * функция, которая готовит из объекта и его схемы массив из промисов на сохранение файлов, которые к нам пришли в base64 в соответствужщих схеме полях
+ *
+ * @param schema полная схема объекта
+ * @param obj весь объект
+ * @returns {Array} массив промисов
+ */
 function prepareFilesPromises(schema, obj) {
 	var promises = [];
 	for (var fieldName in schema.properties) {
@@ -105,6 +142,13 @@ function prepareFilesPromises(schema, obj) {
 	}
 	return promises;
 }
+
+/**
+ * сохраняет файлы из obj в соответствии с его schema и выполняет callback
+ * @param schema полная схема объекта
+ * @param obj весь объект
+ * @param callback
+ */
 function prepareFiles(schema, obj, callback){
 	if(schema){
 		vow.allResolved(prepareFilesPromises(schema, obj)).then(function(result){
@@ -114,9 +158,17 @@ function prepareFiles(schema, obj, callback){
 		callback([]);
 	}
 }
+
+/**
+ * middleware для сохранения файлов
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
 function prepareFilesMiddleware(req, res, next){
 	prepareFiles(getSchema(req.params.collection), req.body, function(result){
-		console.log('prepare files', JSON.stringify(result, ' ', 4));
+		//console.log('prepare files', JSON.stringify(result, ' ', 4));
 		next();
 	});
 }

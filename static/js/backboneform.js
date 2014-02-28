@@ -21,6 +21,8 @@ var FormRowView = Backbone.View.extend({
 	events: {
 		'keyup input': 'changeField',
 		'change input': 'changeField',
+		'keyup textarea': 'changeField',
+		'change textarea': 'changeField',
 		'change select': 'changeField',
 		'click .delete': function () {//обработка удаления модели
 			if(

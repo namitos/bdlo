@@ -49,13 +49,11 @@ var schemaHelper = {
 		if(fieldSchema.hasOwnProperty('minimum')){
 			attributes.min = fieldSchema.minimum;
 		}
-		if (fieldSchema.type == 'any') {
-			if (fieldSchema.hasOwnProperty('info')) {
-				if(fieldSchema.info.hasOwnProperty('type')){
-					attributes.type = fieldSchema.info.type;
-				}
-			}
-		} else {
+
+
+		if (fieldSchema.hasOwnProperty('info') && fieldSchema.info.hasOwnProperty('type')) {
+			attributes.type = fieldSchema.info.type;
+		}else{
 			attributes.type = inputTypes[fieldSchema.type];
 		}
 
@@ -77,6 +75,10 @@ var schemaHelper = {
 				input+="<option value='"+key+"' "+(key==attributes.value?'selected':'')+">"+fieldSchema.info.options[key]+"</option>";
 			}
 			input+="</select>";
+		}else if(attributes.type=='textarea'){
+			var value = attributes.value;
+			delete attributes.value;
+			input+="<textarea " + this.htmlAttributes(attributes) + ">" + value + "</textarea>";
 		}else{
 			input+="<input " + this.htmlAttributes(attributes) + ">";
 		}
