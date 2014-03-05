@@ -1,7 +1,86 @@
+html,
 body{
-	padding-top: 60px;
-	background: rgba(0,0,0,0.05);
+	margin:0;
+	padding:0;
 }
+
+body{
+	background:#eee;
+	padding:65px 0 0 0;
+}
+
+*{
+	font-family: 'Open Sans', sans-serif;
+}
+
+:focus{
+	outline:none;
+}
+
+
+.container{
+	position:relative;
+}
+
+
+.rows-multiple,
+.rows-multiple .row{
+	margin-bottom:10px;
+}
+
+
+
+
+.form-row-view{
+}
+.form-row-view fieldset,
+.form-row-view .multi{
+	padding:5px 5px 5px 5px;
+	border-radius:4px;
+	background:rgba(0,0,0,0.05);
+	margin-bottom:5px;
+}
+.form-row-view .multi-item{
+	position:relative;
+}
+.form-row-view .multi-item fieldset{
+	margin-right:45px;
+}
+.form-row-view .multi-item .btn-multi-delete{
+	position:absolute;
+	top:0;
+	right:0;
+}
+.form-row-view fieldset .form-group:last-child{
+	margin-bottom:0;
+}
+.form-row-view .form-group{
+	margin-bottom:5px;
+}
+.form-row-view .btn-group{
+	margin-top:5px;
+}
+.form-row-view .file-list{
+	margin:0;
+	padding:0;
+}
+.form-row-view .file-list li{
+	display:inline-block;
+	margin:0 10px 0 0;
+	padding:0;
+}
+.form-row-view .file-list li a{
+	display:inline-block;
+	vertical-align:middle;
+}
+
+.form-row-view .btn-multi-add .text,
+.form-row-view .btn-multi-delete .text,
+.form-row-view .file-list li a .text{
+	display:none;
+}
+
+
 
 .list-schemas .nav{
 	margin-bottom: 15px;
