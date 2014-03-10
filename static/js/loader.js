@@ -1,16 +1,13 @@
 /** Асинхронный подгрузчик всякого *********************************************/
-var loadTemplates = function (templates, onLoad) {
-	load(templates, function(results){
-		for(var key in results){
-			results[key]= _.template(results[key]);
-		}
-		onLoad(results);
-	});
-};
 var load = function (urls, onLoad) {
 	var loadPromise = function (url) {
 		return new vow.Promise(function(resolve, reject, notify) {
 			$.get(url, function (data) {
+				var ext = url.split('.');
+				ext = ext[ext.length-1];
+				if(ext == 'ejs'){
+					data = _.template(data);
+				}
 				resolve(data);
 			});
 		});
