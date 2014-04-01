@@ -22,7 +22,7 @@ function clearPids(callback) {
 			});
 		});
 	};
-	fs.readdir('./pids', function (err, files) {
+	fs.readdir('./app/pids', function (err, files) {
 		if (err) {
 			console.log(err);
 			fs.mkdir('pids', function(){
@@ -45,19 +45,19 @@ function clearPids(callback) {
 
 if (cluster.isMaster) {
 	clearPids(function () {
-		fs.writeFile('./pids/' + process.pid, 'master', function (err) {});
+		fs.writeFile('./app/pids/' + process.pid, 'master', function (err) {});
 		var CPUsCount = os.cpus().length;
 		for (var i = 0; i < CPUsCount; ++i) {
 			cluster.fork();
 		}
 		cluster.on('exit', function (worker) {
-			fs.unlink('./pids/' + worker.process.pid, function (err) {});
+			fs.unlink('./app/pids/' + worker.process.pid, function (err) {});
 			console.log('Worker ' + worker.process.pid + ' died.');
 			cluster.fork();
 		});
 
 		cluster.on('listening', function (worker, address) {
-			fs.writeFile('./pids/' + worker.process.pid, '', function (err) {});
+			fs.writeFile('./app/pids/' + worker.process.pid, '', function (err) {});
 			console.log('Worker ' + worker.process.pid + ' is now listening on port ' + address.port + ' in ' + process.env.NODE_ENV + ' mode.');
 			worker.on('message', function (msg) {
 				if(msg.cmd=='restart'){
@@ -70,5 +70,5 @@ if (cluster.isMaster) {
 		});
 	});
 } else {
-	require('./worker')(conf);
+	require('./app/worker')(conf);
 }

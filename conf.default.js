@@ -1,4 +1,4 @@
-var staticPath = __dirname+'/../static';
+var staticPath = __dirname+'/static';
 var conf = {
 	staticPath: staticPath,
 	viewsDir: staticPath + '/views',

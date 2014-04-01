@@ -1,8 +1,6 @@
 var _ = require('lodash');
 
-var conf = require('../conf');
-
-var User = function (fields) {
+var User = function (fields, conf) {
 	var _this = this;
 	for (var key in fields) {
 		this[key] = fields[key];

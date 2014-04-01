@@ -49,7 +49,7 @@ module.exports = function (conf, callback) {
 	app.use(passport.initialize());
 	app.use(passport.session());
 
-	app.use(express.static(__dirname + '/../static'));
+	app.use(express.static(conf.staticPath));
 
 	app.use(function (req, res, next) {
 		var url = req.url.split('/');
@@ -122,7 +122,7 @@ module.exports = function (conf, callback) {
 							} else {
 								if (result.length) {
 									console.log('user exists');
-									done(null, new User(result[0]));
+									done(null, new User(result[0], conf));
 								} else {
 									console.log('user not exists');
 									done(null, null);
@@ -142,7 +142,7 @@ module.exports = function (conf, callback) {
 							done(err, null);
 						} else {
 							if (result.length) {
-								done(null, new User(result[0]));
+								done(null, new User(result[0], conf));
 							} else {
 								console.log('user not exists');
 								done(null, null);
@@ -158,7 +158,7 @@ module.exports = function (conf, callback) {
 
 	function routesPromise() {
 		return new vow.Promise(function (resolve, reject, notify) {
-			fs.readdir('./routes', function (err, files) {
+			fs.readdir('./app/routes', function (err, files) {
 				if (err) {
 					throw err;
 				}
