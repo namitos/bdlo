@@ -1,6 +1,5 @@
-app/node_modules
 app/pids
-app/conf.js
 static/files
+conf.js
 node_modules
 .idea
