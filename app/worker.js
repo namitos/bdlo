@@ -163,7 +163,7 @@ module.exports = function (conf, callback) {
 					throw err;
 				}
 				files.forEach(function (file) {
-					require('./routes/' + file).init(app);
+					require('./routes/' + file)(app);
 				});
 				resolve();
 			});

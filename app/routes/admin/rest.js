@@ -7,7 +7,7 @@ var _ = require('lodash');
 var vow = require('vow');
 var vowFs = require('vow-fs');
 
-exports.init = function (app) {
+module.exports = function (app) {
 	var conf = app.get('conf');
 
 	/**

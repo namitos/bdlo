@@ -1,6 +1,6 @@
 var crypto = require('crypto');
 
-exports.init = function(app){
+module.exports = function(app){
 	if (app.get('env') != 'production') {
 		app.get('/init', function(req, res){
 			var db = app.get('db');
