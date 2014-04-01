@@ -1,4 +1,4 @@
-module.exports = function (callback) {
+module.exports = function (conf, callback) {
 	var express = require('express.io');
 	var app = express();
 	var RedisStore = require('connect-redis')(express);
@@ -10,8 +10,6 @@ module.exports = function (callback) {
 	var vow = require('vow');
 //var vowFs = require('vow-fs');
 	var drev = require('drev');
-
-	var conf = require('./conf');
 
 	var sessionConfiguration = {
 		cookieParser: express.cookieParser,
@@ -37,6 +35,7 @@ module.exports = function (callback) {
 	app.set('views', conf.viewsDir);
 	app.set('view cache', conf.viewCache);
 	app.set('view engine', 'ejs');
+	app.set('conf', conf);
 
 
 	app.use(express.favicon());

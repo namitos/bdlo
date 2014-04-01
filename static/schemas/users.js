@@ -18,7 +18,19 @@ var usersSchema = {
 		roles:{
 			type: 'string',
 			required: true
-		}
+		},
+		avatar: {
+			type: 'any',
+			info: {
+				type: 'file',
+				mimes: ['image/jpeg', 'image/png'],
+				storage: {
+					access: 'pub',
+					type: 'filesystem',
+					path: 'avatars'
+				}
+			}
+		},
 	}
 };
 try{

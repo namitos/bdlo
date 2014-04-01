@@ -4,6 +4,9 @@ var cluster = require('cluster');
 var exec = require("child_process").exec;
 var vow = require('vow');
 
+var conf = require('./conf');
+
+
 function clearPids(callback) {
 	var killPromise = function (pid) {
 		return new vow.Promise(function(resolve, reject, notify) {
@@ -67,5 +70,5 @@ if (cluster.isMaster) {
 		});
 	});
 } else {
-	require('./worker')();
+	require('./worker')(conf);
 }
