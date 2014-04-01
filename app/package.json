@@ -1,7 +1,7 @@
 {
 	"name": "Bydlocms",
 	"version": "0.0.3",
-	"private": true,
+	"private": false,
 	"scripts": {
 		"start": "node app.js"
 	},
@@ -21,5 +21,9 @@
 		"base64": "2.1.x",
 		"connect-redis": "1.4.x",
 		"drev": "0.1.x"
-	}
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/namitos/bydlocms"
+	},
 }
