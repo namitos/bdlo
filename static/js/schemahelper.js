@@ -1,6 +1,6 @@
 /** Помощь по схемам и генератор форм из них *********************************************/
-var schemaHelper = {
-	tableRow: function (schema, obj, parentKeyName) {
+(function(context){
+	function tableRow(schema, obj, parentKeyName) {
 		var html = '';
 		if (!obj) {
 			var obj = {};
@@ -8,7 +8,7 @@ var schemaHelper = {
 		for (var key in schema.properties) {
 			var field = schema.properties[key];
 			if (field.hasOwnProperty('properties')) {
-				html += schemaHelper.tableRow(field, obj.hasOwnProperty(key) ? obj[key] : {}, key);
+				html += tableRow(field, obj.hasOwnProperty(key) ? obj[key] : {}, key);
 			} else {
 				var value = obj.hasOwnProperty(key) ? obj[key] : '';
 				var attributes = {
@@ -19,8 +19,8 @@ var schemaHelper = {
 			}
 		}
 		return html;
-	},
-	formPartPrimitive: function (fieldSchema, value, name) {
+	}
+	function formPartPrimitive(fieldSchema, value, name) {
 		var inputTypes = {
 			string: 'text',
 			number: 'number',
@@ -70,7 +70,7 @@ var schemaHelper = {
 			input+="</ul>";
 		}
 		if(attributes.type=='select'){
-			input+="<select " + this.htmlAttributes(attributes) + "><option></option>";
+			input+="<select " + htmlAttributes(attributes) + "><option></option>";
 			for(var key in fieldSchema.info.options){
 				input+="<option value='"+key+"' "+(key==attributes.value?'selected':'')+">"+fieldSchema.info.options[key]+"</option>";
 			}
@@ -78,17 +78,17 @@ var schemaHelper = {
 		}else if(attributes.type=='textarea'){
 			var value = attributes.value;
 			delete attributes.value;
-			input+="<textarea " + this.htmlAttributes(attributes) + ">" + value + "</textarea>";
+			input+="<textarea " + htmlAttributes(attributes) + ">" + value + "</textarea>";
 		}else{
-			input+="<input " + this.htmlAttributes(attributes) + ">";
+			input+="<input " + htmlAttributes(attributes) + ">";
 		}
 
 		return "<div class='form-group'><label>" + label + "</label>"+input+"</div>";
-	},
-	formPartMulti:function (schema, obj, parentKeyName, i){
-		return "<div class='multi-item' data-i='"+i+"' data-field='"+parentKeyName+"'>"+this.formPart(schema, obj, parentKeyName+'['+i+']')+"<button class='btn btn-danger btn-multi-delete'><span class='glyphicon glyphicon-minus'></span><span class='text'>Delete</span></button></div>";
-	},
-	formPart: function (schema, obj, parentKeyName) {
+	}
+	function formPartMulti(schema, obj, parentKeyName, i){
+		return "<div class='multi-item' data-i='"+i+"' data-field='"+parentKeyName+"'>"+formPart(schema, obj, parentKeyName+'['+i+']')+"<button class='btn btn-danger btn-multi-delete'><span class='glyphicon glyphicon-minus'></span><span class='text'>Delete</span></button></div>";
+	}
+	function formPart(schema, obj, parentKeyName) {
 		var html = '';
 		if (!obj) {
 			obj = {};
@@ -100,37 +100,48 @@ var schemaHelper = {
 		var keyName;
 		for (var key in schema[propKey]) {
 			var fieldSchema = schema[propKey][key];
-			if (fieldSchema.type=='object') {
+			if (fieldSchema.type == 'object') {
 				keyName = parentKeyName ? parentKeyName + '.' + key : key;
-				html += this.formPart(fieldSchema, obj.hasOwnProperty(key) ? obj[key] : {}, keyName);
+				html += formPart(fieldSchema, obj.hasOwnProperty(key) ? obj[key] : {}, keyName);
 
-			} else if (fieldSchema.type=='array') {
+			} else if (fieldSchema.type == 'array') {
 				keyName = parentKeyName ? parentKeyName + '.' + key : key;
-				html+="<div class='multi'>";
-				var i=0;
-				if(obj.hasOwnProperty(key) && obj[key].length){
-					for(i=0;i<obj[key].length;++i){
-						if(fieldSchema.items.type=='object'){
-							html += this.formPartMulti(fieldSchema.items, obj[key][i], keyName, i);
-						}else{
+				html += "<div class='multi'>";
+				var i = 0;
+				if (obj.hasOwnProperty(key) && obj[key].length) {
+					for (i = 0; i < obj[key].length; ++i) {
+						if (fieldSchema.items.type == 'object') {
+							html += formPartMulti(fieldSchema.items, obj[key][i], keyName, i);
+						} else {
 							html += 'массивы из примитивов пока не поддерживаются';
-							//html += this.formPartPrimitive(fieldSchema.items, obj.hasOwnProperty(key) ? obj[key] : '', keyName);
+							//html += formPartPrimitive(fieldSchema.items, obj.hasOwnProperty(key) ? obj[key] : '', keyName);
 						}
 					}
 				}
-				html += "<button class='btn btn-info btn-multi-add' data-schema='"+JSON.stringify(fieldSchema.items)+"' data-keyname='"+keyName+"' data-i='"+i+"'><span class='glyphicon glyphicon-plus'></span><span class='text'>Add</span></button></div>";
+				html += "<button class='btn btn-info btn-multi-add' data-schema='" + JSON.stringify(fieldSchema.items) + "' data-keyname='" + keyName + "' data-i='" + i + "'><span class='glyphicon glyphicon-plus'></span><span class='text'>Add</span></button></div>";
 
 			} else {
 				keyName = parentKeyName ? parentKeyName + '.' + key : key;
-				html += this.formPartPrimitive(fieldSchema, obj.hasOwnProperty(key) ? obj[key] : '', keyName);
+				html += formPartPrimitive(fieldSchema, obj.hasOwnProperty(key) ? obj[key] : '', keyName);
 			}
 		}
 		return "<fieldset>" + html + "</fieldset>";
-	},
-	form:function(schema, obj, formAttributes){
-		return "<form "+this.htmlAttributes(formAttributes)+">"+this.formPart(schema, obj)+"<div class='form-group'><input type='submit' class='btn btn-primary'></div></form>";
-	},
-	htmlAttributes:function(attributes){
+	}
+	function form(schema, obj, formAttributes){
+		var $form = $("<form " + htmlAttributes(formAttributes) + "></form>");
+		$form.append(formPart(schema, obj));
+		if(formAttributes){
+			if(formAttributes.hasOwnProperty('method')){
+				$form.append("<div class='form-group'><input type='submit' class='btn btn-primary'></div>");
+			}else{
+				$form.on('submit', function(){
+					return false;
+				});
+			}
+		}
+		return $form;
+	}
+	function htmlAttributes(attributes){
 		var attributesArray=[];
 		for(var key in attributes){
 			if(attributes[key]===false){
@@ -142,18 +153,18 @@ var schemaHelper = {
 			}
 		}
 		return attributesArray.join(' ');
-	},
-	generate:function(obj){
+	}
+	function generate(obj){
 		var schema={};
 		if(obj instanceof Array){
 			schema.type='array';
-			schema.items=this.generate(obj[0]);
+			schema.items=generate(obj[0]);
 
 		}else if(obj instanceof Object){
 			schema.type='object';
 			schema.properties={};
 			for(var key in obj){
-				schema.properties[key]=this.generate(obj[key]);
+				schema.properties[key]=generate(obj[key]);
 			}
 		}else if(typeof obj == 'string'){
 			schema.type='string';
@@ -164,26 +175,34 @@ var schemaHelper = {
 		}
 		return schema;
 	}
-};
 
-jQuery(document).on('click', '.btn-multi-add', function(e){
-	var $el=jQuery(this);
-	var schema=$el.data('schema');
-	var keyName=$el.data('keyname');
-	var i = $el.data('i');
-	$el.before(schemaHelper.formPartMulti(schema, {}, keyName, i));
-	$el.data('i', ++i);
-	e.preventDefault();
-});
-jQuery(document).on('click', '.btn-multi-delete', function(e){
-	var $el=jQuery(this);
-	var $row=$el.parent();
-	$row.remove();
-	e.preventDefault();
-});
-jQuery(document).on('click', '.btn-file-delete', function(e){
-	var $el=jQuery(this);
-	var $row=$el.parent();
-	$row.remove();
-	e.preventDefault();
-});
+	$(document).on('click', '.btn-multi-add', function(e){
+		var $el=jQuery(this);
+		var schema=$el.data('schema');
+		var keyName=$el.data('keyname');
+		var i = $el.data('i');
+		$el.before(formPartMulti(schema, {}, keyName, i));
+		$el.data('i', ++i);
+		e.preventDefault();
+	});
+	$(document).on('click', '.btn-multi-delete', function(e){
+		var $el=jQuery(this);
+		var $row=$el.parent();
+		$row.remove();
+		e.preventDefault();
+	});
+	$(document).on('click', '.btn-file-delete', function(e){
+		var $el=jQuery(this);
+		var $row=$el.parent();
+		$row.remove();
+		e.preventDefault();
+	});
+
+	context.schemaHelper = {
+		generate: generate,
+		form: form,
+		formPart: function(){
+			return "this method is deprecated. use method 'form'!";
+		}
+	};
+})(this);
