@@ -1,6 +1,3 @@
-var FormRowModel = Backbone.Model.extend({
-});
-
 var FormRowView = Backbone.View.extend({
 	className: "form-row-view",
 	initialize: function (input) {
@@ -34,33 +31,27 @@ var FormRowView = Backbone.View.extend({
 			}
 		},
 		'click .btn-multi-delete': function (e) {//обработка удаления мультиполя(элемента из массива) из модели
-			var instance = this;
-			var $el = instance.$(e.currentTarget).parent();
+			var view = this;
+			var $el = view.$(e.currentTarget).parent();
 			var i = $el.data('i');
-			var newModel = instance.model.toJSON();
-			var headObj = instance._headObj($el.data('field'), newModel);
+			var newModel = view.model.toJSON();
+			var headObj = view._headObj($el.data('field'), newModel);
 			delete headObj[i];
-			instance.model.set(newModel);
-			if (instance.options.hasOwnProperty('presave')) {
-				instance.model = instance.options.presave(instance.model);
-			}
-			if (instance.options.hasOwnProperty('autosave') && instance.options.autosave == true) {
-				instance.saveModel();
+			view.model.set(newModel);
+			if (view.options.hasOwnProperty('autosave') && view.options.autosave == true) {
+				view.saveModel();
 			}
 		},
 		'click .btn-file-delete': function(e){
-			var instance = this;
-			var $el = instance.$(e.currentTarget).parent();
+			var view = this;
+			var $el = view.$(e.currentTarget).parent();
 			var i = $el.data('i');
-			var newModel = instance.model.toJSON();
-			var headObj = instance._headObj($el.data('field'), newModel);
+			var newModel = view.model.toJSON();
+			var headObj = view._headObj($el.data('field'), newModel);
 			delete headObj[i];
-			instance.model.set(newModel);
-			if (instance.options.hasOwnProperty('presave')) {
-				instance.model = instance.options.presave(instance.model);
-			}
-			if (instance.options.hasOwnProperty('autosave') && instance.options.autosave == true) {
-				instance.saveModel();
+			view.model.set(newModel);
+			if (view.options.hasOwnProperty('autosave') && view.options.autosave == true) {
+				view.saveModel();
 			}
 		},
 		'click .save': function () {
@@ -120,35 +111,41 @@ var FormRowView = Backbone.View.extend({
 			}
 		};
 
-		var instance = this;
+		var view = this;
 		changeField(e.currentTarget, function(update){
-			instance.model.set(_.merge(instance.model.toJSON(), update));
-			//console.log('instance.model.toJSON()', instance.model.toJSON());
-			if (instance.options.hasOwnProperty('presave')) {
-				instance.model = instance.options.presave(instance.model);
-			}
-			if (instance.options.hasOwnProperty('autosave') && instance.options.autosave == true) {
-				instance.saveModel();
+			view.model.set(_.merge(view.model.toJSON(), update));
+			if (view.options.hasOwnProperty('autosave') && view.options.autosave == true) {
+				view.saveModel();
 			}
 		});
 	},
 	saveModel:function(){
-		var _this=this;
-		//console.log('saving... instance.model.toJSON()', this.model.toJSON());
-		this.model.save({}, {
-			success:function(model){
-				if(_this.options.hasOwnProperty('saveSuccess')){
-					_this.model = model;
-					_this.render();
-					_this.options.saveSuccess(model);
+		var view=this;
+		var save = function(view){
+			view.model.save({}, {
+				success:function(model){
+					if(view.options.hasOwnProperty('saveSuccess')){
+						view.model = model;
+						view.render();
+						view.options.saveSuccess(model);
+					}
+				},
+				error: function(model){
+					if(view.options.hasOwnProperty('saveError')){
+						view.options.saveError(model);
+					}
 				}
-			},
-			error: function(model){
-				if(_this.options.hasOwnProperty('saveError')){
-					_this.options.saveError(model);
-				}
-			}
-		});
+			});
+		}
+		if (view.options.hasOwnProperty('presave')) {
+			view.options.presave(view.model, function(model){
+				save(view);
+			});
+		}else{
+			save(view);
+		}
+
+
 	},
 	_headObj:function(fieldString, obj){
 		var fieldParts = fieldString.split('.');
