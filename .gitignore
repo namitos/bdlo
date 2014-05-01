@@ -1,4 +1,4 @@
-app/pids
+pids
 static/files
 conf.js
 node_modules

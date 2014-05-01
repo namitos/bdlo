@@ -6,9 +6,8 @@ module.exports = function (conf, callback) {
 	var LocalStrategy = require('passport-local').Strategy;
 	var mongodb = require('mongodb');
 	var fs = require('fs');
-//var logger = require('winston');
 	var vow = require('vow');
-//var vowFs = require('vow-fs');
+	var vowFs = require('vow-fs');
 	var drev = require('drev');
 
 	var sessionConfiguration = {
@@ -24,11 +23,6 @@ module.exports = function (conf, callback) {
 			accept(null, true);
 		}
 	};
-
-//logger.remove(logger.transports.Console);
-//logger.add(logger.transports.Console, { level: 'info', colorize: true, timestamp: true });
-//logger.info('--------------------');
-//console.log('process.env.NODE_ENV', process.env.NODE_ENV);
 
 	app.set('env', process.env.hasOwnProperty('NODE_ENV') ? process.env.NODE_ENV : 'production');
 	app.set('port', conf.port);
@@ -57,7 +51,7 @@ module.exports = function (conf, callback) {
 			res.render(template, parameters, function (err, html) {
 				res.render(url[1] == 'admin' ? 'admin/page' : 'page', {
 					html: html,
-					user: req.hasOwnProperty('user')?req.user:false
+					user: req.hasOwnProperty('user') ? req.user : false
 				});
 			});
 		};
@@ -102,46 +96,59 @@ module.exports = function (conf, callback) {
 		next();
 	});
 
-	function mongoConnectPromise() {
+	function mongoConnectPromise(connectionString) {
 		return new vow.Promise(function (resolve, reject, notify) {
 			var MongoClient = mongodb.MongoClient;
-			MongoClient.connect(conf.mongoConnect, function (err, db) {
+			MongoClient.connect(connectionString, function (err, db) {
 				if (err) {
-					throw err;
+					console.log(err);
+					reject(err);
+				} else {
+					resolve(db);
 				}
-				app.set('db', db);
+			});
+		});
+	}
 
-				var User = require('./models/user');
-				passport.use(new LocalStrategy(
-					function (username, password, done) {
-						console.log('trying', username, password);
-						password = require('crypto').createHash('sha512').update(password).digest("hex");
-						db.collection('users').find({username: username, password: password}).toArray(function (err, result) {
-							if (err) {
-								done(err, null);
-							} else {
-								if (result.length) {
-									console.log('user exists');
-									done(null, new User(result[0], conf));
-								} else {
-									console.log('user not exists');
-									done(null, null);
-								}
-							}
-						});
-					}
-				));
-				passport.serializeUser(function (user, done) {
-					console.log('user serialize', user);
-					done(null, user._id.toString());
-				});
-				passport.deserializeUser(function (id, done) {
-					console.log('user deserialize', id);
-					db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function (err, result) {
+	function routesPromise(path) {
+		return new vow.Promise(function (resolve, reject, notify) {
+			fs.readdir(path, function (err, files) {
+				if (err) {
+					console.log(err);
+					reject(err);
+				} else {
+					files.forEach(function (file) {
+						require(path + '/' + file)(app);
+					});
+					resolve(files);
+				}
+			});
+		});
+	}
+
+	var promises = {
+		db: mongoConnectPromise(conf.mongoConnect),
+		routes: routesPromise('./app/routes'),
+		projectInfo: vowFs.read('./package.json', 'utf8')
+	};
+	if(conf.hasOwnProperty('routesAdditionalPath')){
+		promises.routesAdditionalPath = routesPromise(conf.routesAdditionalPath);
+	}
+	vow.all(promises).then(function (result) {
+
+			var db = result.db;
+			app.set('db', db);
+			var User = require('./app/models/user');
+			passport.use(new LocalStrategy(
+				function (username, password, done) {
+					console.log('trying', username, password);
+					password = require('crypto').createHash('sha512').update(password).digest("hex");
+					db.collection('users').find({username: username, password: password}).toArray(function (err, result) {
 						if (err) {
 							done(err, null);
 						} else {
 							if (result.length) {
+								console.log('user exists');
 								done(null, new User(result[0], conf));
 							} else {
 								console.log('user not exists');
@@ -149,33 +156,33 @@ module.exports = function (conf, callback) {
 							}
 						}
 					});
-				});
-				//logger.info('Mongo connected');
-				resolve();
-			});
-		});
-	}
-
-	function routesPromise() {
-		return new vow.Promise(function (resolve, reject, notify) {
-			fs.readdir('./app/routes', function (err, files) {
-				if (err) {
-					throw err;
 				}
-				files.forEach(function (file) {
-					require('./routes/' + file)(app);
-				});
-				resolve();
+			));
+			passport.serializeUser(function (user, done) {
+				console.log('user serialize', user);
+				done(null, user._id.toString());
 			});
-		});
-	}
+			passport.deserializeUser(function (id, done) {
+				console.log('user deserialize', id);
+				db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function (err, result) {
+					if (err) {
+						done(err, null);
+					} else {
+						if (result.length) {
+							done(null, new User(result[0], conf));
+						} else {
+							console.log('user not exists');
+							done(null, null);
+						}
+					}
+				});
+			});
 
+			app.set('projectInfo', JSON.parse(result.projectInfo));
+			app.set('conf', conf);
 
-	vow.all({
-		mongo: mongoConnectPromise(),
-		routes: routesPromise()
-	}).then(function (result) {
 			drev.start(conf.session.redis.host, conf.session.redis.port);
+
 			app.listen(app.get('port'));
 			if (callback) {
 				callback(result);

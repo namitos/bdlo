@@ -1,6 +1,7 @@
-var staticPath = __dirname+'/static';
+var staticPath = __dirname + '/static';
 var conf = {
 	staticPath: staticPath,
+	routesAdditionalPath: __dirname + '/app/routes',
 	viewsDir: staticPath + '/views',
 	viewCache: false,
 	port: 8000,
@@ -26,9 +27,9 @@ var conf = {
 			port: 6379
 		}
 	},
-	roles:{
-		admin:['full access', 'ass'],
-		user:['ass', 'user access']
+	roles: {
+		admin: ['full access', 'ass'],
+		user: ['ass', 'user access']
 	},
 	fileUpload: {
 		mimes: {
