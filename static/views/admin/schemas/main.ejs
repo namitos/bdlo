@@ -10,36 +10,34 @@
 	</div>
 </div>
 <script>
-	load({
-		pages: '/schemas/pages.js',
-		users: '/schemas/users.js'
-	}, function (result) {
+	var schemas = <%- JSON.stringify(conf.editableSchemas) %>;
+	var toLoad = {};
+	for (var key in schemas) {
+		toLoad[key] = schemas[key].hasOwnProperty('path') ? schemas[key].path : '/schemas/' + key + '.js';
+	}
 
-		var schemas = {
-			pages: {
-				schema: result.pages,
-				titleField: 'title'
-			},
-			users: {
-				schema: result.users,
-				titleField: 'username',
-				presave: function (user, next) {
-					console.log('presave');
-					if (user.attributes.hasOwnProperty('roles')) {
-						var roles = user.attributes.roles.toString().split(',');
-						user.attributes.roles = [];
-						roles.forEach(function (role) {
-							user.attributes.roles.push(role.trim());
-						});
-					}
-					next(user);
+	load(toLoad, function (result) {
+		for(var key in schemas){
+			schemas[key].schema = result[key];
+		}
+
+		if(schemas.hasOwnProperty('users')){
+			schemas.users.presave = function (user, next) {
+				console.log('presave');
+				if (user.attributes.hasOwnProperty('roles')) {
+					var roles = user.attributes.roles.toString().split(',');
+					user.attributes.roles = [];
+					roles.forEach(function (role) {
+						user.attributes.roles.push(role.trim());
+					});
 				}
-			}
-		};
+				next(user);
+			};
+		}
 
 		var schemasMenuHtml = "<ul class='nav nav-tabs'>";
 		for (var key in schemas) {
-			schemasMenuHtml += "<li><a href='#s/" + key + "'>" + key + "</a></li>";
+			schemasMenuHtml += "<li><a href='#s/" + key + "'>" + schemas[key].name + "</a></li>";
 		}
 		schemasMenuHtml += "</ul>";
 		$('.list-schemas').html(schemasMenuHtml);
@@ -118,7 +116,7 @@
 					var getObj = function (id, callback) {
 						var obj;
 						if (id == 'new') {
-							obj = view.collectionFullObj.add(new ObjModel())
+							obj = view.collectionFullObj.add(new ObjModel());
 							callback(obj);
 						} else {
 							view.collectionFullObj.fetch({

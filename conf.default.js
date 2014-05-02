@@ -1,7 +1,22 @@
 var staticPath = __dirname + '/static';
 var conf = {
 	staticPath: staticPath,
-	routesAdditionalPath: __dirname + '/app/routes',
+	editableSchemas: {
+		pages: {
+			name: 'Pages',
+			titleField: 'title'
+		},
+		users: {
+			name: 'Users',
+			titleField: 'username'
+		}/*,
+		 assssd: {
+		 name: 'Test',
+		 titleField: 'asdasd',
+		 path:'/schemas/users.js'
+		 }*/
+	},
+	//routesAdditionalPath: __dirname + '/app/routes',
 	viewsDir: staticPath + '/views',
 	viewCache: false,
 	port: 8000,

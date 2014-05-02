@@ -48,10 +48,16 @@ module.exports = function (conf, callback) {
 	app.use(function (req, res, next) {
 		var url = req.url.split('/');
 		res.renderPage = function (template, parameters) {
+			if (!parameters) {
+				parameters = {};
+			}
+			parameters.user = req.hasOwnProperty('user') ? req.user : false;
+			parameters.conf = conf;
 			res.render(template, parameters, function (err, html) {
 				res.render(url[1] == 'admin' ? 'admin/page' : 'page', {
 					html: html,
-					user: req.hasOwnProperty('user') ? req.user : false
+					user: req.hasOwnProperty('user') ? req.user : false,
+					conf: conf
 				});
 			});
 		};
@@ -131,44 +137,24 @@ module.exports = function (conf, callback) {
 		routes: routesPromise('./app/routes'),
 		projectInfo: vowFs.read('./package.json', 'utf8')
 	};
-	if(conf.hasOwnProperty('routesAdditionalPath')){
+	if (conf.hasOwnProperty('routesAdditionalPath')) {
 		promises.routesAdditionalPath = routesPromise(conf.routesAdditionalPath);
 	}
 	vow.all(promises).then(function (result) {
 
-			var db = result.db;
-			app.set('db', db);
-			var User = require('./app/models/user');
-			passport.use(new LocalStrategy(
-				function (username, password, done) {
-					console.log('trying', username, password);
-					password = require('crypto').createHash('sha512').update(password).digest("hex");
-					db.collection('users').find({username: username, password: password}).toArray(function (err, result) {
-						if (err) {
-							done(err, null);
-						} else {
-							if (result.length) {
-								console.log('user exists');
-								done(null, new User(result[0], conf));
-							} else {
-								console.log('user not exists');
-								done(null, null);
-							}
-						}
-					});
-				}
-			));
-			passport.serializeUser(function (user, done) {
-				console.log('user serialize', user);
-				done(null, user._id.toString());
-			});
-			passport.deserializeUser(function (id, done) {
-				console.log('user deserialize', id);
-				db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function (err, result) {
+		var db = result.db;
+		app.set('db', db);
+		var User = require('./app/models/user');
+		passport.use(new LocalStrategy(
+			function (username, password, done) {
+				console.log('trying', username, password);
+				password = require('crypto').createHash('sha512').update(password).digest("hex");
+				db.collection('users').find({username: username, password: password}).toArray(function (err, result) {
 					if (err) {
 						done(err, null);
 					} else {
 						if (result.length) {
+							console.log('user exists');
 							done(null, new User(result[0], conf));
 						} else {
 							console.log('user not exists');
@@ -176,17 +162,37 @@ module.exports = function (conf, callback) {
 						}
 					}
 				});
-			});
-
-			app.set('projectInfo', JSON.parse(result.projectInfo));
-			app.set('conf', conf);
-
-			drev.start(conf.session.redis.host, conf.session.redis.port);
-
-			app.listen(app.get('port'));
-			if (callback) {
-				callback(result);
 			}
+		));
+		passport.serializeUser(function (user, done) {
+			console.log('user serialize', user);
+			done(null, user._id.toString());
 		});
+		passport.deserializeUser(function (id, done) {
+			console.log('user deserialize', id);
+			db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function (err, result) {
+				if (err) {
+					done(err, null);
+				} else {
+					if (result.length) {
+						done(null, new User(result[0], conf));
+					} else {
+						console.log('user not exists');
+						done(null, null);
+					}
+				}
+			});
+		});
+
+		app.set('projectInfo', JSON.parse(result.projectInfo));
+		app.set('conf', conf);
+
+		drev.start(conf.session.redis.host, conf.session.redis.port);
+
+		app.listen(app.get('port'));
+		if (callback) {
+			callback(result);
+		}
+	});
 };
 
