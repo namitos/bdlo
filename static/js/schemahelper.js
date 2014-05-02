@@ -88,6 +88,9 @@
 	function formPartMulti(schema, obj, parentKeyName, i){
 		return "<div class='multi-item' data-i='"+i+"' data-field='"+parentKeyName+"'>"+formPart(schema, obj, parentKeyName+'['+i+']')+"<button class='btn btn-danger btn-multi-delete'><span class='glyphicon glyphicon-minus'></span><span class='text'>Delete</span></button></div>";
 	}
+	function formPartMultiPrimitive(schema, obj, parentKeyName, i){
+		return "<div class='multi-item' data-i='"+i+"' data-field='"+parentKeyName+"'>"+formPartPrimitive(schema, obj, parentKeyName+'['+i+']')+"<button class='btn btn-danger btn-multi-delete'><span class='glyphicon glyphicon-minus'></span><span class='text'>Delete</span></button></div>";
+	}
 	function formPart(schema, obj, parentKeyName) {
 		var html = '';
 		if (!obj) {
@@ -113,7 +116,8 @@
 						if (fieldSchema.items.type == 'object') {
 							html += formPartMulti(fieldSchema.items, obj[key][i], keyName, i);
 						} else {
-							html += 'массивы из примитивов пока не поддерживаются';
+							html += formPartMultiPrimitive(fieldSchema.items, obj[key][i], keyName, i);
+							//html += 'массивы из примитивов пока не поддерживаются';
 							//html += formPartPrimitive(fieldSchema.items, obj.hasOwnProperty(key) ? obj[key] : '', keyName);
 						}
 					}
@@ -181,7 +185,12 @@
 		var schema=$el.data('schema');
 		var keyName=$el.data('keyname');
 		var i = $el.data('i');
-		$el.before(formPartMulti(schema, {}, keyName, i));
+		if(schema.type != 'object' && schema.type != 'array'){
+			$el.before(formPartMultiPrimitive(schema, '', keyName, i));
+		}else{
+			$el.before(formPartMulti(schema, {}, keyName, i));
+		}
+
 		$el.data('i', ++i);
 		e.preventDefault();
 	});
