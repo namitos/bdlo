@@ -1,2 +1,0 @@
-#!/bin/sh
-NODE_ENV=testing nodejs index > /dev/null 2>&1 &

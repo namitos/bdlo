@@ -4,9 +4,6 @@ var cluster = require('cluster');
 var exec = require("child_process").exec;
 var vow = require('vow');
 
-var conf = require('./conf');
-
-
 function clearPids(callback) {
 	var killPromise = function (pid) {
 		return new vow.Promise(function(resolve, reject, notify) {
@@ -43,32 +40,34 @@ function clearPids(callback) {
 
 }
 
-if (cluster.isMaster) {
-	clearPids(function () {
-		fs.writeFile('./pids/' + process.pid, 'master', function (err) {});
-		var CPUsCount = os.cpus().length;
-		for (var i = 0; i < CPUsCount; ++i) {
-			cluster.fork();
-		}
-		cluster.on('exit', function (worker) {
-			fs.unlink('./pids/' + worker.process.pid, function (err) {});
-			console.log('Worker ' + worker.process.pid + ' died.');
-			cluster.fork();
-		});
+module.exports = function(conf){
+	if (cluster.isMaster) {
+		clearPids(function () {
+			fs.writeFile('./pids/' + process.pid, 'master', function (err) {});
+			var CPUsCount = os.cpus().length;
+			for (var i = 0; i < CPUsCount; ++i) {
+				cluster.fork();
+			}
+			cluster.on('exit', function (worker) {
+				fs.unlink('./pids/' + worker.process.pid, function (err) {});
+				console.log('Worker ' + worker.process.pid + ' died.');
+				cluster.fork();
+			});
 
-		cluster.on('listening', function (worker, address) {
-			fs.writeFile('./pids/' + worker.process.pid, '', function (err) {});
-			console.log('Worker ' + worker.process.pid + ' is now listening on port ' + address.port + ' in ' + process.env.NODE_ENV + ' mode.');
-			worker.on('message', function (msg) {
-				if(msg.cmd=='restart'){
-					console.log('restart all children instances');
-					Object.keys(cluster.workers).forEach(function(id) {
-						cluster.workers[id].kill();
-					});
-				}
+			cluster.on('listening', function (worker, address) {
+				fs.writeFile('./pids/' + worker.process.pid, '', function (err) {});
+				console.log('Worker ' + worker.process.pid + ' is now listening on port ' + address.port + ' in ' + process.env.NODE_ENV + ' mode.');
+				worker.on('message', function (msg) {
+					if(msg.cmd=='restart'){
+						console.log('restart all children instances');
+						Object.keys(cluster.workers).forEach(function(id) {
+							cluster.workers[id].kill();
+						});
+					}
+				});
 			});
 		});
-	});
-} else {
-	require('./worker')(conf);
+	} else {
+		require('./worker')(conf);
+	}
 }

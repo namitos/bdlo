@@ -1,23 +1,8 @@
 var staticPath = __dirname + '/static';
 var conf = {
 	staticPath: staticPath,
-	editableSchemas: {
-		pages: {
-			name: 'Pages',
-			titleField: 'title'
-		},
-		users: {
-			name: 'Users',
-			titleField: 'username'
-		}/*,
-		 assssd: {
-		 name: 'Test',
-		 titleField: 'asdasd',
-		 path:'/schemas/users.js'
-		 }*/
-	},
-	//routesAdditionalPath: __dirname + '/app/routes',
-	viewsDir: staticPath + '/views',
+	viewsPath: staticPath + '/views',
+	routesPath: __dirname + '/routes',
 	viewCache: false,
 	port: 8000,
 	mongoConnect: 'mongodb://127.0.0.1:27017/bydlocms',
@@ -57,7 +42,22 @@ var conf = {
 				pri: 'files_private'
 			}
 		}
-
+	},
+	editableSchemas: {
+		pages: {
+			name: 'Pages',
+			titleField: 'title'
+		},
+		users: {
+			name: 'Users',
+			titleField: 'username',
+			path: '/static/schemas/users.js'
+		}/*,
+		 assssd: {
+		 name: 'Test',
+		 titleField: 'asdasd',
+		 path:'/schemas/users.js'
+		 }*/
 	}
 };
 

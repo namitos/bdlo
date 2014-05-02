@@ -13,8 +13,9 @@
 	var schemas = <%- JSON.stringify(conf.editableSchemas) %>;
 	var toLoad = {};
 	for (var key in schemas) {
-		toLoad[key] = schemas[key].hasOwnProperty('path') ? schemas[key].path : '/schemas/' + key + '.js';
+		toLoad[key] = schemas[key].hasOwnProperty('path') ? schemas[key].path : '/core/schemas/' + key + '.js';
 	}
+
 
 	load(toLoad, function (result) {
 		for(var key in schemas){

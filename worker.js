@@ -26,7 +26,7 @@ module.exports = function (conf, callback) {
 
 	app.set('env', process.env.hasOwnProperty('NODE_ENV') ? process.env.NODE_ENV : 'production');
 	app.set('port', conf.port);
-	app.set('views', conf.viewsDir);
+	app.set('views', conf.viewsPath);
 	app.set('view cache', conf.viewCache);
 	app.set('view engine', 'ejs');
 	app.set('conf', conf);
@@ -43,18 +43,20 @@ module.exports = function (conf, callback) {
 	app.use(passport.initialize());
 	app.use(passport.session());
 
-	app.use(express.static(conf.staticPath));
+	app.use('/core', express.static(__dirname + '/static'));
+	app.use('/static', express.static(conf.staticPath));
 
 	app.use(function (req, res, next) {
 		var url = req.url.split('/');
+		var adminViewsPath = __dirname + '/static/views/';
 		res.renderPage = function (template, parameters) {
 			if (!parameters) {
 				parameters = {};
 			}
 			parameters.user = req.hasOwnProperty('user') ? req.user : false;
 			parameters.conf = conf;
-			res.render(template, parameters, function (err, html) {
-				res.render(url[1] == 'admin' ? 'admin/page' : 'page', {
+			res.render(url[1] == 'admin' ? adminViewsPath + template : template, parameters, function (err, html) {
+				res.render(url[1] == 'admin' ? adminViewsPath + 'admin/page' : 'page', {
 					html: html,
 					user: req.hasOwnProperty('user') ? req.user : false,
 					conf: conf
@@ -85,9 +87,6 @@ module.exports = function (conf, callback) {
 
 
 	app.io.set('authorization', function (data, accept) {
-		//console.log(data);
-		//console.log(require('passport.socketio').authorize(sessionConfiguration).toString());
-		//logger.info('New client (%s) connecting in common mode.', data.headers['x-real-ip']);
 		require('passport.socketio').authorize(sessionConfiguration)(data, accept);
 	});
 
@@ -134,11 +133,11 @@ module.exports = function (conf, callback) {
 
 	var promises = {
 		db: mongoConnectPromise(conf.mongoConnect),
-		routes: routesPromise('./app/routes'),
+		routes: routesPromise(__dirname + '/app/routes'),
 		projectInfo: vowFs.read('./package.json', 'utf8')
 	};
-	if (conf.hasOwnProperty('routesAdditionalPath')) {
-		promises.routesAdditionalPath = routesPromise(conf.routesAdditionalPath);
+	if (conf.hasOwnProperty('routesPath')) {
+		promises.routesPath = routesPromise(conf.routesPath);
 	}
 	vow.all(promises).then(function (result) {
 
