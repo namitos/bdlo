@@ -1,8 +1,9 @@
 var staticPath = __dirname + '/static';
 var conf = {
-	staticPath: staticPath,
-	viewsPath: staticPath + '/views',
-	routesPath: __dirname + '/routes',
+	projectPath: __dirname,//папка проекта. абсолютный путь. как правило, не надо его менять.
+	staticPath: staticPath,//путь до статики
+	viewsPath: staticPath + '/views',//путь до вьюх
+	routesPath: __dirname + '/routes',//путь дл роутов
 	viewCache: false,
 	port: 8000,
 	mongoConnect: 'mongodb://127.0.0.1:27017/bydlocms',
@@ -31,15 +32,15 @@ var conf = {
 		admin: ['full access', 'ass'],
 		user: ['ass', 'user access']
 	},
-	fileUpload: {
-		mimes: {
+	fileUpload: {//настройки файл аплоада для реста.
+		mimes: {//какие mime типы вообще поддерживаются для загрузки
 			'image/jpeg': 'jpg',
 			'image/png': 'png'
 		},
-		storages: {
-			filesystem: {
-				pub: 'files',
-				pri: 'files_private'
+		storages: {//хранилища
+			filesystem: {//сейчас пока поддерживается только хранилище в файловой системе
+				pub: 'files',//название папки с публичными файлами (настраивается в конкретном поле в схеме как access)
+				pri: 'files_private'//название папки с приватными файлами (настраивается в конкретном поле в схеме как access)
 			}
 		}
 	},
@@ -50,8 +51,8 @@ var conf = {
 		},
 		users: {
 			name: 'Users',
-			titleField: 'username',
-			path: '/static/schemas/users.js'
+			titleField: 'username'//,
+			//path: '/static/schemas/users.js'
 		}/*,
 		 assssd: {
 		 name: 'Test',

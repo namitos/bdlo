@@ -22,20 +22,6 @@
 			schemas[key].schema = result[key];
 		}
 
-		if(schemas.hasOwnProperty('users')){
-			schemas.users.presave = function (user, next) {
-				console.log('presave');
-				if (user.attributes.hasOwnProperty('roles')) {
-					var roles = user.attributes.roles.toString().split(',');
-					user.attributes.roles = [];
-					roles.forEach(function (role) {
-						user.attributes.roles.push(role.trim());
-					});
-				}
-				next(user);
-			};
-		}
-
 		var schemasMenuHtml = "<ul class='nav nav-tabs'>";
 		for (var key in schemas) {
 			schemasMenuHtml += "<li><a href='#s/" + key + "'>" + schemas[key].name + "</a></li>";

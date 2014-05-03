@@ -9,28 +9,24 @@ var usersSchema = {
 			required: true
 		},
 		//@TODO: заменить. потом будет нормальный мультифилд, когда сделаю поддержку у конструктора форм
-		/*roles:{
+		roles:{
 			type:'array',
 			items:{
 				type:'string'
 			}
-		}*/
-		roles:{
-			type: 'string',
-			required: true
 		},
 		avatar: {
-			type: 'any',
+			type: 'any',//для схемы мы указали тип любой, чтобы потом в info его переопределить как file
 			info: {
 				type: 'file',
-				mimes: ['image/jpeg', 'image/png'],
-				storage: {
-					access: 'pub',
-					type: 'filesystem',
-					path: 'avatars'
+				mimes: ['image/jpeg', 'image/png'],//какие mime типы разрешены
+				storage: {//инфа о хранилище
+					access: 'pub',//доступ публичный
+					type: 'filesystem',//в файловой системе
+					path: 'avatars'//папка в этом хранилище
 				}
 			}
-		},
+		}
 	}
 };
 try{
