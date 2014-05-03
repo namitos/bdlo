@@ -13,14 +13,21 @@ module.exports = function (app) {
 	/**
 	 * Пытается достать схему, если не получается, то возвращает false
 	 *
-	 * @param collectionName
+	 * @param name
 	 * @returns {object|boolean}
 	 */
-	function getSchema(collectionName){
+	function getSchema(name) {
+		var schemas = app.get('conf').editableSchemas;
 		var schema = false;
-		try{
-			schema = require(conf.staticPath+'/schemas/'+collectionName);
-		}catch(e){
+		try {
+			if (schemas.hasOwnProperty(name)) {
+				if (schemas[name].hasOwnProperty('path')) {
+					schema = require(app.get('conf').projectPath + schemas[name].path);
+				} else {
+					schema = require('../../../static/schemas/' + name);
+				}
+			}
+		} catch (e) {
 			console.log(e);
 		}
 		return schema;
@@ -31,15 +38,15 @@ module.exports = function (app) {
 	 *
 	 * @param obj
 	 */
-	function autoType(obj){
+	function autoType(obj) {
 		var digitValue;
-		for(var key in obj){
-			if(typeof obj[key]=='string'){
-				digitValue=parseInt(obj[key]);
-				if(obj[key]==digitValue.toString()){
-					obj[key]=digitValue;
+		for (var key in obj) {
+			if (typeof obj[key] == 'string') {
+				digitValue = parseInt(obj[key]);
+				if (obj[key] == digitValue.toString()) {
+					obj[key] = digitValue;
 				}
-			}else{
+			} else {
 				autoType(obj[key]);
 			}
 		}
@@ -51,14 +58,14 @@ module.exports = function (app) {
 	 * @param str
 	 * @returns {boolean}
 	 */
-	function isFile(str){
-		if(!str){
+	function isFile(str) {
+		if (!str) {
 			return false;
 		}
 		var a = str.substr(0, 5);
-		if(a.indexOf('data:')!=-1){
+		if (a.indexOf('data:') != -1) {
 			return true;
-		}else{
+		} else {
 			return false;
 		}
 	}
@@ -70,17 +77,17 @@ module.exports = function (app) {
 	 * @param input само поле
 	 * @returns {vow.Promise}
 	 */
-	function saveFilePromise(schemaPart, input){
-		return new vow.Promise(function(resolve, reject, notify) {
-			var promises=[];
-			for(var i=0; i<input.length; ++i){
-				if(isFile(input[i])){
+	function saveFilePromise(schemaPart, input) {
+		return new vow.Promise(function (resolve, reject, notify) {
+			var promises = [];
+			for (var i = 0; i < input.length; ++i) {
+				if (isFile(input[i])) {
 					var matches = input[i].split(';base64,');
 					var data = matches[1];
 					var mime = matches[0].replace('data:', '');
-					if(_.contains(schemaPart.info.mimes, mime)){
+					if (_.contains(schemaPart.info.mimes, mime)) {
 						var buf = new Buffer(data, 'base64');
-						var fileName = require('crypto').createHash('sha512').update(data+(new Date()).valueOf()).digest("hex")+'.'+conf.fileUpload.mimes[mime];
+						var fileName = require('crypto').createHash('sha512').update(data + (new Date()).valueOf()).digest("hex") + '.' + conf.fileUpload.mimes[mime];
 						var fileDir = [
 							conf.fileUpload.storages.filesystem[schemaPart.info.storage.access],
 							schemaPart.info.storage.path
@@ -90,21 +97,21 @@ module.exports = function (app) {
 						var filePathWrite = [fileDirWrite, fileName].join('/');
 						promises.push(vowFs.write(filePathWrite, buf));
 						input[i] = filePath;
-					}else{
+					} else {
 						input[i] = null;
-						var promise=new vow.Promise(function(resolve, reject, notify){
+						var promise = new vow.Promise(function (resolve, reject, notify) {
 							reject('mime type incorrect');
 						});
 						promises.push(promise);
 					}
-				}else{
-					var promise=new vow.Promise(function(resolve, reject, notify){
+				} else {
+					var promise = new vow.Promise(function (resolve, reject, notify) {
 						resolve('not changed(sended url of file) or not base64 of file');
 					});
 					promises.push(promise);
 				}
 			}
-			vow.allResolved(promises).then(function(result){
+			vow.allResolved(promises).then(function (result) {
 				resolve(result);
 			});
 		});
@@ -150,12 +157,12 @@ module.exports = function (app) {
 	 * @param obj весь объект
 	 * @param callback
 	 */
-	function prepareFiles(schema, obj, callback){
-		if(schema){
-			vow.allResolved(prepareFilesPromises(schema, obj)).then(function(result){
+	function prepareFiles(schema, obj, callback) {
+		if (schema) {
+			vow.allResolved(prepareFilesPromises(schema, obj)).then(function (result) {
 				callback(result);
 			});
-		}else{
+		} else {
 			callback([]);
 		}
 	}
@@ -167,17 +174,12 @@ module.exports = function (app) {
 	 * @param res
 	 * @param next
 	 */
-	function prepareFilesMiddleware(req, res, next){
-		prepareFiles(getSchema(req.params.collection), req.body, function(result){
+	function prepareFilesMiddleware(req, res, next) {
+		prepareFiles(getSchema(req.params.collection), req.body, function (result) {
 			//console.log('prepare files', JSON.stringify(result, ' ', 4));
 			next();
 		});
 	}
-
-
-
-
-
 
 
 	app.get('/admin/rest/:collection', function (request, response) {
@@ -186,7 +188,7 @@ module.exports = function (app) {
 			request.query._id = new mongodb.ObjectID(request.query._id.toString());
 		}
 		var fields = [];
-		if(request.query.hasOwnProperty('fields')){
+		if (request.query.hasOwnProperty('fields')) {
 			fields = request.query.fields;
 			delete request.query.fields;
 		}
