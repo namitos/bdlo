@@ -9,7 +9,7 @@ module.exports = function(app){
 		if(req.hasOwnProperty('user')){
 			res.redirect('/');
 		}else{
-			res.renderPage('userlogin');
+			res.renderPage(app.get('adminViewsPath') + '/userlogin');
 		}
 	});
 	app.post('/login', passport.authenticate('local', { failureRedirect: '/login?err=1' }), function(req, res){

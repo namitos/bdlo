@@ -30,6 +30,7 @@ module.exports = function (conf, callback) {
 	app.set('view cache', conf.viewCache);
 	app.set('view engine', 'ejs');
 	app.set('conf', conf);
+	app.set('adminViewsPath', __dirname + '/static/views');
 
 
 	app.use(express.favicon());
@@ -48,15 +49,15 @@ module.exports = function (conf, callback) {
 
 	app.use(function (req, res, next) {
 		var url = req.url.split('/');
-		var adminViewsPath = __dirname + '/static/views/';
+		//var adminViewsPath = __dirname + '/static/views/';
 		res.renderPage = function (template, parameters) {
 			if (!parameters) {
 				parameters = {};
 			}
 			parameters.user = req.hasOwnProperty('user') ? req.user : false;
 			parameters.conf = conf;
-			res.render(url[1] == 'admin' ? adminViewsPath + template : template, parameters, function (err, html) {
-				res.render(url[1] == 'admin' ? adminViewsPath + 'admin/page' : 'page', {
+			res.render(template, parameters, function (err, html) {
+				res.render(url[1] == 'admin' ? app.get('adminViewsPath') + '/admin/page' : 'page', {
 					html: html,
 					user: req.hasOwnProperty('user') ? req.user : false,
 					conf: conf
