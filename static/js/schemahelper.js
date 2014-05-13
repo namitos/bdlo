@@ -89,7 +89,11 @@
 
 			} else if (fieldSchema.type == 'array') {
 				keyName = parentKeyName ? parentKeyName + '.' + key : key;
-				html += "<div class='multi'>";
+				html += "<fieldset class='multi'>";
+				if(fieldSchema.hasOwnProperty('info') && fieldSchema.info.hasOwnProperty('label')){
+					html +=	"<legend>" + fieldSchema.info.label + "</legend>";
+				}
+
 				var i = 0;
 				if (obj.hasOwnProperty(key) && obj[key].length) {
 					for (i = 0; i < obj[key].length; ++i) {
@@ -102,7 +106,7 @@
 						}
 					}
 				}
-				html += "<button class='btn btn-info btn-multi-add' data-schema='" + JSON.stringify(fieldSchema.items) + "' data-keyname='" + keyName + "' data-i='" + i + "'><span class='glyphicon glyphicon-plus'></span><span class='text'>Add</span></button></div>";
+				html += "<button class='btn btn-info btn-multi-add' data-schema='" + JSON.stringify(fieldSchema.items) + "' data-keyname='" + keyName + "' data-i='" + i + "'><span class='glyphicon glyphicon-plus'></span><span class='text'>Add</span></button></fieldset>";
 
 			} else {
 				keyName = parentKeyName ? parentKeyName + '.' + key : key;
