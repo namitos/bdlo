@@ -46,10 +46,22 @@ body{
 .form-row-view .multi-item fieldset{
 	margin-right:45px;
 }
+.form-row-view fieldset legend{
+	font-weight: 300;
+	font-style: italic;
+	margin:0;
+	padding:0;
+	border:none;
+	font-size: inherit;
+}
 .form-row-view .multi-item .btn-multi-delete{
 	position:absolute;
 	top:0;
 	right:0;
+}
+}
+.form-row-view label{
+	font-weight: 600;
 }
 .form-row-view fieldset .form-group:last-child{
 	margin-bottom:0;
