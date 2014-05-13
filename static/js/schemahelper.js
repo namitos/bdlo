@@ -1,25 +1,5 @@
 /** Помощь по схемам и генератор форм из них *********************************************/
 (function(context){
-	function tableRow(schema, obj, parentKeyName) {
-		var html = '';
-		if (!obj) {
-			var obj = {};
-		}
-		for (var key in schema.properties) {
-			var field = schema.properties[key];
-			if (field.hasOwnProperty('properties')) {
-				html += tableRow(field, obj.hasOwnProperty(key) ? obj[key] : {}, key);
-			} else {
-				var value = obj.hasOwnProperty(key) ? obj[key] : '';
-				var attributes = {
-					value: value,
-					name: parentKeyName ? parentKeyName + '.' + key : key
-				};
-				html += "<td data-name='"+attributes.name+"'>" + attributes.value + "</td>";
-			}
-		}
-		return html;
-	}
 	function formPartPrimitive(fieldSchema, value, name) {
 		var inputTypes = {
 			string: 'text',
@@ -129,6 +109,9 @@
 				html += formPartPrimitive(fieldSchema, obj.hasOwnProperty(key) ? obj[key] : '', keyName);
 			}
 		}
+		if(schema.hasOwnProperty('info') && schema.info.hasOwnProperty('label')){
+			html +=	"<legend>" + schema.info.label + "</legend>";
+		}
 		return "<fieldset>" + html + "</fieldset>";
 	}
 	function form(schema, obj, formAttributes){
@@ -209,9 +192,6 @@
 
 	context.schemaHelper = {
 		generate: generate,
-		form: form,
-		formPart: function(){
-			return "this method is deprecated. use method 'form'!";
-		}
+		form: form
 	};
 })(this);
