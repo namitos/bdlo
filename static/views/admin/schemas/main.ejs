@@ -106,10 +106,12 @@
 				's/:schemaName/:id': function (schemaName, id) {
 					$('.form-schema-new').html("<a class='btn btn-info' href='#s/" + schemaName + "/new'><span class='glyphicon glyphicon-plus'></span> New</a>");
 					if (views.hasOwnProperty(schemaName)) {
+						views[schemaName].fetchCollection();
 					} else {
 						views[schemaName] = this.listView(schemaName);
 					}
 					var view = views[schemaName];
+
 					var getObj = function (id, callback) {
 						var obj;
 						if (id == 'new') {
