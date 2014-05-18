@@ -77,6 +77,7 @@
 				listHtml += "</ul>";
 				if (this.collection.length > 0) {
 					this.$el.html(listHtml);
+					$('.list-group', this.$el).height($(window).height() - 150);
 				} else {
 					this.$el.html("<div class='alert alert-info'>No documents</div>");
 				}
