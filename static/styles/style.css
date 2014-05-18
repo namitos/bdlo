@@ -1,99 +1,116 @@
 html,
-body{
-	margin:0;
-	padding:0;
+body {
+	margin: 0;
+	padding: 0;
 }
 
-body{
-	background:#eee;
-	padding:65px 0 0 0;
+body {
+	background: #eee;
+	padding: 65px 0 0 0;
 }
 
-*{
+* {
 	font-family: 'Open Sans', sans-serif;
 }
 
-:focus{
-	outline:none;
+:focus {
+	outline: none;
 }
 
-
-.container{
-	position:relative;
+.container {
+	position: relative;
 }
-
 
 .rows-multiple,
-.rows-multiple .row{
-	margin-bottom:10px;
+.rows-multiple .row {
+	margin-bottom: 10px;
 }
 
-
-
-
-.form-row-view{
+.form-row-view {
 }
+
 .form-row-view fieldset,
-.form-row-view .multi{
-	padding:5px 5px 5px 5px;
-	border-radius:4px;
-	background:rgba(0,0,0,0.05);
-	margin-bottom:5px;
+.form-row-view .multi {
+	padding: 5px 5px 5px 5px;
+	border-radius: 4px;
+	background: rgba(0, 0, 0, 0.05);
+	margin-bottom: 5px;
 }
-.form-row-view .multi-item{
-	position:relative;
+
+.form-row-view .multi-item {
+	position: relative;
 }
-.form-row-view .multi-item fieldset{
-	margin-right:45px;
+
+.form-row-view .multi-item fieldset {
+	margin-right: 45px;
 }
-.form-row-view fieldset legend{
+
+.form-row-view fieldset legend {
 	font-weight: 300;
 	font-style: italic;
-	margin:0;
-	padding:0;
-	border:none;
+	margin: 0;
+	padding: 0;
+	border: none;
 	font-size: inherit;
 }
-.form-row-view .multi-item .btn-multi-delete{
-	position:absolute;
-	top:0;
-	right:0;
+
+.form-row-view .multi-item .btn-multi-delete {
+	position: absolute;
+	top: 0;
+	right: 0;
 }
+
 }
-.form-row-view label{
+.form-row-view label {
 	font-weight: 600;
 }
-.form-row-view fieldset .form-group:last-child{
-	margin-bottom:0;
+
+.form-row-view fieldset .form-group:last-child {
+	margin-bottom: 0;
 }
-.form-row-view .form-group{
-	margin-bottom:5px;
+
+.form-row-view .form-group {
+	margin-bottom: 5px;
 }
-.form-row-view .btn-group{
-	margin-top:5px;
+
+.form-row-view .btn-group {
+	margin-top: 5px;
 }
-.form-row-view .file-list{
-	margin:0;
-	padding:0;
+
+.form-row-view .file-list {
+	margin: 0;
+	padding: 0;
 }
-.form-row-view .file-list li{
-	display:inline-block;
-	margin:0 10px 0 0;
-	padding:0;
+
+.form-row-view .file-list li {
+	display: inline-block;
+	margin: 0 10px 0 0;
+	padding: 0;
 }
-.form-row-view .file-list li a{
-	display:inline-block;
-	vertical-align:middle;
+
+.form-row-view .file-list li a {
+	display: inline-block;
+	vertical-align: middle;
 }
 
 .form-row-view .btn-multi-add .text,
 .form-row-view .btn-multi-delete .text,
-.form-row-view .file-list li a .text{
-	display:none;
+.form-row-view .file-list li a .text {
+	display: none;
 }
 
-
-
-.list-schemas .nav{
+.list-schemas .nav {
 	margin-bottom: 15px;
+}
+
+.list-group {
+	max-height: 589px;
+	width: 263px;
+	overflow-y: auto;
+	position: fixed;
+}
+
+.list-group li {
+	padding: 5px;
+	font-size: 12px;
 }
