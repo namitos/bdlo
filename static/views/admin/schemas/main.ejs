@@ -18,16 +18,21 @@
 
 
 	load(toLoad, function (result) {
-		for(var key in schemas){
+		for (var key in schemas) {
 			schemas[key].schema = result[key];
 		}
 
 		var schemasMenuHtml = "<ul class='nav nav-tabs'>";
 		for (var key in schemas) {
-			schemasMenuHtml += "<li><a href='#s/" + key + "'>" + schemas[key].name + "</a></li>";
+			schemasMenuHtml += "<li><a href='#s/" + key + "/new'>" + schemas[key].name + "</a></li>";
 		}
 		schemasMenuHtml += "</ul>";
-		$('.list-schemas').html(schemasMenuHtml);
+		var $listSchemas = $('.list-schemas');
+		$listSchemas.html(schemasMenuHtml);
+		$listSchemas.on('click', 'li', function () {
+			$('li', $listSchemas).removeClass('active');
+			$(this).addClass('active');
+		});
 
 
 		var ObjModel = Backbone.Model.extend({
@@ -70,7 +75,12 @@
 					}
 				});
 				listHtml += "</ul>";
-				this.$el.html(listHtml);
+				if (this.collection.length > 0) {
+					this.$el.html(listHtml);
+				} else {
+					this.$el.html("<div class='alert alert-info'>No documents</div>");
+				}
+
 			}
 		});
 
@@ -86,15 +96,15 @@
 					}
 				});
 				list.fetchCollection();
-				$('.form-schema-new').html("<a class='btn btn-info' href='#s/" + schemaName + "/new'><span class='glyphicon glyphicon-plus'></span> New</a>");
 				return list;
 			},
 			routes: {
 				's/:schemaName': function (schemaName) {
-					views[schemaName] = this.listView(schemaName);
-
+					//views[schemaName] = this.listView(schemaName);
+					this.navigate("s/" + schemaName + "/new", {trigger: true});
 				},
 				's/:schemaName/:id': function (schemaName, id) {
+					$('.form-schema-new').html("<a class='btn btn-info' href='#s/" + schemaName + "/new'><span class='glyphicon glyphicon-plus'></span> New</a>");
 					if (views.hasOwnProperty(schemaName)) {
 					} else {
 						views[schemaName] = this.listView(schemaName);
@@ -150,13 +160,12 @@
 						$('.form-schema').html(html);
 						$('.form-schema input[type=dateUnixtime]').hide().after("<div></div>").next().datepicker({
 							dateFormat: $.datepicker.TIMESTAMP,
-							onSelect: function(val){
+							onSelect: function (val) {
 								$(this).prev().val(val).change();
 							}
 						});
 					});
 
-					console.log(schemaName, id);
 				}
 			}
 		});
