@@ -172,6 +172,18 @@
 									},
 									saveSuccess: function (obj) {
 										window.location.hash = 's/' + schemaName + '/' + obj.id;
+									},
+									afterRender: function (view){
+										view.$el.find('input[type=dateUnixtime]').each(function(){
+											var $input = $(this);
+											$input.hide().after("<div></div>").next().datepicker({
+												dateFormat: $.datepicker.TIMESTAMP,
+												onSelect: function (val) {
+													$(this).prev().val(val).change();
+												}
+											});
+											$input.next().datepicker('setDate', new Date(parseInt($input.val())));
+										});
 									}
 								};
 								if (schemas[schemaName].hasOwnProperty('presave')) {
@@ -186,12 +198,6 @@
 								html = "<div class='alert alert-danger'>Object is not exists</div>";
 							}
 							$('.form-schema').html(html);
-							$('.form-schema input[type=dateUnixtime]').hide().after("<div></div>").next().datepicker({
-								dateFormat: $.datepicker.TIMESTAMP,
-								onSelect: function (val) {
-									$(this).prev().val(val).change();
-								}
-							});
 						});
 
 					});

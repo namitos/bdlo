@@ -13,6 +13,10 @@ var FormRowView = Backbone.View.extend({
 			data.additional = this.options.additional;
 		}
 		this.$el.html(this.options.template(data));
+
+		if (this.options.hasOwnProperty('afterRender')) {
+			this.options.afterRender(this);
+		}
 		return this;
 	},
 	events: {
@@ -64,7 +68,6 @@ var FormRowView = Backbone.View.extend({
 			return new vow.Promise(function (resolve, reject, notify) {
 				var reader = new FileReader();
 				reader.onload = function (a) {
-					console.log(a.target.result);
 					resolve(a.target.result);
 				};
 				reader.readAsDataURL(file);
@@ -106,7 +109,6 @@ var FormRowView = Backbone.View.extend({
 	saveModel: function () {
 		var view = this;
 		var save = function (view) {
-			console.log(view.model.attributes);
 			view.model.save({}, {
 				success: function (model) {
 					if (view.options.hasOwnProperty('saveSuccess')) {
