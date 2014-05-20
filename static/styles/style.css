@@ -104,7 +104,6 @@ body {
 }
 
 .list-group {
-	max-height: 589px;
 	width: 263px;
 	overflow-y: auto;
 	position: fixed;

@@ -1,0 +1,75 @@
+<div id='menu-admin'>
+	<button class='trigger'>Admin menu</button>
+	<ul class='nav'>
+		<li><a href='/admin/schemas'>Simple materials</a></li>
+		<li><a href='/logout'><span class='glyphicon glyphicon-off'></span> Logout</a></li>
+	</ul>
+</div>
+<script>
+	$(document).on('click', '#menu-admin .trigger', function () {
+		var $nav = $(this).next();
+		if ($nav.hasClass('active')) {
+			$nav.removeClass('active');
+		} else {
+			$nav.addClass('active');
+		}
+	});
+</script>
+<style>
+	#menu-admin {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 1000;
+	}
+
+	#menu-admin .nav{
+		display:none;
+	}
+	#menu-admin .nav.active{
+		display:block;
+	}
+
+	#menu-admin .trigger {
+		border: none;
+		height: 45px;
+		overflow: hidden;
+		position: relative;
+		cursor: pointer;
+		outline: none;
+		color:#fff;
+		padding:0 10px 0 50px;
+
+	}
+
+	#menu-admin .trigger:hover {
+
+	}
+
+	#menu-admin .trigger:after {
+		content: '';
+		position: absolute;
+		width: 30px;
+		height: 5px;
+		background: #fff;
+		top: 10px;
+		left: 10px;
+		box-shadow: 0 10px 0 #fff,
+		0 20px 0 #fff;
+	}
+
+	#menu-admin .trigger,
+	#menu-admin .nav {
+		background: #00b4ae;
+	}
+
+	#menu-admin .nav a {
+		color: #fff;
+	}
+
+	#menu-admin .trigger:hover,
+	#menu-admin .nav a:hover {
+		background: #08cbc4;
+	}
+
+</style>
