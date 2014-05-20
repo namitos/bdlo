@@ -25,6 +25,9 @@
 			if(fieldSchema.info.hasOwnProperty('pattern')){
 				attributes.pattern=fieldSchema.info.pattern;
 			}
+			if(fieldSchema.info.hasOwnProperty('multiple')){
+				attributes.multiple=fieldSchema.info.multiple;
+			}
 		}
 		if(fieldSchema.hasOwnProperty('minimum')){
 			attributes.min = fieldSchema.minimum;
