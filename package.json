@@ -8,16 +8,15 @@
 		"vow": "0.4.x",
 		"vow-fs": "0.3.x",
 		"lodash": "2.x",
+		"lodash-express": "0.0.x",
 		"mongodb": "1.x",
-		"ejs": "0.8.x",
 		"passport": "0.1.x",
 		"passport-local": "0.1.x",
 		"passport.socketio": "2.2.x",
 		"revalidator": "0.1.x",
 		"base64": "2.1.x",
 		"connect-redis": "1.4.x",
-		"drev": "0.1.x",
-		"lodash-express": "0.0.x"
+		"drev": "0.1.x"
 	},
 	"repository": {
 		"type": "git",
