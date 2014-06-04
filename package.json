@@ -1,6 +1,6 @@
 {
 	"name": "bydlocms",
-	"version": "0.1.9",
+	"version": "0.1.10",
 	"private": false,
 	"dependencies": {
 		"express.io": "1.1.x",
@@ -16,7 +16,8 @@
 		"revalidator": "0.1.x",
 		"base64": "2.1.x",
 		"connect-redis": "1.4.x",
-		"drev": "0.1.x"
+		"drev": "0.1.x",
+		"lodash-express": "0.0.x"
 	},
 	"repository": {
 		"type": "git",
