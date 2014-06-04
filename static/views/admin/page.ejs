@@ -33,7 +33,7 @@
 			<a href='/' class='navbar-brand'>Bydlo cms</a>
 
 			<ul class="nav navbar-nav navbar-right">
-				<%- user?"<li><a href='/logout'>Logout</a></li>":"<li><a href='/login'>Login</a></li>" %>
+				<%= user?"<li><a href='/logout'>Logout</a></li>":"<li><a href='/login'>Login</a></li>" %>
 			</ul>
 		</div>
 	</nav>
@@ -42,7 +42,7 @@
 		<div class='row'>
 			<div class='col-md-12'></div>
 		</div>
-		<%- html %>
+		<%= html %>
 	</div>
 	
 </body>

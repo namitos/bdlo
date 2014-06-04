@@ -10,7 +10,7 @@
 	</div>
 </div>
 <script>
-var schemas = <%- JSON.stringify(conf.editableSchemas) %>;
+var schemas = <%= JSON.stringify(conf.editableSchemas) %>;
 var toLoad = {};
 for (var key in schemas) {
 	toLoad[key] = schemas[key].hasOwnProperty('path') ? schemas[key].path : '/core/schemas/' + key + '.js';

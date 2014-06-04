@@ -28,7 +28,7 @@ module.exports = function (conf, callback) {
 	app.set('port', conf.port);
 	app.set('views', conf.viewsPath);
 	app.set('view cache', conf.viewCache);
-	require('lodash-express')(app, 'ejs');
+	app.engine('ejs', require('consolidate').lodash);
 	app.set('view engine', 'ejs');
 	app.set('conf', conf);
 	app.set('adminViewsPath', __dirname + '/static/views');
