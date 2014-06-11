@@ -1,7 +1,12 @@
 module.exports = function (conf, callback) {
-	var express = require('express.io');
+	var express = require('express');
 	var app = express();
-	var RedisStore = require('connect-redis')(express);
+	var server = require('http').createServer(app);
+
+	app.io = require('socket.io')(server);
+
+	var session = require('express-session');
+	var RedisStore = require('connect-redis')(session);
 	var passport = require('passport');
 	var LocalStrategy = require('passport-local').Strategy;
 	var mongodb = require('mongodb');
@@ -11,7 +16,6 @@ module.exports = function (conf, callback) {
 	var drev = require('drev');
 
 	var sessionConfiguration = {
-		cookieParser: express.cookieParser,
 		store: new RedisStore({ host: conf.session.redis.host, port: conf.session.redis.port, ttl: 604800 }),
 		secret: conf.session.secret,
 		key: 'session',
@@ -24,24 +28,18 @@ module.exports = function (conf, callback) {
 		}
 	};
 
+	app.set('conf', conf);
 	app.set('env', process.env.hasOwnProperty('NODE_ENV') ? process.env.NODE_ENV : 'production');
-	app.set('port', conf.port);
 	app.set('views', conf.viewsPath);
 	app.set('view cache', conf.viewCache);
 	app.engine('ejs', require('consolidate').lodash);
 	app.set('view engine', 'ejs');
-	app.set('conf', conf);
 	app.set('adminViewsPath', __dirname + '/static/views');
 
 
-	app.use(express.favicon());
-
-	app.use(express.bodyParser({ limit: '500mb'}));
-//app.use(express.json({limit: '500mb'}));
-//app.use(express.urlencoded({limit: '500mb'}));
-
-	app.use(express.cookieParser());
-	app.use(express.session(sessionConfiguration));
+	app.use(require('body-parser')({ limit: '500mb'}));
+	app.use(require('cookie-parser')());
+	app.use(session(sessionConfiguration));
 	app.use(passport.initialize());
 	app.use(passport.session());
 
@@ -50,7 +48,6 @@ module.exports = function (conf, callback) {
 
 	app.use(function (req, res, next) {
 		var url = req.url.split('/');
-		//var adminViewsPath = __dirname + '/static/views/';
 		res.renderPage = function (template, parameters) {
 			if (!parameters) {
 				parameters = {};
@@ -78,29 +75,6 @@ module.exports = function (conf, callback) {
 		} else {
 			next();
 		}
-	});
-
-	app.http().io();
-
-	app.io.set('heartbeat timeout', 50);
-	app.io.set('heartbeat interval', 20);
-	app.io.set('browser client minification', true);
-	app.io.set('store', new express.io.RedisStore(conf.ioStore));
-
-
-	app.io.set('authorization', function (data, accept) {
-		require('passport.socketio').authorize(sessionConfiguration)(data, accept);
-	});
-
-	/*app.io.on("connection", function(socket){
-	 console.log(socket.handshake.user);
-	 });*/
-
-	require('express.io-middleware')(app);
-	app.io.use(function (req, next) {
-		console.log(req.handshake.user);
-		console.log('middleware!!!!!!!!!!!!!');
-		next();
 	});
 
 	function mongoConnectPromise(connectionString) {
@@ -142,13 +116,12 @@ module.exports = function (conf, callback) {
 		promises.routesPath = routesPromise(conf.routesPath);
 	}
 	vow.all(promises).then(function (result) {
-
 		var db = result.db;
 		app.set('db', db);
 		var User = require('./app/models/user');
 		passport.use(new LocalStrategy(
 			function (username, password, done) {
-				console.log('trying', username, password);
+				//console.log('trying', username, password);
 				password = require('crypto').createHash('sha512').update(password).digest("hex");
 				db.collection('users').find({username: username, password: password}).toArray(function (err, result) {
 					if (err) {
@@ -166,11 +139,11 @@ module.exports = function (conf, callback) {
 			}
 		));
 		passport.serializeUser(function (user, done) {
-			console.log('user serialize', user);
+			//console.log('user serialize', user);
 			done(null, user._id.toString());
 		});
 		passport.deserializeUser(function (id, done) {
-			console.log('user deserialize', id);
+			//console.log('user deserialize', id);
 			db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function (err, result) {
 				if (err) {
 					done(err, null);
@@ -186,11 +159,10 @@ module.exports = function (conf, callback) {
 		});
 
 		app.set('projectInfo', JSON.parse(result.projectInfo));
-		app.set('conf', conf);
 
 		drev.start(conf.session.redis.host, conf.session.redis.port);
 
-		app.listen(app.get('port'));
+		app.listen(conf.port);
 		if (callback) {
 			callback(result);
 		}

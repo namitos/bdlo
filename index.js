@@ -1,36 +1,30 @@
 var os = require('os');
 var fs = require('fs');
 var cluster = require('cluster');
-var exec = require("child_process").exec;
+var exec = require('child_process').exec;
 var vow = require('vow');
 
 function clearPids(callback) {
 	var killPromise = function (pid) {
-		return new vow.Promise(function(resolve, reject, notify) {
+		return new vow.Promise(function (resolve, reject, notify) {
 			exec('kill ' + pid, function (error, stdout, stderr) {
 				console.log('kill ' + pid, error, stdout, stderr);
 				fs.unlink('./pids/' + pid, function (err) {
 					console.log('delete ' + pid);
 					resolve();
-					if (err) {
-						console.log(err);
-					}
 				});
 			});
 		});
 	};
 	fs.readdir('./pids', function (err, files) {
 		if (err) {
-			console.log(err);
-			fs.mkdir('pids', function(){
+			fs.mkdir('pids', function () {
 				callback();
 			});
-		}else{
+		} else {
 			var promises = [];
 			files.forEach(function (file) {
-				if(file!='donotdelete'){
-					promises.push(killPromise(file));
-				}
+				promises.push(killPromise(file));
 			});
 			vow.all(promises).then(function () {
 				callback();
@@ -40,27 +34,44 @@ function clearPids(callback) {
 
 }
 
-module.exports = function(conf){
+module.exports = function (conf) {
 	if (cluster.isMaster) {
+		var ports = {};
+		var maxPort = conf.port;
+
 		clearPids(function () {
-			fs.writeFile('./pids/' + process.pid, 'master', function (err) {});
+			fs.writeFile('./pids/' + process.pid, 'master', function (err) {
+			});
 			var CPUsCount = os.cpus().length;
 			for (var i = 0; i < CPUsCount; ++i) {
-				cluster.fork();
+				var newWorker = cluster.fork({
+					port: maxPort
+				});
+				ports[newWorker.process.pid] = maxPort;
+				++maxPort;
 			}
-			cluster.on('exit', function (worker) {
-				fs.unlink('./pids/' + worker.process.pid, function (err) {});
-				console.log('Worker ' + worker.process.pid + ' died.');
-				cluster.fork();
+			console.log('pids:ports', ports);
+			cluster.on('exit', function (worker, address) {
+				fs.unlink('./pids/' + worker.process.pid, function (err) {
+				});
+				var port = ports[worker.process.pid];
+				delete ports[worker.process.pid];
+				console.log('Worker ' + worker.process.pid + ' died.', address);
+				var newWorker = cluster.fork({
+					port: port
+				});
+				ports[newWorker.process.pid] = port;
+				console.log('pids:ports', ports);
 			});
 
 			cluster.on('listening', function (worker, address) {
-				fs.writeFile('./pids/' + worker.process.pid, '', function (err) {});
+				fs.writeFile('./pids/' + worker.process.pid, '', function (err) {
+				});
 				console.log('Worker ' + worker.process.pid + ' is now listening on port ' + address.port + ' in ' + process.env.NODE_ENV + ' mode.');
 				worker.on('message', function (msg) {
-					if(msg.cmd=='restart'){
+					if (msg.cmd == 'restart') {
 						console.log('restart all children instances');
-						Object.keys(cluster.workers).forEach(function(id) {
+						Object.keys(cluster.workers).forEach(function (id) {
 							cluster.workers[id].kill();
 						});
 					}
