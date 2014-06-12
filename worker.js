@@ -162,10 +162,8 @@ module.exports = function (conf, callback) {
 
 		drev.start(conf.session.redis.host, conf.session.redis.port);
 
-		app.listen(conf.port);
-		if (callback) {
-			callback(result);
-		}
+		server.listen(process.env.port, function () {
+		});
 	});
 };
 
