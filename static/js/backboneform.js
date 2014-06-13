@@ -28,7 +28,7 @@ var FormRowView = Backbone.View.extend({
 		'click .delete': function () {//обработка удаления модели
 			if (
 				(this.options.deleteConfirm == false) ||
-					(this.options.deleteConfirm == true && confirm('Are you sure?'))
+				(this.options.deleteConfirm == true && confirm('Are you sure?'))
 				) {
 				this.$el.remove();
 				this.model.destroy();
@@ -83,7 +83,7 @@ var FormRowView = Backbone.View.extend({
 				callback(result);
 			});
 		};
-		var changeField = function (input, callback) {//@TODO возможно получится упростить получение самого верхнего объекта как тут 'click .btn-multi-delete'
+		var changeField = function (input, callback) {
 			var $input = jQuery(input);
 			var keys = _.compact($input.attr('name').split(/[\.\[\]]/));
 			keys.forEach(function (key, i) {
@@ -109,6 +109,9 @@ var FormRowView = Backbone.View.extend({
 	saveModel: function () {
 		var view = this;
 		var save = function (view) {
+			var data = view.model.toJSON();
+			view._compact(data);
+			view.model.set(data);
 			view.model.save({}, {
 				success: function (model) {
 					if (view.options.hasOwnProperty('saveSuccess')) {
@@ -165,5 +168,14 @@ var FormRowView = Backbone.View.extend({
 			headObj = headObj[fieldPart];
 		});
 		return obj;
+	},
+	_compact: function (obj) {
+		for (var key in obj) {
+			if (obj[key] instanceof Array) {
+				obj[key] = _.compact(obj[key]);
+			} else if (obj[key] instanceof Object) {
+				this._compact(obj[key]);
+			}
+		}
 	}
 });
