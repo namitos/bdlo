@@ -99,7 +99,7 @@
 				if (fieldSchema.hasOwnProperty('info') && fieldSchema.info.hasOwnProperty('label')) {
 					html += "<legend>" + fieldSchema.info.label + "</legend>";
 				}
-
+				html += "<div class='items'>";
 				var i = 0;
 				if (obj.hasOwnProperty(key) && obj[key].length) {
 					for (i = 0; i < obj[key].length; ++i) {
@@ -107,12 +107,11 @@
 							html += formPartMulti(fieldSchema.items, obj[key][i], keyName, i);
 						} else {
 							html += formPartMultiPrimitive(fieldSchema.items, obj[key][i], keyName, i);
-							//html += 'массивы из примитивов пока не поддерживаются';
-							//html += formPartPrimitive(fieldSchema.items, obj.hasOwnProperty(key) ? obj[key] : '', keyName);
 						}
 					}
 				}
-				html += "<button class='btn btn-info btn-multi-add' data-schema='" + JSON.stringify(fieldSchema.items) + "' data-keyname='" + keyName + "' data-i='" + i + "'><span class='glyphicon glyphicon-plus'></span><span class='text'>Add</span></button></fieldset>";
+				html += "</div>";
+				html += "<div class='btn-group'><button class='btn btn-info btn-multi-add' data-schema='" + JSON.stringify(fieldSchema.items) + "' data-keyname='" + keyName + "' data-i='" + i + "'><span class='glyphicon glyphicon-plus'></span><span class='text'>Add</span></button></div></fieldset>";
 
 			} else {
 				keyName = parentKeyName ? parentKeyName + '.' + key : key;
@@ -181,10 +180,11 @@
 		var schema = $el.data('schema');
 		var keyName = $el.data('keyname');
 		var i = $el.data('i');
+		var $items = $el.closest('.multi').find('.items');
 		if (schema.type != 'object' && schema.type != 'array') {
-			$el.before(formPartMultiPrimitive(schema, '', keyName, i));
+			$items.append(formPartMultiPrimitive(schema, '', keyName, i));
 		} else {
-			$el.before(formPartMulti(schema, {}, keyName, i));
+			$items.append(formPartMulti(schema, {}, keyName, i));
 		}
 
 		$el.data('i', ++i);
