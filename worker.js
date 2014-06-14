@@ -29,13 +29,13 @@ module.exports = function (conf, callback) {
 	};
 
 	app.set('conf', conf);
+	app.set('corePath', __dirname);
 	app.set('env', process.env.hasOwnProperty('NODE_ENV') ? process.env.NODE_ENV : 'production');
 	app.set('views', conf.viewsPath);
 	app.set('view cache', conf.viewCache);
 	app.engine('ejs', require('consolidate').lodash);
 	app.set('view engine', 'ejs');
 	app.set('adminViewsPath', __dirname + '/static/views');
-
 
 	app.use(require('body-parser')({ limit: '500mb'}));
 	app.use(require('cookie-parser')());
@@ -67,8 +67,8 @@ module.exports = function (conf, callback) {
 
 	var User = require('./app/models/user');
 	app.use(function (req, res, next) {
-		if (!req.hasOwnProperty('user')){
-			req.user = new User({roles:['anon']}, conf);
+		if (!req.hasOwnProperty('user')) {
+			req.user = new User({roles: ['anon']}, conf);
 		}
 		var url = req.url.split('/');
 		if (url[1] == 'admin') {
