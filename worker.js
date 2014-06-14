@@ -64,10 +64,15 @@ module.exports = function (conf, callback) {
 		};
 		next();
 	});
+
+	var User = require('./app/models/user');
 	app.use(function (req, res, next) {
+		if (!req.hasOwnProperty('user')){
+			req.user = new User({roles:['anon']}, conf);
+		}
 		var url = req.url.split('/');
 		if (url[1] == 'admin') {
-			if (req.hasOwnProperty('user') && req.user.permission('full access')) {
+			if (req.user.permission('full access')) {
 				next();
 			} else {
 				res.send(403, 'access denied');
@@ -118,7 +123,6 @@ module.exports = function (conf, callback) {
 	vow.all(promises).then(function (result) {
 		var db = result.db;
 		app.set('db', db);
-		var User = require('./app/models/user');
 		passport.use(new LocalStrategy(
 			function (username, password, done) {
 				//console.log('trying', username, password);
