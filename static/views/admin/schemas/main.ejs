@@ -67,7 +67,7 @@ load(toLoad, function (result) {
 			var ObjCollection = Backbone.Collection.extend({
 				model: ObjModel,
 				url: function () {
-					return '/admin/rest/' + _this.options.schemaName;
+					return '/rest/' + _this.options.schemaName;
 				}
 			});
 			this.collection = new ObjCollection();
@@ -129,7 +129,7 @@ load(toLoad, function (result) {
 						if (schemaPart.type == 'any' && schemaPart.hasOwnProperty('info') && schemaPart.info.hasOwnProperty('type') && schemaPart.info.type == 'select' && schemaPart.info.hasOwnProperty('schema')) {
 							toLoad.push({
 								obj: schemaPart,
-								url: '/admin/rest/' + schemaPart.info.schema
+								url: '/rest/' + schemaPart.info.schema
 							});
 						}
 					});

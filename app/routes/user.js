@@ -7,7 +7,7 @@ module.exports = function (app) {
 	});
 
 	app.get('/login', function (req, res) {
-		if (req.hasOwnProperty('user')) {
+		if (req.user.hasOwnProperty('_id')) {
 			res.redirect('/');
 		} else {
 			res.renderPage(app.get('adminViewsPath') + '/userlogin');

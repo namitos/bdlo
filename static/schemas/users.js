@@ -1,18 +1,17 @@
 var usersSchema = {
 	properties: {
-		username:{
+		username: {
 			type: 'string',
 			required: true
 		},
-		password:{
+		password: {
 			type: 'string',
 			required: true
 		},
-		//@TODO: заменить. потом будет нормальный мультифилд, когда сделаю поддержку у конструктора форм
-		roles:{
-			type:'array',
-			items:{
-				type:'string'
+		roles: {
+			type: 'array',
+			items: {
+				type: 'string'
 			}
 		},
 		avatar: {
@@ -27,8 +26,12 @@ var usersSchema = {
 				}
 			}
 		}
+	},
+	info: {
+		ownerField: '_id'
 	}
 };
-try{
+try {
 	module.exports = usersSchema;
-}catch(e){}
+} catch (e) {
+}

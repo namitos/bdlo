@@ -3,7 +3,6 @@
 		load({
 			adminMenu: '/core/views/adminmenu.ejs'
 		}, function (result) {
-			console.log(result);
 			$(function(){
 				$('body').append(result.adminMenu());
 			});

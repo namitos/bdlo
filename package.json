@@ -1,6 +1,6 @@
 {
 	"name": "bydlocms",
-	"version": "0.2.0",
+	"version": "0.2.3",
 	"private": false,
 	"dependencies": {
 		"express": "4.x.x",
