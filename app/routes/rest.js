@@ -39,18 +39,16 @@ module.exports = function (app) {
 	 * @param successCb {Function}
 	 * @returns {boolean}
 	 */
-	function getSchemaOwnerField(name, successCb){
+	function getSchemaOwnerField(name, successCb) {
 		var schema = getSchema(name);
-		if(schema){
-			if(schema.hasOwnProperty('info') && schema.info.hasOwnProperty('ownerField')){
+		if (schema) {
+			if (schema.hasOwnProperty('info') && schema.info.hasOwnProperty('ownerField')) {
 				successCb(schema.info.ownerField);
 				return true;
 			}
-		}else{
-			return false;
 		}
+		return false;
 	}
-
 
 	/**
 	 * рекурсивная функция, которая приводит аттрибуты объекта автоматически к нужному типу. на сей момент нужна только для поиска и приводит только к числу, чтобы искало и по чистам тоже
@@ -70,7 +68,6 @@ module.exports = function (app) {
 			}
 		}
 	}
-
 
 	/**
 	 * проверка на то, файл ли к нам пришёл в строке (она должна быть base64 файла, а если нет, то это не файл)
@@ -203,15 +200,6 @@ module.exports = function (app) {
 
 
 
-
-
-
-
-
-
-
-
-
 	app.get('/rest/:collection', function (req, res) {
 		var collectionName = req.params.collection;
 		if(
@@ -329,6 +317,5 @@ module.exports = function (app) {
 			});
 		}
 	});
-
 
 };
