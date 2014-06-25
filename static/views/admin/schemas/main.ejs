@@ -21,7 +21,7 @@ function resizeList($list) {
 	if ($(window).width() > 767) {
 		if ($(window).width() > 992) {
 			$list.height($(window).height() - 150);
-		}else{
+		} else {
 			$list.height($(window).height() - 200);
 		}
 	} else {
@@ -55,6 +55,9 @@ load(toLoad, function (result) {
 		fetchCollection: function () {
 			var fieldsToFetch = {};
 			fieldsToFetch[schemas[this.options.schemaName].titleField] = true;
+			if (this.options.schemaName == 'pages') {
+				fieldsToFetch['parent'] = true;
+			}
 			this.collection.fetch({
 				data: {
 					fields: fieldsToFetch
@@ -68,6 +71,22 @@ load(toLoad, function (result) {
 				model: ObjModel,
 				url: function () {
 					return '/rest/' + _this.options.schemaName;
+				},
+				toJSONTree: function () {
+					var data = this.toJSON();
+					data.forEach(function (el, i) {
+						if (el.hasOwnProperty('parent') && el.parent != '') {
+							var parent = _.find(data, {
+								_id: el.parent
+							});
+							if (!parent.hasOwnProperty('children')) {
+								parent.children = [];
+							}
+							parent.children.push(el);
+							delete data[i];
+						}
+					});
+					return _.compact(data);
 				}
 			});
 			this.collection = new ObjCollection();
@@ -80,16 +99,27 @@ load(toLoad, function (result) {
 		},
 		render: function () {
 			var schemaName = this.options.schemaName;
-			var listHtml = "<ul class='list-group'>";
-			this.collection.toJSON().forEach(function (obj) {
-				if (obj.hasOwnProperty('_id')) {
-					listHtml += "<li class='list-group-item'><a href='#s/" + schemaName + "/" + obj._id + "'>" + obj[schemas[schemaName].titleField] + "</a></li>";
-				}
-			});
-			listHtml += "</ul>";
+
+			function list(elements) {
+				var listHtml = "<ul class='list-group'>";
+				elements.forEach(function (obj) {
+					if (obj.hasOwnProperty('_id')) {
+						listHtml += "<li class='list-group-item'><a href='#s/" + schemaName + "/" + obj._id + "'>" + obj[schemas[schemaName].titleField] + "</a>" + (obj.hasOwnProperty('children') ? list(obj.children) : '') + "</li>";
+					}
+				});
+				listHtml += "</ul>";
+				return listHtml;
+			}
+
+			if (schemaName == 'pages') {
+				var listHtml = list(this.collection.toJSONTree());
+			} else {
+				var listHtml = list(this.collection.toJSON());
+			}
+
 			if (this.collection.length > 0) {
 				this.$el.html(listHtml);
-				resizeList($('.list-group', this.$el));
+				resizeList($('.wrapper', this.$el));
 
 			} else {
 				this.$el.html("<div class='alert alert-info'>No documents</div>");
@@ -99,7 +129,7 @@ load(toLoad, function (result) {
 	});
 
 	$(window).on('resize', function () {
-		resizeList($('.list-group', $('.collection-list')));
+		resizeList($('.wrapper', $('.collection-list')));
 	});
 
 	var views = {};
@@ -123,29 +153,8 @@ load(toLoad, function (result) {
 			's/:schemaName/:id': function (schemaName, id) {
 				var routerItem = this;
 
-				function loadVocabularies(schemaName, callback) {
-					toLoad = [];
-					_.forIn(schemas[schemaName].schema.properties, function (schemaPart, key) {//вытаскивание промисов на загрузку словарей надо сделать рекурсивно из всех схемы, а не только из первого уровня
-						if (schemaPart.type == 'any' && schemaPart.hasOwnProperty('info') && schemaPart.info.hasOwnProperty('type') && schemaPart.info.type == 'select' && schemaPart.info.hasOwnProperty('schema')) {
-							toLoad.push({
-								obj: schemaPart,
-								url: '/rest/' + schemaPart.info.schema
-							});
-						}
-					});
-					load(toLoad, function (result) {
-						_.forIn(result, function (loadedItem, key) {
-							var options = {};
-							loadedItem.result.forEach(function (vocabularyItem) {
-								options[vocabularyItem._id] = vocabularyItem[schemas[loadedItem.obj.info.schema].titleField];
-							});
-							loadedItem.obj.info.options = options;
-						});
-						callback();
-					});
-				}
 
-				loadVocabularies(schemaName, function () {
+				util.loadVocabularies(schemas, schemaName, function () {
 					$('.form-schema-new').html("<a class='btn btn-info' href='#s/" + schemaName + "/new'><span class='glyphicon glyphicon-plus'></span> New</a>");
 					if (views.hasOwnProperty(schemaName)) {
 						views[schemaName].fetchCollection();
@@ -200,6 +209,18 @@ load(toLoad, function (result) {
 										});
 										$input.next().datepicker('setDate', new Date(parseInt($input.val())));
 									});
+									view.$el.find('textarea').each(function () {
+										CKEDITOR.replace(this);
+									});
+									var instance;
+									for (var i in CKEDITOR.instances) {
+										instance = CKEDITOR.instances[i];
+										instance.$el = view.$el.find('textarea[name=' + instance.name + ']');
+										instance.on('change', function () {
+											instance.updateElement();
+											instance.$el.change();
+										});
+									}
 								}
 							};
 							if (schemas[schemaName].hasOwnProperty('presave')) {

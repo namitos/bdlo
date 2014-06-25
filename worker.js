@@ -58,7 +58,8 @@ module.exports = function (conf, callback) {
 				res.render(url[1] == 'admin' ? app.get('adminViewsPath') + '/admin/page' : 'page', {
 					html: html,
 					user: req.hasOwnProperty('user') ? req.user : false,
-					conf: conf
+					conf: conf,
+					title: parameters.hasOwnProperty('title') ? parameters.title : ''
 				});
 			});
 		};
@@ -80,6 +81,22 @@ module.exports = function (conf, callback) {
 		} else {
 			next();
 		}
+	});
+
+	app.use(function (req, res, next) {
+		var db = app.get('db');
+		db.collection('pages').find({
+			route: req.url
+		}).toArray(function (err, result) {
+			if (result.length > 0) {
+				res.renderPage(app.get('adminViewsPath') + '/staticpage', {
+					title: result[0].title,
+					page: result[0]
+				});
+			} else {
+				next();
+			}
+		});
 	});
 
 	function mongoConnectPromise(connectionString) {
@@ -120,9 +137,12 @@ module.exports = function (conf, callback) {
 	if (conf.hasOwnProperty('routesPath')) {
 		promises.routesPath = routesPromise(conf.routesPath);
 	}
+
+
 	vow.all(promises).then(function (result) {
 		var db = result.db;
 		app.set('db', db);
+
 		passport.use(new LocalStrategy(
 			function (username, password, done) {
 				//console.log('trying', username, password);

@@ -1,3 +1,8 @@
 module.exports = function (app) {
-	require('./schemas')(app);
+	app.get('/admin/schemas', function (request, response) {
+		response.renderPage(app.get('adminViewsPath') + '/admin/schemas/main');
+	});
+	app.get('/admin/pages', function (request, response) {
+		response.renderPage(app.get('adminViewsPath') + '/admin/pages/main');
+	});
 };

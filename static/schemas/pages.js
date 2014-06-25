@@ -9,7 +9,11 @@ var pagesSchema = {
 			required: true
 		},
 		parent:{
-			type: 'any'
+			type: 'any',
+			info:{
+				type:'select',
+				schema: 'pages'
+			}
 		},
 		content:{
 			type: 'string',
