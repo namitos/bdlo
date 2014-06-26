@@ -20,7 +20,6 @@ for (var key in schemas) {
 
 
 function resizeList($list) {
-	console.log('resizeList');
 	if ($(window).width() > 767) {
 		if ($(window).width() > 992) {
 			$list.height($(window).height() - 150);
@@ -83,7 +82,6 @@ load(toLoad, function (result) {
 								var parent = _.find(data, {
 									_id: el.parent
 								});
-								console.log('parent', parent);
 								if(parent){
 									if (!parent.hasOwnProperty('children')) {
 										parent.children = [];
@@ -225,8 +223,8 @@ load(toLoad, function (result) {
 										instance = CKEDITOR.instances[i];
 										instance.$el = view.$el.find('textarea[name=' + instance.name + ']');
 										instance.on('change', function () {
-											instance.updateElement();
-											instance.$el.change();
+											this.updateElement();
+											this.$el.change();
 										});
 									}
 								}
