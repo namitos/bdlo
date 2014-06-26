@@ -3,7 +3,9 @@
 </div>
 
 <div class='row'>
-	<div class='col-sm-3 collection-list'></div>
+	<div class='col-sm-3 collection-list'>
+		<div class='wrapper'></div>
+	</div>
 	<div class='col-sm-9'>
 		<div class='form-group form-schema-new'></div>
 		<div class='form-schema'></div>
@@ -76,16 +78,19 @@ load(toLoad, function (result) {
 					var data = this.toJSON();
 					data.forEach(function (el, i) {
 						if (el.hasOwnProperty('parent') && el.parent != '') {
-							var parent = _.find(data, {
-								_id: el.parent
-							});
-							if(parent){
-								if (!parent.hasOwnProperty('children')) {
-									parent.children = [];
+							try{
+								var parent = _.find(data, {
+									_id: el.parent
+								});
+								console.log('parent', parent);
+								if(parent){
+									if (!parent.hasOwnProperty('children')) {
+										parent.children = [];
+									}
+									parent.children.push(el);
+									delete data[i];
 								}
-								parent.children.push(el);
-								delete data[i];
-							}
+							}catch(e){}
 						}
 					});
 					return _.compact(data);
@@ -139,7 +144,7 @@ load(toLoad, function (result) {
 	var schemasRoute = Backbone.Router.extend({
 		listView: function (schemaName) {
 			var list = new ObjCollectionList({
-				el: $('.collection-list'),
+				el: $('.collection-list .wrapper'),
 				options: {
 					schemaName: schemaName
 				}
