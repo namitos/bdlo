@@ -79,11 +79,13 @@ load(toLoad, function (result) {
 							var parent = _.find(data, {
 								_id: el.parent
 							});
-							if (!parent.hasOwnProperty('children')) {
-								parent.children = [];
+							if(parent){
+								if (!parent.hasOwnProperty('children')) {
+									parent.children = [];
+								}
+								parent.children.push(el);
+								delete data[i];
 							}
-							parent.children.push(el);
-							delete data[i];
 						}
 					});
 					return _.compact(data);
