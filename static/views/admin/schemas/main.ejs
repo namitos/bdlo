@@ -20,6 +20,7 @@ for (var key in schemas) {
 
 
 function resizeList($list) {
+	console.log('resizeList');
 	if ($(window).width() > 767) {
 		if ($(window).width() > 992) {
 			$list.height($(window).height() - 150);
@@ -126,7 +127,7 @@ load(toLoad, function (result) {
 
 			if (this.collection.length > 0) {
 				this.$el.html(listHtml);
-				resizeList($('.wrapper', this.$el));
+				resizeList($('.collection-list .wrapper'));
 
 			} else {
 				this.$el.html("<div class='alert alert-info'>No documents</div>");
@@ -136,7 +137,7 @@ load(toLoad, function (result) {
 	});
 
 	$(window).on('resize', function () {
-		resizeList($('.wrapper', $('.collection-list')));
+		resizeList($('.collection-list .wrapper'));
 	});
 
 	var views = {};
