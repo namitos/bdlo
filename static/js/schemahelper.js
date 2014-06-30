@@ -47,7 +47,7 @@
 				if (value[i] != null) {
 					fileName = value[i].split('/');
 					fileName = fileName[fileName.length - 1];
-					input += "<li data-i='" + i + "' data-field='" + name + "'><a class='btn-file-delete'><span class='glyphicon glyphicon-remove'></span><span class='text'>Delete</span></a><a style='display:inline-block;width:100px;overflow:hidden;text-overflow:ellipsis;' target='_blank' href='/" + value[i] + "'>" + fileName + "</a></li>";
+					input += "<li data-i='" + i + "' data-field='" + name + "'><a class='btn-file-delete'><span class='glyphicon glyphicon-remove'></span><span class='text'>Delete</span></a><a style='display:inline-block;width:100px;overflow:hidden;text-overflow:ellipsis;' target='_blank' href='/static/" + value[i] + "'>" + fileName + "</a></li>";
 				}
 			}
 			input += "</ul>";
