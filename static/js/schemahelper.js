@@ -11,7 +11,8 @@
 			value: value,
 			name: name,
 			'class': 'form-control',
-			required: fieldSchema.hasOwnProperty('required') && fieldSchema.required == true ? true : false
+			required: fieldSchema.hasOwnProperty('required') && fieldSchema.required == true ? true : false,
+			type: inputTypes[fieldSchema.type]
 		};
 		var input = '';
 		var label = name;
@@ -28,17 +29,17 @@
 			if (fieldSchema.info.hasOwnProperty('multiple')) {
 				attributes.multiple = fieldSchema.info.multiple;
 			}
+			if (fieldSchema.info.hasOwnProperty('wysiwyg')) {
+				attributes.wysiwyg = fieldSchema.info.wysiwyg;
+			}
+			if (fieldSchema.info.hasOwnProperty('type')) {
+				attributes.type = fieldSchema.info.type;
+			}
 		}
 		if (fieldSchema.hasOwnProperty('minimum')) {
 			attributes.min = fieldSchema.minimum;
 		}
 
-
-		if (fieldSchema.hasOwnProperty('info') && fieldSchema.info.hasOwnProperty('type')) {
-			attributes.type = fieldSchema.info.type;
-		} else {
-			attributes.type = inputTypes[fieldSchema.type];
-		}
 
 		if (attributes.type == 'file' && value && value.length) {
 			input += "<ul class='file-list'>";

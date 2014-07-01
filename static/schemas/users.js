@@ -28,7 +28,8 @@ var usersSchema = {
 		}
 	},
 	info: {
-		ownerField: '_id'
+		ownerField: '_id',
+		titleField: 'username'
 	}
 };
 try {

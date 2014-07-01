@@ -1,29 +1,34 @@
 var pagesSchema = {
 	properties: {
-		route:{
+		route: {
 			type: 'string',
 			required: true
 		},
-		title:{
+		title: {
 			type: 'string',
 			required: true
 		},
-		parent:{
+		parent: {
 			type: 'any',
-			info:{
-				type:'select',
+			info: {
+				type: 'select',
 				schema: 'pages'
 			}
 		},
-		content:{
+		content: {
 			type: 'string',
 			required: true,
-			info:{
-				type:'textarea'
+			info: {
+				type: 'textarea',
+				wysiwyg: true
 			}
 		}
+	},
+	info: {
+		titleField: 'title'
 	}
 };
-try{
+try {
 	module.exports = pagesSchema;
-}catch(e){}
+} catch (e) {
+}

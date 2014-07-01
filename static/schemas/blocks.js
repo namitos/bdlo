@@ -3,60 +3,64 @@ var blocksSchema = {
 		title: {
 			type: 'string',
 			required: true,
-			info:{
-				label:'Название блока'
+			info: {
+				label: 'Название блока'
 			}
 		},
 		link: {
 			type: 'string',
-			info:{
-				label:'Ссылка'
+			info: {
+				label: 'Ссылка'
 			}
 		},
 		target: {
 			type: 'string',
 			required: true,
-			info:{
-				label:'Куда вставлять (jQuery селектор)'
+			info: {
+				label: 'Куда вставлять (jQuery селектор)'
 			}
 		},
 		weight: {
 			type: 'number',
 			required: true,
-			info:{
-				label:'Вес (чем тяжелее, тем ниже)'
+			info: {
+				label: 'Вес (чем тяжелее, тем ниже)'
 			}
 		},
 		content: {
 			type: 'string',
 			info: {
 				type: 'textarea',
-				label:'Контент (не нужен, если используется функция-генератор)'
+				label: 'Контент (не нужен, если используется функция-генератор)',
+				wysiwyg: true
 			}
 		},
 		widget: {
 			type: 'string',
-			label:'Функция-генератор'
+			label: 'Функция-генератор'
 		},
 		urls: {
 			type: 'array',
 			info: {
-				label:'Адреса (если адресов нет, то блок выводится везде)'
+				label: 'Адреса (если адресов нет, то блок выводится везде)'
 			},
-			items:{
-				type:'string'
+			items: {
+				type: 'string'
 			}
 		},
-		urlsType:{
-			type:'string',
-			info:{
-				type:'select',
-				label:'Исключать вывод блока по этим адресам',
-				options:{
-					exclude:'Исключать'
+		urlsType: {
+			type: 'string',
+			info: {
+				type: 'select',
+				label: 'Исключать вывод блока по этим адресам',
+				options: {
+					exclude: 'Исключать'
 				}
 			}
 		}
+	},
+	info: {
+		titleField: 'title'
 	}
 };
 try {
