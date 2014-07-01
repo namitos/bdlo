@@ -14,7 +14,7 @@
 				_.forIn(result, function (loadedItem, key) {
 					var options = {};
 					loadedItem.result.forEach(function (vocabularyItem) {
-						options[vocabularyItem._id] = vocabularyItem[schemas[loadedItem.obj.info.schema].titleField];
+						options[vocabularyItem._id] = vocabularyItem[schemas[loadedItem.obj.info.schema].schema.info.titleField];
 					});
 					loadedItem.obj.info.options = options;
 				});
