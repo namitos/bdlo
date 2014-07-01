@@ -7,6 +7,12 @@ var blocksSchema = {
 				label:'Название блока'
 			}
 		},
+		link: {
+			type: 'string',
+			info:{
+				label:'Ссылка'
+			}
+		},
 		target: {
 			type: 'string',
 			required: true,
