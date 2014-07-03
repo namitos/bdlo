@@ -59,7 +59,11 @@ var FormRowView = Backbone.View.extend({
 			}
 		},
 		'click .save': function () {
+			this.$el.find('form input[type=submit]').click();
+		},
+		'submit form': function () {
 			this.saveModel();
+			return false;
 		}
 	},
 	changeField: function (e) {
