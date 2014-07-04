@@ -19,7 +19,11 @@
 				var $wrapper = $("<div class='panel panel-default panel-" + block._id + "'><div class='panel-heading'><div class='panel-title'>" + block.title + "</div></div><div class='panel-body'>" + block.content + "</div></div>");
 				if (block.hasOwnProperty('widget') && block.widget) {
 					$wrapper.addClass('panel-' + block.widget);
-					$wrapper.find('.panel-body').html(widgets[block.widget]());
+					var $content = widgets[block.widget]();
+					if ($content) {
+						$wrapper.find('.panel-body').html($content);
+					}
+
 				}
 				$(block.target).append($wrapper);
 			});
