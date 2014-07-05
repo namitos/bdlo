@@ -126,7 +126,7 @@
 	}
 
 	function form(schema, obj, formAttributes) {
-		var $form = $("<form " + htmlAttributes(formAttributes) + "><input type='submit' value='' style='display:none;'></form>");
+		var $form = $("<form " + htmlAttributes(formAttributes) + "></form>");
 		$form.append(formPart(schema, obj));
 		if (formAttributes) {
 			if (formAttributes.hasOwnProperty('method')) {
