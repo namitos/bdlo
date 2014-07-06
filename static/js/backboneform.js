@@ -100,7 +100,11 @@ var FormRowView = Backbone.View.extend({
 					callback(view._treeObj(keys, result));
 				});
 			} else {
-				callback(view._treeObj(keys, $input.val()));
+				var val = $input.val();
+				if($input.attr('type') == 'number'){
+					val = parseInt($input.val());
+				}
+				callback(view._treeObj(keys, val));
 			}
 		};
 		changeField(e.currentTarget, function (update) {
