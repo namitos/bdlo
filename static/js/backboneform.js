@@ -149,7 +149,6 @@ var FormRowView = Backbone.View.extend({
 		return _.compact(str.trim().split(/[\.\[\]]/));
 	},
 	_headObj: function (fieldParts, obj) {
-		console.log('fieldParts', fieldParts);
 		var headObj = obj;
 		fieldParts.forEach(function (fieldPart) {
 			headObj = headObj[fieldPart];
