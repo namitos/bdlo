@@ -166,6 +166,7 @@ module.exports = function (app) {
 				schema.properties[fieldName].type == 'array' && 
 				obj.hasOwnProperty(fieldName)
 			) {
+				obj[fieldName] = _.compact(obj[fieldName]);
 				obj[fieldName].forEach(function(item, i){
 					prepareFilesPromises(schema.properties[fieldName].items, item).forEach(function (promise) {
 						promises.push(promise);
