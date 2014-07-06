@@ -39,7 +39,7 @@ var FormRowView = Backbone.View.extend({
 			var $el = view.$(e.currentTarget).parent();
 			var i = $el.data('i');
 			var newModel = view.model.toJSON();
-			var headObj = view._headObj($el.data('field').split('.'), newModel);
+			var headObj = view._headObj(view._fieldParts($el.data('field')), newModel);
 			delete headObj[i];
 			view.model.set(newModel);
 			if (view.options.hasOwnProperty('autosave') && view.options.autosave == true) {
@@ -51,7 +51,7 @@ var FormRowView = Backbone.View.extend({
 			var $el = view.$(e.currentTarget).parent();
 			var i = $el.data('i');
 			var newModel = view.model.toJSON();
-			var headObj = view._headObj($el.data('field').split('.'), newModel);
+			var headObj = view._headObj(view._fieldParts($el.data('field')), newModel);
 			delete headObj[i];
 			view.model.set(newModel);
 			if (view.options.hasOwnProperty('autosave') && view.options.autosave == true) {
@@ -89,7 +89,7 @@ var FormRowView = Backbone.View.extend({
 		};
 		var changeField = function (input, callback) {
 			var $input = jQuery(input);
-			var keys = _.compact($input.attr('name').split(/[\.\[\]]/));
+			var keys = view._fieldParts($input.attr('name'));
 			keys.forEach(function (key, i) {
 				if (parseInt(key).toString() == key) {
 					keys[i] = parseInt(key);
@@ -145,7 +145,11 @@ var FormRowView = Backbone.View.extend({
 
 
 	},
+	_fieldParts: function(str){
+		return _.compact(str.trim().split(/[\.\[\]]/));
+	},
 	_headObj: function (fieldParts, obj) {
+		console.log('fieldParts', fieldParts);
 		var headObj = obj;
 		fieldParts.forEach(function (fieldPart) {
 			headObj = headObj[fieldPart];
