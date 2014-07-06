@@ -146,6 +146,7 @@ module.exports = function (app) {
 	function prepareFilesPromises(schema, obj) {
 		var promises = [];
 		for (var fieldName in schema.properties) {
+			//console.log('fieldName', fieldName, 'type', schema.properties[fieldName].type);
 			if (
 				schema.properties[fieldName].type == 'any' &&
 				schema.properties[fieldName].hasOwnProperty('info') &&
@@ -157,12 +158,19 @@ module.exports = function (app) {
 			} else if (
 				schema.properties[fieldName].type == 'object' &&
 				obj.hasOwnProperty(fieldName)
-				) {
+			) {
 				prepareFilesPromises(schema.properties[fieldName], obj[fieldName]).forEach(function (promise) {
 					promises.push(promise);
 				});
-			} else if (schema.properties[fieldName].type == 'array') {
-				//@TODO: make array processing
+			} else if (
+				schema.properties[fieldName].type == 'array' && 
+				obj.hasOwnProperty(fieldName)
+			) {
+				obj[fieldName].forEach(function(item, i){
+					prepareFilesPromises(schema.properties[fieldName].items, item).forEach(function (promise) {
+						promises.push(promise);
+					});
+				});
 			}
 		}
 		return promises;
