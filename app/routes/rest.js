@@ -147,32 +147,53 @@ module.exports = function (app) {
 		var promises = [];
 		for (var fieldName in schema.properties) {
 			//console.log('fieldName', fieldName, 'type', schema.properties[fieldName].type);
-			if (
-				schema.properties[fieldName].type == 'any' &&
-				schema.properties[fieldName].hasOwnProperty('info') &&
-				schema.properties[fieldName].info.type == 'file' &&
-				obj.hasOwnProperty(fieldName)
-				) {
-				obj[fieldName] = _.compact(obj[fieldName]);
-				promises.push(saveFilePromise(schema.properties[fieldName], obj[fieldName]));
-			} else if (
-				schema.properties[fieldName].type == 'object' &&
-				obj.hasOwnProperty(fieldName)
-			) {
-				prepareFilesPromises(schema.properties[fieldName], obj[fieldName]).forEach(function (promise) {
-					promises.push(promise);
-				});
-			} else if (
-				schema.properties[fieldName].type == 'array' && 
-				obj.hasOwnProperty(fieldName)
-			) {
-				obj[fieldName] = _.compact(obj[fieldName]);
-				obj[fieldName].forEach(function(item, i){
-					prepareFilesPromises(schema.properties[fieldName].items, item).forEach(function (promise) {
+			if (obj.hasOwnProperty(fieldName)) {
+				if (//если просто файловое поле
+					schema.properties[fieldName].type == 'any' &&
+					schema.properties[fieldName].hasOwnProperty('info') &&
+					schema.properties[fieldName].info.type == 'file'
+					) {
+
+					obj[fieldName] = _.compact(obj[fieldName]);
+					promises.push(saveFilePromise(schema.properties[fieldName], obj[fieldName]));
+
+				} else if (//если массив из простых файловых полей
+					schema.properties[fieldName].type == 'array' &&
+					schema.properties[fieldName].items.hasOwnProperty('info') &&
+					schema.properties[fieldName].items.info.type == 'file'
+					) {
+
+					obj[fieldName].forEach(function (item, i) {
+						item = _.compact(item);
+						obj[fieldName][i] = item.length ? item : false
+					});
+					obj[fieldName] = _.compact(obj[fieldName]);
+					obj[fieldName].forEach(function (item, i) {
+						promises.push(saveFilePromise(schema.properties[fieldName].items, item));
+					});
+
+				} else if (//если файловое поле часть объекта
+					schema.properties[fieldName].type == 'object'
+					) {
+
+					prepareFilesPromises(schema.properties[fieldName], obj[fieldName]).forEach(function (promise) {//рекурсия чтобы это файловое поле было как простое файловое поле
 						promises.push(promise);
 					});
-				});
+
+				} else if (//если массив из объектов, в которых файловые поля
+					schema.properties[fieldName].type == 'array'
+					) {
+
+					obj[fieldName] = _.compact(obj[fieldName]);
+					obj[fieldName].forEach(function (item, i) {
+						prepareFilesPromises(schema.properties[fieldName].items, item).forEach(function (promise) {//рекурсия чтобы каждое файловое поле было как часть объекта
+							promises.push(promise);
+						});
+					});
+
+				}
 			}
+
 		}
 		return promises;
 	}
@@ -208,15 +229,18 @@ module.exports = function (app) {
 	}
 
 
-
 	app.get('/rest/:collection', function (req, res) {
 		var collectionName = req.params.collection;
-		if(
+		if (
 			req.user.permission(collectionName + ' all all') ||
 			req.user.permission(collectionName + ' read all') ||
-			req.user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function(ownerField){ req.query[ownerField] = req.user._id.toString() }) ||
-			req.user.permission(collectionName + ' read his') && getSchemaOwnerField(collectionName, function(ownerField){ req.query[ownerField] = req.user._id.toString() })
-		){
+			req.user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
+			req.query[ownerField] = req.user._id.toString()
+		}) ||
+			req.user.permission(collectionName + ' read his') && getSchemaOwnerField(collectionName, function (ownerField) {
+			req.query[ownerField] = req.user._id.toString()
+		})
+			) {
 			var db = app.get('db');
 			if (req.query.hasOwnProperty('_id')) {
 				req.query._id = new mongodb.ObjectID(req.query._id.toString());
@@ -248,12 +272,16 @@ module.exports = function (app) {
 		var where = {
 			_id: new mongodb.ObjectID(req.params.id)
 		};
-		if(
+		if (
 			req.user.permission(collectionName + ' all all') ||
 			req.user.permission(collectionName + ' delete all') ||
-			req.user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function(ownerField){ where[ownerField] = req.user._id.toString() }) ||
-			req.user.permission(collectionName + ' delete his') && getSchemaOwnerField(collectionName, function(ownerField){ where[ownerField] = req.user._id.toString() })
-		){
+			req.user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
+			where[ownerField] = req.user._id.toString()
+		}) ||
+			req.user.permission(collectionName + ' delete his') && getSchemaOwnerField(collectionName, function (ownerField) {
+			where[ownerField] = req.user._id.toString()
+		})
+			) {
 			var db = app.get('db');
 			db.collection(collectionName).remove(where, function (err, numRemoved) {
 				if (err) {
@@ -271,15 +299,19 @@ module.exports = function (app) {
 
 	app.put('/rest/:collection/:id', prepareFilesMiddleware, function (req, res) {
 		var collectionName = req.params.collection;
-		var where= {
+		var where = {
 			_id: new mongodb.ObjectID(req.params.id)
 		};
-		if(
+		if (
 			req.user.permission(collectionName + ' all all') ||
 			req.user.permission(collectionName + ' update all') ||
-			req.user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function(ownerField){ where[ownerField] = req.user._id.toString() }) ||
-			req.user.permission(collectionName + ' update his') && getSchemaOwnerField(collectionName, function(ownerField){ where[ownerField] = req.user._id.toString() })
-		){
+			req.user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
+			where[ownerField] = req.user._id.toString()
+		}) ||
+			req.user.permission(collectionName + ' update his') && getSchemaOwnerField(collectionName, function (ownerField) {
+			where[ownerField] = req.user._id.toString()
+		})
+			) {
 			var db = app.get('db');
 			if (req.body.hasOwnProperty('_id')) {
 				delete req.body._id;
@@ -303,12 +335,16 @@ module.exports = function (app) {
 
 	app.post('/rest/:collection', prepareFilesMiddleware, function (req, res) {
 		var collectionName = req.params.collection;
-		if(
+		if (
 			req.user.permission(collectionName + ' all all') ||
 			req.user.permission(collectionName + ' create all') ||
-			req.user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function(ownerField){ req.body[ownerField] = req.user._id.toString() }) ||
-			req.user.permission(collectionName + ' create his') && getSchemaOwnerField(collectionName, function(ownerField){ req.body[ownerField] = req.user._id.toString() })
-		){
+			req.user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
+			req.body[ownerField] = req.user._id.toString()
+		}) ||
+			req.user.permission(collectionName + ' create his') && getSchemaOwnerField(collectionName, function (ownerField) {
+			req.body[ownerField] = req.user._id.toString()
+		})
+			) {
 			var db = app.get('db');
 			if (req.body.hasOwnProperty('_id')) {
 				delete req.body._id;
