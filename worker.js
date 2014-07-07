@@ -1,4 +1,4 @@
-module.exports = function (conf, callback) {
+module.exports = function (conf, middlewares) {
 	var express = require('express');
 	var app = express();
 	var server = require('http').createServer(app);
@@ -98,6 +98,10 @@ module.exports = function (conf, callback) {
 			}
 		});
 	});
+
+	if (middlewares) {
+		middlewares(app);
+	}
 
 	function mongoConnectPromise(connectionString) {
 		return new vow.Promise(function (resolve, reject, notify) {
