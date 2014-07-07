@@ -4,6 +4,10 @@ var cluster = require('cluster');
 var exec = require('child_process').exec;
 var vow = require('vow');
 
+/**
+ *
+ * @param callback {Function}
+ */
 function clearPids(callback) {
 	var killPromise = function (pid) {
 		return new vow.Promise(function (resolve, reject, notify) {
@@ -33,8 +37,12 @@ function clearPids(callback) {
 	});
 
 }
-
-module.exports = function (conf) {
+/**
+ *
+ * @param conf {Object}
+ * @param middlewares {Function}
+ */
+module.exports = function (conf, middlewares) {
 	if (cluster.isMaster) {
 		var ports = {};
 		var maxPort = conf.port;
@@ -79,6 +87,6 @@ module.exports = function (conf) {
 			});
 		});
 	} else {
-		require('./worker')(conf);
+		require('./worker')(conf, middlewares);
 	}
-}
+};
