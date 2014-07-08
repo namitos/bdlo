@@ -28,11 +28,14 @@
 		$.get('/blocks', {
 			pathname: pathname
 		}, function (blocks) {
+			blocks.forEach(function (block) {
+				block.weight = parseInt(block.weight);
+			});
 			blocks.sort(function (a, b) {
-				if (parseInt(a.weight) < parseInt(b.weight)) {
+				if (a.weight < b.weight) {
 					return -1;
 				}
-				if (parseInt(a.weight) > parseInt(b.weight)) {
+				if (a.weight > b.weight) {
 					return 1;
 				}
 				return 0;
