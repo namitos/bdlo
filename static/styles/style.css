@@ -13,6 +13,14 @@ body {
 	font-family: 'Open Sans', sans-serif;
 }
 
+.form-control-code {
+	min-height:600px;
+}
+
+.form-control-code *{
+	font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+
 a {
 	cursor: pointer;
 }
@@ -131,6 +139,3 @@ a {
 }
 .list-group li ul li {
 }
-
-
-
