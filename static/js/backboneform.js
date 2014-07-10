@@ -88,23 +88,26 @@ var FormRowView = Backbone.View.extend({
 			});
 		};
 		var changeField = function (input, callback) {
-			var $input = jQuery(input);
-			var keys = view._fieldParts($input.attr('name'));
-			keys.forEach(function (key, i) {
-				if (parseInt(key).toString() == key) {
-					keys[i] = parseInt(key);
-				}
-			});
-			if (input.type == 'file') {
-				filesRead(input.files, function (result) {
-					callback(view._treeObj(keys, result));
+			if(input.name){
+				var $input = jQuery(input);
+				console.log($input);
+				var keys = view._fieldParts($input.attr('name'));
+				keys.forEach(function (key, i) {
+					if (parseInt(key).toString() == key) {
+						keys[i] = parseInt(key);
+					}
 				});
-			} else {
-				var val = $input.val();
-				if($input.attr('type') == 'number'){
-					val = parseInt($input.val());
+				if (input.type == 'file') {
+					filesRead(input.files, function (result) {
+						callback(view._treeObj(keys, result));
+					});
+				} else {
+					var val = $input.val();
+					if($input.attr('type') == 'number'){
+						val = parseInt($input.val());
+					}
+					callback(view._treeObj(keys, val));
 				}
-				callback(view._treeObj(keys, val));
 			}
 		};
 		changeField(e.currentTarget, function (update) {
