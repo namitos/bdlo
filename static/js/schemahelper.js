@@ -20,21 +20,11 @@
 			if (fieldSchema.info.hasOwnProperty('label')) {
 				label = fieldSchema.info.label;
 			}
-			if (fieldSchema.info.hasOwnProperty('placeholder')) {
-				attributes.placeholder = fieldSchema.info.placeholder;
-			}
-			if (fieldSchema.info.hasOwnProperty('pattern')) {
-				attributes.pattern = fieldSchema.info.pattern;
-			}
-			if (fieldSchema.info.hasOwnProperty('multiple')) {
-				attributes.multiple = fieldSchema.info.multiple;
-			}
-			if (fieldSchema.info.hasOwnProperty('wysiwyg')) {
-				attributes.wysiwyg = fieldSchema.info.wysiwyg;
-			}
-			if (fieldSchema.info.hasOwnProperty('type')) {
-				attributes.type = fieldSchema.info.type;
-			}
+			['placeholder', 'pattern', 'multiple', 'wysiwyg', 'code', 'type'].forEach(function(attribute){
+				if (fieldSchema.info.hasOwnProperty(attribute)) {
+					attributes[attribute] = fieldSchema.info[attribute];
+				}
+			});
 		}
 		if (fieldSchema.hasOwnProperty('minimum')) {
 			attributes.min = fieldSchema.minimum;
