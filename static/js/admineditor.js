@@ -189,6 +189,7 @@
 										window.location.hash = 's/' + schemaName + '/' + obj.id;
 									},
 									afterRender: function (view) {
+										//date input
 										view.$el.find('input[type=dateUnixtime]').each(function () {
 											var $input = $(this);
 											$input.hide().after("<div></div>").next().datepicker({
@@ -199,6 +200,7 @@
 											});
 											$input.next().datepicker('setDate', new Date(parseInt($input.val())));
 										});
+										//wysiwyg input
 										view.$el.find('textarea[wysiwyg]').each(function () {
 											CKEDITOR.replace(this);
 										});
@@ -211,6 +213,20 @@
 												this.$el.change();
 											});
 										}
+										//code input
+										view.$el.find('textarea[code]').each(function () {
+											var $textarea = $(this);
+											var $wrapper = $("<div class='form-control-code' style='height:500px;' id='code-"+this.name+"'>");
+											$textarea.hide().after($wrapper);
+											var editor = ace.edit($wrapper[0]);
+											editor.getSession().setValue($textarea.val());
+											editor.getSession().on('change', function() {
+												console.log(editor.getSession().getValue());
+												$textarea.val(editor.getSession().getValue()).change();
+											});
+											editor.getSession().setMode("ace/mode/javascript");
+											editor.setTheme("ace/theme/monokai");
+										});
 									}
 								};
 								if (schemas[schemaName].hasOwnProperty('presave')) {
