@@ -96,7 +96,7 @@
 					var listHtml = "<ul class='list-group'>";
 					elements.forEach(function (obj) {
 						if (obj.hasOwnProperty('_id')) {
-							listHtml += "<li class='list-group-item'><a href='#s/" + schemaName + "/" + obj._id + "'>" + obj[schemas[schemaName].schema.info.titleField] + "</a>" + (obj.hasOwnProperty('children') ? list(obj.children) : '') + "</li>";
+							listHtml += "<li class='list-group-item'><a href='#s/" + schemaName + "/" + obj._id + "'>" + _.escape(obj[schemas[schemaName].schema.info.titleField]) + "</a>" + (obj.hasOwnProperty('children') ? list(obj.children) : '') + "</li>";
 						}
 					});
 					listHtml += "</ul>";
