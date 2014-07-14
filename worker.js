@@ -28,6 +28,25 @@ module.exports = function (conf, middlewares) {
 		}
 	};
 
+	app.response.__proto__.renderPage = function (template, parameters) {
+		if (!parameters) {
+			parameters = {};
+		}
+		var res = this;
+		var req = res.req;
+		var url = req.url.split('/');
+		parameters.user = req.hasOwnProperty('user') ? req.user : false;
+		parameters.conf = conf;
+		res.render(template, parameters, function (err, html) {
+			res.render(url[1] == 'admin' ? app.get('adminViewsPath') + '/admin/page' : 'page', {
+				html: html,
+				user: req.hasOwnProperty('user') ? req.user : false,
+				conf: conf,
+				title: parameters.hasOwnProperty('title') ? parameters.title : ''
+			});
+		});
+	}
+
 	app.set('conf', conf);
 	app.set('corePath', __dirname);
 	app.set('env', process.env.hasOwnProperty('NODE_ENV') ? process.env.NODE_ENV : 'production');
@@ -45,26 +64,6 @@ module.exports = function (conf, middlewares) {
 
 	app.use('/core', express.static(__dirname + '/static'));
 	app.use('/static', express.static(conf.staticPath));
-
-	app.use(function (req, res, next) {
-		var url = req.url.split('/');
-		res.renderPage = function (template, parameters) {
-			if (!parameters) {
-				parameters = {};
-			}
-			parameters.user = req.hasOwnProperty('user') ? req.user : false;
-			parameters.conf = conf;
-			res.render(template, parameters, function (err, html) {
-				res.render(url[1] == 'admin' ? app.get('adminViewsPath') + '/admin/page' : 'page', {
-					html: html,
-					user: req.hasOwnProperty('user') ? req.user : false,
-					conf: conf,
-					title: parameters.hasOwnProperty('title') ? parameters.title : ''
-				});
-			});
-		};
-		next();
-	});
 
 	var User = require('./app/models/user');
 	app.use(function (req, res, next) {
