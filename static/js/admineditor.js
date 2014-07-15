@@ -16,6 +16,23 @@
 		}
 	}
 
+	function sendNoficiation(title, tag, text, onclick) {
+		Notification.requestPermission(function (result) {
+			console.log(result);
+		});
+		var message = new Notification(title, {
+			tag: tag,
+			body: text,
+			icon: ''
+		});
+		message.onclick = function (a, b, c) {
+			if (onclick) {
+				message.onclick = onclick;
+			}
+			this.close();
+		}
+	};
+
 	load(toLoad, function (result) {
 		for (var key in schemas) {
 			schemas[key].schema = result[key];
@@ -185,7 +202,12 @@
 										$wrapper.append("<div class='btn-group'>" + buttons.join('') + "</div>");
 										return $wrapper;
 									},
+									presave: function (obj, next) {
+										sendNoficiation('Сохранение материала', 'rest', 'Пока не закрывайте страницу');
+										next(obj);
+									},
 									saveSuccess: function (obj) {
+										sendNoficiation('Сохранение материала', 'rest', 'Материал успешно сохранён');
 										window.location.hash = 's/' + schemaName + '/' + obj.id;
 									},
 									afterRender: function (view) {
@@ -216,11 +238,11 @@
 										//code input
 										view.$el.find('textarea[code]').each(function () {
 											var $textarea = $(this);
-											var $wrapper = $("<div class='form-control-code' style='height:500px;' id='code-"+this.name+"'>");
+											var $wrapper = $("<div class='form-control-code' style='height:500px;' id='code-" + this.name + "'>");
 											$textarea.hide().after($wrapper);
 											var editor = ace.edit($wrapper[0]);
 											editor.getSession().setValue($textarea.val());
-											editor.getSession().on('change', function() {
+											editor.getSession().on('change', function () {
 												console.log(editor.getSession().getValue());
 												$textarea.val(editor.getSession().getValue()).change();
 											});
