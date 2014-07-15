@@ -16,23 +16,6 @@
 		}
 	}
 
-	function sendNoficiation(title, tag, text, onclick) {
-		Notification.requestPermission(function (result) {
-			console.log(result);
-		});
-		var message = new Notification(title, {
-			tag: tag,
-			body: text,
-			icon: ''
-		});
-		message.onclick = function (a, b, c) {
-			if (onclick) {
-				message.onclick = onclick;
-			}
-			this.close();
-		}
-	};
-
 	load(toLoad, function (result) {
 		for (var key in schemas) {
 			schemas[key].schema = result[key];
@@ -203,11 +186,11 @@
 										return $wrapper;
 									},
 									presave: function (obj, next) {
-										sendNoficiation('Сохранение материала', 'rest', 'Пока не закрывайте страницу');
+										util.sendNoficiation('Сохранение материала', 'rest', 'Пока не закрывайте страницу');
 										next(obj);
 									},
 									saveSuccess: function (obj) {
-										sendNoficiation('Сохранение материала', 'rest', 'Материал успешно сохранён');
+										util.sendNoficiation('Сохранение материала', 'rest', 'Материал успешно сохранён');
 										window.location.hash = 's/' + schemaName + '/' + obj.id;
 									},
 									afterRender: function (view) {

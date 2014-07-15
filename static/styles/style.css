@@ -14,10 +14,10 @@ body {
 }
 
 .form-control-code {
-	min-height:600px;
+	min-height: 600px;
 }
 
-.form-control-code *{
+.form-control-code * {
 	font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
 }
 
@@ -39,6 +39,27 @@ a {
 
 .container {
 	position: relative;
+}
+
+#notifications {
+	position: fixed;
+	top: 55px;
+	right: 5px;
+	width: 200px;
+}
+
+#notifications .alert {
+	-webkit-transition: all 0.2s;
+	-moz-transition: all 0.2s;
+	-ms-transition: all 0.2s;
+	-o-transition: all 0.2s;
+	transition: all 0.2s;
+	font-size: 12px;
+	padding: 3px 5px;
+	border-radius: 0;
+	border: none;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+	background:#fff;
 }
 
 .rows-multiple,
@@ -134,8 +155,10 @@ a {
 	padding: 5px;
 	font-size: 12px;
 }
-.list-group li ul{
-	margin-top:5px;
+
+.list-group li ul {
+	margin-top: 5px;
 }
+
 .list-group li ul li {
 }

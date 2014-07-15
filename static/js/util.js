@@ -68,7 +68,55 @@
 		return "<ul class='nav navbar-nav'>" + menu + "</ul>";
 	};
 
+
+	if (!global.Notification) {
+		global.Notification = function (title, data) {
+			var $wrapper = $('#notifications');
+			if (!$wrapper.length) {
+				$('body').append("<div id='notifications'></div>");
+				$wrapper = $('#notifications');
+			}
+			$wrapper.find('.alert-' + data.tag).remove();
+			this.$el = $("<div style='opacity:0' class='alert alert-" + data.tag + "'><button type='button' class='close' data-dismiss='alert'>×</button><strong>" + title + "</strong><p>" + data.body + "</p></div>");
+
+			$wrapper.append(this.$el);
+			this.$el.css({
+				opacity: 1
+			});
+			var notification = this;
+			this.$el.on('click', function(){
+				if(notification.onclick){
+					notification.onclick();
+				}
+			});
+		};
+		global.Notification.requestPermission = function (callback) {
+			callback('granted');
+		};
+		global.Notification.prototype.close = function(){
+			this.$el.remove();
+		}
+	}
+
+	function sendNoficiation(title, tag, text, onclick) {
+		global.Notification.requestPermission(function (result) {
+			console.log(result);
+		});
+		var message = new global.Notification(title, {
+			tag: tag,
+			body: text,
+			icon: ''
+		});
+		message.onclick = function () {
+			if (onclick) {
+				message.onclick = onclick;
+			}
+			this.close();
+		}
+	};
+
 	global.util.loadVocabularies = loadVocabularies;
 	global.util.loadBlocks = loadBlocks;
 	global.util.buildMenu = buildMenu;
+	global.util.sendNoficiation = sendNoficiation;
 })(this, jQuery);
