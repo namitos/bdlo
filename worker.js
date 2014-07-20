@@ -49,7 +49,7 @@ module.exports = function (conf, middlewares) {
 
 	app.set('conf', conf);
 	app.set('corePath', __dirname);
-	app.set('env', process.env.hasOwnProperty('NODE_ENV') ? process.env.NODE_ENV : 'production');
+	app.set('env', process.env.NODE_ENV);
 	app.set('views', conf.viewsPath);
 	app.set('view cache', conf.viewCache);
 	app.engine('ejs', require('consolidate').lodash);
