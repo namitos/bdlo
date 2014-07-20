@@ -4,6 +4,11 @@ var cluster = require('cluster');
 var exec = require('child_process').exec;
 var vow = require('vow');
 
+if(!process.env.NODE_ENV){
+	process.env.NODE_ENV = 'production';
+}
+
+
 /**
  *
  * @param callback {Function}
