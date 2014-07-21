@@ -207,7 +207,9 @@
 										});
 										//wysiwyg input
 										view.$el.find('textarea[wysiwyg]').each(function () {
-											CKEDITOR.replace(this);
+											CKEDITOR.replace(this, {
+												allowedContent: true
+											});
 										});
 										var instance;
 										for (var i in CKEDITOR.instances) {
