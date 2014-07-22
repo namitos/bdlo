@@ -131,9 +131,9 @@ var FormRowView = Backbone.View.extend({
 						view.options.saveSuccess(model);
 					}
 				},
-				error: function (model) {
+				error: function (model, response) {
 					if (view.options.hasOwnProperty('saveError')) {
-						view.options.saveError(model);
+						view.options.saveError(model, response);
 					}
 				}
 			});
