@@ -316,6 +316,7 @@ module.exports = function (app) {
 			if (req.body.hasOwnProperty('_id')) {
 				delete req.body._id;
 			}
+			autoType(req.body);
 			db.collection(req.params.collection).update(where, {
 				"$set": req.body
 			}, function (error, results) {
@@ -349,6 +350,7 @@ module.exports = function (app) {
 			if (req.body.hasOwnProperty('_id')) {
 				delete req.body._id;
 			}
+			autoType(req.body);
 			db.collection(req.params.collection).insert(req.body, function (err, results) {
 				if (err) {
 					res.status(500).send();
