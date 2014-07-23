@@ -3,15 +3,8 @@
 		_.merge(this, data);
 	}
 
-	User.prototype.permission = function (permission) {
-		if (this.hasOwnProperty('permissions')) {
-			for (var key in this.permissions) {
-				if (this.permissions[key] == permission) {
-					return true;
-				}
-			}
-		}
-		return false;
+	User.prototype.permission = function (permissionString) {
+		return _.contains(this.permissions, permissionString) || _.contains(this.permissions, 'full access');
 	};
 	context.User = User;
 })(this);
