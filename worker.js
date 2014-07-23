@@ -85,7 +85,7 @@ module.exports = function (conf, middlewares) {
 	app.use(function (req, res, next) {
 		var db = app.get('db');
 		db.collection('pages').find({
-			route: req.url
+			route: req.url.split('?')[0]
 		}).toArray(function (err, result) {
 			if (result.length > 0) {
 				res.renderPage(app.get('adminViewsPath') + '/staticpage', {
