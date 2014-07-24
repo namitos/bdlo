@@ -4,6 +4,14 @@ module.exports = function (conf, modifyApp) {
 	var server = require('http').createServer(app);
 
 	app.io = require('socket.io')(server);
+	app.io.adapter(require('socket.io-redis')({
+		host: conf.session.redis.host,
+		port: conf.session.redis.port
+	}));
+	var redisClient = require("redis").createClient(conf.session.redis.port, conf.session.redis.host, {
+		return_buffers: true
+	});
+	app.ioEmitter = require('socket.io-emitter')(redisClient);
 
 	var session = require('express-session');
 	var RedisStore = require('connect-redis')(session);
@@ -13,7 +21,7 @@ module.exports = function (conf, modifyApp) {
 	var fs = require('fs');
 	var vow = require('vow');
 	var vowFs = require('vow-fs');
-	var drev = require('drev');
+	//var drev = require('drev');
 
 	var User = require('./app/models/user');
 
@@ -179,7 +187,6 @@ module.exports = function (conf, modifyApp) {
 		promises.routesPath = routesPromise(conf.routesPath);
 	}
 
-
 	vow.all(promises).then(function (result) {
 		var db = result.db;
 		app.set('db', db);
@@ -225,7 +232,7 @@ module.exports = function (conf, modifyApp) {
 
 		app.set('projectInfo', JSON.parse(result.projectInfo));
 
-		drev.start(conf.session.redis.host, conf.session.redis.port);
+		//drev.start(conf.session.redis.host, conf.session.redis.port);
 
 		server.listen(process.env.port, function () {
 		});
