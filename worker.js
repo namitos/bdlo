@@ -15,28 +15,31 @@ module.exports = function (conf, modifyApp) {
 
 	var session = require('express-session');
 	var RedisStore = require('connect-redis')(session);
-	var passport = require('passport');
-	var LocalStrategy = require('passport-local').Strategy;
-	var mongodb = require('mongodb');
-	var fs = require('fs');
-	var vow = require('vow');
-	var vowFs = require('vow-fs');
-	//var drev = require('drev');
-
-	var User = require('./app/models/user');
-
 	var sessionConfiguration = {
 		store: new RedisStore({ host: conf.session.redis.host, port: conf.session.redis.port, ttl: 604800 }),
 		secret: conf.session.secret,
 		key: 'session',
 		cookie: { maxAge: 604800000 },
+		resave: true,
+		saveUninitialized: true,
 		fail: function (data, accept) {
+			console.log('fail');
 			accept(null, true);
 		},
 		success: function (data, accept) {
+			console.log('fail');
 			accept(null, true);
 		}
 	};
+	var passport = require('passport');
+	var LocalStrategy = require('passport-local').Strategy;
+
+	var mongodb = require('mongodb');
+	var fs = require('fs');
+	var vow = require('vow');
+	var vowFs = require('vow-fs');
+
+	var User = require('./app/models/user');
 
 	app.response.__proto__.renderPage = function (template, parameters) {
 		if (!parameters) {
@@ -66,11 +69,14 @@ module.exports = function (conf, modifyApp) {
 	app.set('view engine', 'ejs');
 	app.set('adminViewsPath', __dirname + '/static/views');
 
-
 	var middleWares = [
 		{
-			key: 'bodyParser',
-			fn: require('body-parser')({ limit: '500mb'})
+			key: 'bodyParserJson',
+			fn: require('body-parser').json({ limit: '500mb'})
+		},
+		{
+			key: 'bodyParserUrlencoded',
+			fn: require('body-parser').urlencoded({ extended: true, limit: '50mb'})
 		},
 		{
 			key: 'cookieParser',
@@ -229,11 +235,7 @@ module.exports = function (conf, modifyApp) {
 				}
 			});
 		});
-
 		app.set('projectInfo', JSON.parse(result.projectInfo));
-
-		//drev.start(conf.session.redis.host, conf.session.redis.port);
-
 		server.listen(process.env.port, function () {
 		});
 	});
