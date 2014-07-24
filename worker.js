@@ -23,11 +23,9 @@ module.exports = function (conf, modifyApp) {
 		resave: true,
 		saveUninitialized: true,
 		fail: function (data, accept) {
-			console.log('fail');
 			accept(null, true);
 		},
 		success: function (data, accept) {
-			console.log('fail');
 			accept(null, true);
 		}
 	};
