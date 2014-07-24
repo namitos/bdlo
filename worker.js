@@ -1,4 +1,4 @@
-module.exports = function (conf, middlewares) {
+module.exports = function (conf, modifyApp) {
 	var express = require('express');
 	var app = express();
 	var server = require('http').createServer(app);
@@ -14,6 +14,8 @@ module.exports = function (conf, middlewares) {
 	var vow = require('vow');
 	var vowFs = require('vow-fs');
 	var drev = require('drev');
+
+	var User = require('./app/models/user');
 
 	var sessionConfiguration = {
 		store: new RedisStore({ host: conf.session.redis.host, port: conf.session.redis.port, ttl: 604800 }),
@@ -56,51 +58,87 @@ module.exports = function (conf, middlewares) {
 	app.set('view engine', 'ejs');
 	app.set('adminViewsPath', __dirname + '/static/views');
 
-	app.use(require('body-parser')({ limit: '500mb'}));
-	app.use(require('cookie-parser')());
-	app.use(session(sessionConfiguration));
-	app.use(passport.initialize());
-	app.use(passport.session());
 
-	app.use('/core', express.static(__dirname + '/static'));
-	app.use('/static', express.static(conf.staticPath));
-
-	var User = require('./app/models/user');
-	app.use(function (req, res, next) {
-		if (!req.hasOwnProperty('user')) {
-			req.user = new User({roles: ['anon']}, conf);
-		}
-		var url = req.url.split('/');
-		if (url[1] == 'admin') {
-			if (req.user.permission('full access')) {
-				next();
-			} else {
-				res.send(403, 'access denied');
+	var middleWares = [
+		{
+			key: 'bodyParser',
+			fn: require('body-parser')({ limit: '500mb'})
+		},
+		{
+			key: 'cookieParser',
+			fn: require('cookie-parser')()
+		},
+		{
+			key: 'session',
+			fn: session(sessionConfiguration)
+		},
+		{
+			key: 'passportInitialize',
+			fn: passport.initialize()
+		},
+		{
+			key: 'passportSession',
+			fn: passport.session()
+		},
+		{
+			key: 'coreStatic',
+			fn: express.static(__dirname + '/static'),
+			url: '/core'
+		},
+		{
+			key: 'static',
+			fn: express.static(conf.staticPath),
+			url: '/static'
+		},
+		{
+			key: 'permissions',
+			fn: function (req, res, next) {
+				if (!req.hasOwnProperty('user')) {
+					req.user = new User({roles: ['anon']}, conf);
+				}
+				var url = req.url.split('/');
+				if (url[1] == 'admin') {
+					if (req.user.permission('full access')) {
+						next();
+					} else {
+						res.send(403, 'access denied');
+					}
+				} else {
+					next();
+				}
 			}
-		} else {
-			next();
-		}
-	});
-
-	app.use(function (req, res, next) {
-		var db = app.get('db');
-		db.collection('pages').find({
-			route: req.url.split('?')[0]
-		}).toArray(function (err, result) {
-			if (result.length > 0) {
-				res.renderPage(app.get('adminViewsPath') + '/staticpage', {
-					title: result[0].title,
-					page: result[0]
+		},
+		{
+			key: 'pages',
+			fn: function (req, res, next) {
+				var db = app.get('db');
+				db.collection('pages').find({
+					route: req.url.split('?')[0]
+				}).toArray(function (err, result) {
+					if (result.length > 0) {
+						res.renderPage(app.get('adminViewsPath') + '/staticpage', {
+							title: result[0].title,
+							page: result[0]
+						});
+					} else {
+						next();
+					}
 				});
-			} else {
-				next();
 			}
-		});
-	});
+		}
+	];
 
-	if (middlewares) {
-		middlewares(app);
+	if (modifyApp) {
+		modifyApp(app, middleWares);
 	}
+
+	middleWares.forEach(function (obj) {
+		if (obj.hasOwnProperty('url')) {
+			app.use(obj.url, obj.fn);
+		} else {
+			app.use(obj.fn);
+		}
+	});
 
 	function mongoConnectPromise(connectionString) {
 		return new vow.Promise(function (resolve, reject, notify) {
