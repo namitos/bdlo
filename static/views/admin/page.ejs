@@ -29,10 +29,10 @@
 
 	<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
 		<div class='container'>
-			<a href='/' class='navbar-brand'>Bydlo cms</a>
+			<a href='/' class='navbar-brand'><%= conf.projectName ? conf.projectName : 'Bydlo cms' %></a>
 
 			<ul class="nav navbar-nav navbar-right">
-				<%= user?"<li><a href='/logout'>Logout</a></li>":"<li><a href='/login'>Login</a></li>" %>
+				<%= user._id ? "<li><a href='/logout'><span class='glyphicon glyphicon-off'></span> Logout</a></li>" : "<li><a href='/login'><span class='glyphicon glyphicon-lock'></span> Login</a></li>" %>
 			</ul>
 		</div>
 	</nav>
