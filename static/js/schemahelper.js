@@ -7,6 +7,7 @@
 			integer: 'number',
 			boolean: 'number'
 		};
+		console.log(name);
 		var attributes = {
 			name: name,
 			'class': 'form-control',
@@ -29,7 +30,7 @@
 		}
 
 		var $wrapper = $("<div><label>" + label + "</label></div>");
-		$wrapper.addClass("form-group input-" + name.replace('[', '').replace(']', '').replace('.', ''));
+		$wrapper.addClass("form-group " + _.compact(name.trim().split(/[\.\[\]]/)).join(' '));
 
 		if (attributes.type == 'file' && value && value.length) {
 			var $files = $("<ul class='file-list'></ul>");
@@ -91,7 +92,10 @@
 
 	function formPart(schema, obj, parentKeyName) {
 		var $wrapper = $("<fieldset></fieldset>");
-		$wrapper.addClass("group-" + parentKeyName);
+		$wrapper.addClass("group");
+		if(parentKeyName){
+			$wrapper.addClass(_.compact(parentKeyName.trim().split(/[\.\[\]]/)).join(' '));
+		}
 		if (schema.hasOwnProperty('info') && schema.info.hasOwnProperty('label')) {
 			$wrapper.append("<legend>" + schema.info.label + "</legend>");
 		}
