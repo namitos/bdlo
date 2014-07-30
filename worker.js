@@ -75,7 +75,6 @@ module.exports = function (conf, modifyApp) {
 	app.set('view cache', conf.viewCache);
 	app.engine('ejs', require('consolidate').lodash);
 	app.set('view engine', 'ejs');
-	app.set('adminViewsPath', __dirname + '/static/views');//@deprecated удалить это
 	app.set('coreViewsPath', __dirname + '/static/views');
 
 	var middleWares = [
