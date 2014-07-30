@@ -49,12 +49,22 @@ module.exports = function (conf, modifyApp) {
 		parameters.user = req.hasOwnProperty('user') ? req.user : false;
 		parameters.conf = conf;
 		res.render(template, parameters, function (err, html) {
-			res.render(url[1] == 'admin' ? app.get('adminViewsPath') + '/admin/page' : 'page', {
+			var title = parameters.hasOwnProperty('title') ? parameters.title : '';
+			var h1Title = parameters.hasOwnProperty('h1Title') ? parameters.h1Title : title;
+			var toRender = {
 				html: html,
 				user: req.hasOwnProperty('user') ? req.user : false,
 				conf: conf,
-				title: parameters.hasOwnProperty('title') ? parameters.title : ''
-			});
+				title: title,
+				h1Title: h1Title,
+				seoContent: ''
+			};
+			if (res.seo) {
+				toRender.title = res.seo.title;
+				toRender.h1Title = res.seo.h1Title;
+				toRender.seoContent = res.seo.content;
+			}
+			res.render(url[1] == 'admin' ? app.get('coreViewsPath') + '/admin/page' : 'page', toRender);
 		});
 	}
 
@@ -65,7 +75,8 @@ module.exports = function (conf, modifyApp) {
 	app.set('view cache', conf.viewCache);
 	app.engine('ejs', require('consolidate').lodash);
 	app.set('view engine', 'ejs');
-	app.set('adminViewsPath', __dirname + '/static/views');
+	app.set('adminViewsPath', __dirname + '/static/views');//@deprecated удалить это
+	app.set('coreViewsPath', __dirname + '/static/views');
 
 	var middleWares = [
 		{
@@ -121,6 +132,20 @@ module.exports = function (conf, modifyApp) {
 			}
 		},
 		{
+			key: 'seo',
+			fn: function (req, res, next) {
+				var db = app.get('db');
+				db.collection('seo').find({
+					route: req.url.split('?')[0]
+				}).toArray(function (err, result) {
+					if (result.length > 0) {
+						res.seo = result[0];
+					}
+					next();
+				});
+			}
+		},
+		{
 			key: 'pages',
 			fn: function (req, res, next) {
 				var db = app.get('db');
@@ -128,8 +153,9 @@ module.exports = function (conf, modifyApp) {
 					route: req.url.split('?')[0]
 				}).toArray(function (err, result) {
 					if (result.length > 0) {
-						res.renderPage(app.get('adminViewsPath') + '/staticpage', {
+						res.renderPage(app.get('coreViewsPath') + '/staticpage', {
 							title: result[0].title,
+							h1Title: result[0].title,
 							page: result[0]
 						});
 					} else {

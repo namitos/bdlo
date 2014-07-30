@@ -10,7 +10,7 @@ module.exports = function (app) {
 		if (req.user.hasOwnProperty('_id')) {
 			res.redirect('/');
 		} else {
-			res.renderPage(app.get('adminViewsPath') + '/userlogin');
+			res.renderPage(app.get('coreViewsPath') + '/userlogin');
 		}
 	});
 
