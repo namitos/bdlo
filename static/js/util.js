@@ -114,9 +114,23 @@
 			this.close();
 		}
 	};
-
+	
+	function makeTabs(data) {
+		var $wrapper = $("<div class='tabs-wrapper'></div>");
+		var $tabs = $("<ul class='nav nav-tabs'></ul>");
+		var $tabsContent = $("<div class='tab-content'></div>");
+		for(var key in data){
+			$tabs.append("<li><a href='#" + key + "' data-toggle='tab'>" + data[key].title + "</a></li>");
+			var $dataWrap = $("<div class='tab-pane' id='" + key + "'></div>");
+			$dataWrap.append(data[key].html);
+			$tabsContent.append($dataWrap);
+		}
+		$wrapper.append($tabs).append($tabsContent);
+		return $wrapper;
+	}
 	global.util.loadVocabularies = loadVocabularies;
 	global.util.loadBlocks = loadBlocks;
 	global.util.buildMenu = buildMenu;
 	global.util.sendNoficiation = sendNoficiation;
+	global.util.makeTabs = makeTabs;
 })(this, jQuery);
