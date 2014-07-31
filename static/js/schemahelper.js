@@ -7,7 +7,6 @@
 			integer: 'number',
 			boolean: 'number'
 		};
-		console.log(name);
 		var attributes = {
 			name: name,
 			'class': 'form-control',
@@ -116,7 +115,7 @@
 			} else if (fieldSchema.type == 'array') {
 				keyName = parentKeyName ? parentKeyName + '.' + key : key;
 				var $array = $("<fieldset></fieldset>");
-				$array.addClass('multi');
+				$array.addClass('multi ' + _.compact(keyName.trim().split(/[\.\[\]]/)).join(' '));
 				if (fieldSchema.hasOwnProperty('info') && fieldSchema.info.hasOwnProperty('label')) {
 					$array.append("<legend>" + fieldSchema.info.label + "</legend>");
 				}
