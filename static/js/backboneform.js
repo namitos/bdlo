@@ -90,7 +90,6 @@ var FormRowView = Backbone.View.extend({
 		var changeField = function (input, callback) {
 			if(input.name){
 				var $input = jQuery(input);
-				console.log($input);
 				var keys = view._fieldParts($input.attr('name'));
 				keys.forEach(function (key, i) {
 					if (parseInt(key).toString() == key) {
@@ -139,9 +138,7 @@ var FormRowView = Backbone.View.extend({
 			});
 		};
 		if (view.options.hasOwnProperty('presave')) {
-			view.options.presave(view.model, function (model) {
-				save(view);
-			});
+			view.options.presave.apply(view, [view.model, function (model) { save(view); }]);
 		} else {
 			save(view);
 		}
