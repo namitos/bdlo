@@ -1,0 +1,15 @@
+{
+	"name": "bdlo",
+	"version": "0.4.0",
+	"private": false,
+	"dependencies": {
+		"jquery": "2.x",
+		"jquery-ui": "1.x",
+		"lodash": "2.x",
+		"backbone": "1.x",
+		"vow": "dfilatov/vow",
+		"bootstrap": "3.x",
+		"ace": "1.x",
+		"ckeditor": "4.x"
+	}
+}

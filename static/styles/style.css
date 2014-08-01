@@ -29,13 +29,7 @@ a {
 	outline: none;
 }
 
-.btn {
-	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-}
 
-.btn:active {
-	box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.3);
-}
 
 .container {
 	position: relative;
@@ -111,10 +105,6 @@ a {
 
 .form-row-view .form-group {
 	margin-bottom: 5px;
-}
-
-.form-row-view .btn-group {
-	margin-top: 5px;
 }
 
 .form-row-view .file-list {
