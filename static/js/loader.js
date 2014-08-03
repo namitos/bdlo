@@ -1,6 +1,6 @@
 /** Асинхронный подгрузчик всякого *********************************************/
-(function (context, $) {
-	context.load = function (urls, onLoad) {
+(function (global, $) {
+	global.load = function (urls, onLoad) {
 		var loadPromise = function (input) {
 			return new vow.Promise(function (resolve, reject, notify) {
 				var traverse = {};
@@ -17,8 +17,13 @@
 					if (ext == 'ejs') {
 						data = _.template(data);
 					} else if (ext == 'js') {
-						var module = {};
-						(function (module) {//это сделано для схем, которые также подтягиваются на бекенде и пишутся в module.exports
+						var module = {
+							exports: {}
+						};
+						function define(cb){
+							cb({}, {}, module);
+						}
+						(function (module) {
 							eval(data);
 						})(module);
 						data = module.exports;
