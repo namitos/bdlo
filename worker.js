@@ -3,6 +3,9 @@ module.exports = function (conf, modifyApp) {
 	var app = express();
 	var server = require('http').createServer(app);
 
+	require('./app/lib/util')(app);
+	require('./app/lib/crud')(app);
+
 	app.io = require('socket.io')(server);
 	app.io.adapter(require('socket.io-redis')({
 		host: conf.session.redis.host,
