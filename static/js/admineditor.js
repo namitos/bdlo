@@ -100,7 +100,7 @@
 					this.$el.html(listHtml);
 
 				} else {
-					this.$el.html("<div class='alert alert-info'>No documents</div>");
+					this.$el.html("<div class='alert'>No documents</div>");
 				}
 
 			}

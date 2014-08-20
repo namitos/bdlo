@@ -224,9 +224,13 @@ a {
 	left: 240px;
 	background: #5ebd5e;
 	font-size: 13px;
-	overflow-y: auto;
 	padding-top: 46px;
 	color:#fff;
+}
+.list-collection > ul,
+.list-schemas > ul{
+	overflow-y: auto;
+	height:100%;
 }
 .list-collection > ul > li > a{
 	color: #fff;
