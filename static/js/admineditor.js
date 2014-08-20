@@ -4,24 +4,12 @@
 		toLoad[key] = schemas[key].hasOwnProperty('path') ? schemas[key].path : '/core/schemas/' + key + '.js';
 	}
 
-	function resizeList($list) {
-		if ($(window).width() > 767) {
-			if ($(window).width() > 992) {
-				$list.height($(window).height() - 150);
-			} else {
-				$list.height($(window).height() - 200);
-			}
-		} else {
-			$list.height(141);
-		}
-	}
-
 	load(toLoad, function (result) {
 		for (var key in schemas) {
 			schemas[key].schema = result[key];
 		}
 
-		var schemasMenuHtml = "<ul class='nav nav-tabs'>";
+		var schemasMenuHtml = "<ul class='nav'>";
 		for (var key in schemas) {
 			schemasMenuHtml += "<li><a href='#s/" + key + "/new'>" + schemas[key].name + "</a></li>";
 		}
@@ -38,7 +26,6 @@
 			idAttribute: '_id'
 		});
 		var ObjCollectionList = Backbone.View.extend({
-			className: "collection-list",
 			fetchCollection: function () {
 				var fieldsToFetch = {};
 				fieldsToFetch[schemas[this.options.schemaName].schema.info.titleField] = true;
@@ -93,10 +80,10 @@
 				var schemaName = this.options.schemaName;
 
 				function list(elements) {
-					var listHtml = "<ul class='list-group'>";
+					var listHtml = "<ul class='nav'>";
 					elements.forEach(function (obj) {
 						if (obj.hasOwnProperty('_id')) {
-							listHtml += "<li class='list-group-item'><a href='#s/" + schemaName + "/" + obj._id + "'>" + _.escape(obj[schemas[schemaName].schema.info.titleField]) + "</a>" + (obj.hasOwnProperty('children') ? list(obj.children) : '') + "</li>";
+							listHtml += "<li " + (obj._id == window.location.hash.split('/')[2] ? "class='active'" : '') + "><a href='#s/" + schemaName + "/" + obj._id + "'>" + _.escape(obj[schemas[schemaName].schema.info.titleField]) + "</a>" + (obj.hasOwnProperty('children') ? list(obj.children) : '') + "</li>";
 						}
 					});
 					listHtml += "</ul>";
@@ -111,7 +98,6 @@
 
 				if (this.collection.length > 0) {
 					this.$el.html(listHtml);
-					resizeList($('.collection-list .wrapper'));
 
 				} else {
 					this.$el.html("<div class='alert alert-info'>No documents</div>");
@@ -120,16 +106,12 @@
 			}
 		});
 
-		$(window).on('resize', function () {
-			resizeList($('.collection-list .wrapper'));
-		});
-
 		var views = {};
 
 		var schemasRoute = Backbone.Router.extend({
 			listView: function (schemaName) {
 				var list = new ObjCollectionList({
-					el: $('.collection-list .wrapper'),
+					el: $('.list-collection'),
 					options: {
 						schemaName: schemaName
 					}
@@ -143,7 +125,7 @@
 				},
 				's/:schemaName/:id': function (schemaName, id) {
 					var routerItem = this;
-
+					$(".list-schemas a[href='#s/" + schemaName + "/new']").parent().addClass('active');
 					util.loadVocabularies(schemas, schemaName, function () {
 						$('.form-schema-new').html("<a class='btn btn-info' href='#s/" + schemaName + "/new'><span class='glyphicon glyphicon-plus'></span> New</a>");
 						if (views.hasOwnProperty(schemaName)) {
