@@ -175,23 +175,6 @@ a {
 	display: none;
 }
 
-.list-group {
-	margin-bottom: 0;
-}
-
-.list-group li {
-	padding: 5px;
-	font-size: 12px;
-}
-
-.list-group li ul {
-	margin-top: 5px;
-}
-
-.list-group li ul li {
-}
-
-
 
 .list-schemas{
 	position:fixed;
