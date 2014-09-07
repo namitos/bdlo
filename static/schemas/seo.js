@@ -8,6 +8,12 @@ var seoSchema = {
 			type: 'string',
 			required: true
 		},
+		keywords: {
+			type: 'string'
+		},
+		description: {
+			type: 'string'
+		},
 		h1Title: {
 			type: 'string'
 		},
