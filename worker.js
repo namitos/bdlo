@@ -60,12 +60,16 @@ module.exports = function (conf, modifyApp) {
 				conf: conf,
 				title: title,
 				h1Title: h1Title,
-				seoContent: ''
+				seoContent: '',
+				seoKeywords: '',
+				seoDescription: ''
 			};
 			if (res.seo) {
 				toRender.title = res.seo.title;
 				toRender.h1Title = res.seo.h1Title;
 				toRender.seoContent = res.seo.content;
+				toRender.seoKeywords = res.seo.keywords;
+				toRender.seoDescription = res.seo.description;
 			}
 			res.render(url[1] == 'admin' ? app.get('coreViewsPath') + '/admin/page' : 'page', toRender);
 		});
