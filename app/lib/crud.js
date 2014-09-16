@@ -192,7 +192,14 @@ module.exports = function (app) {
 			return new vow.Promise(function (resolve, reject) {
 				var schema = app.util.getSchema(collectionName);
 				if (schema) {
-					data = app.util.forceSchema(schema, data);
+					if (data instanceof Array) {
+						data.forEach(function (row, i) {
+							data[i] = app.util.forceSchema(schema, data[i]);
+						});
+						data = _.compact(data);
+					} else {
+						data = app.util.forceSchema(schema, data);
+					}
 				}
 				prepareFiles(schema, data, function (result) {
 					if (
