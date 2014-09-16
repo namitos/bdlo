@@ -190,7 +190,11 @@ module.exports = function (app) {
 	var crud = {
 		create: function (collectionName, data, user) {
 			return new vow.Promise(function (resolve, reject) {
-				prepareFiles(app.util.getSchema(collectionName), data, function (result) {
+				var schema = app.util.getSchema(collectionName);
+				if (schema) {
+					data = app.util.forceSchema(schema, data);
+				}
+				prepareFiles(schema, data, function (result) {
 					if (
 						user.permission(collectionName + ' all all') ||
 						user.permission(collectionName + ' create all') ||
@@ -269,7 +273,11 @@ module.exports = function (app) {
 		},
 		update: function (collectionName, _id, data, user) {
 			return new vow.Promise(function (resolve, reject) {
-				prepareFiles(app.util.getSchema(collectionName), data, function (result) {
+				var schema = app.util.getSchema(collectionName);
+				if (schema) {
+					data = app.util.forceSchema(schema, data);
+				}
+				prepareFiles(schema, data, function (result) {
 					var where = {
 						_id: new mongodb.ObjectID(_id)
 					};

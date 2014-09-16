@@ -216,17 +216,25 @@ module.exports = function (conf, modifyApp) {
 
 	var promises = {
 		db: mongoConnectPromise(conf.mongoConnect),
-		routes: routesPromise(__dirname + '/app/routes'),
+		routesCore: routesPromise(__dirname + '/app/routes'),
 		projectInfo: vowFs.read('./package.json', 'utf8')
 	};
 	if (conf.hasOwnProperty('routesPath')) {
-		promises.routesPath = routesPromise(conf.routesPath);
+		promises.routes = routesPromise(conf.routesPath);
 	}
 
 	vow.all(promises).then(function (result) {
+		app.get('*', function (req, res) {
+			res.renderPage(app.get('coreViewsPath') + '/staticpage', {
+				title: '404',
+				page: {
+					content:'Not found'
+				}
+			});
+		});
+
 		var db = result.db;
 		app.set('db', db);
-
 		passport.use(new LocalStrategy(
 			function (username, password, done) {
 				//console.log('trying', username, password);
