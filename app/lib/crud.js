@@ -200,6 +200,8 @@ module.exports = function (app) {
 					} else {
 						data = app.util.forceSchema(schema, data);
 					}
+				} else {
+					autoType(data);
 				}
 				prepareFiles(schema, data, function (result) {
 					if (
@@ -216,7 +218,6 @@ module.exports = function (app) {
 						if (data.hasOwnProperty('_id')) {
 							delete data._id;
 						}
-						autoType(data);
 						db.collection(collectionName).insert(data, function (err, results) {
 							if (err) {
 								reject({
@@ -283,6 +284,8 @@ module.exports = function (app) {
 				var schema = app.util.getSchema(collectionName);
 				if (schema) {
 					data = app.util.forceSchema(schema, data);
+				} else {
+					autoType(data);
 				}
 				prepareFiles(schema, data, function (result) {
 					var where = {
@@ -302,7 +305,6 @@ module.exports = function (app) {
 						if (data.hasOwnProperty('_id')) {
 							delete data._id;
 						}
-						autoType(data);
 						db.collection(collectionName).update(where, {
 							"$set": data
 						}, function (err, results) {
