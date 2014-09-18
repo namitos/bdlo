@@ -60,7 +60,7 @@ module.exports = function (app) {
 			} else if (schema.type == 'string') {
 				objNew = obj.toString();
 			} else if (schema.type == 'boolean') {
-				objNew = _.contains([false, 0, '', '0', 'false'], obj) ? false : true;
+				objNew = !_.contains([false, 0, '', '0', 'false', undefined, null], obj);
 			} else if (schema.type == 'any') {
 				objNew = obj;
 			}
