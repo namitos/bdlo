@@ -31,13 +31,15 @@ module.exports = function (app) {
 	function autoType(obj) {
 		var digitValue;
 		for (var key in obj) {
-			if (typeof obj[key] == 'string') {
-				digitValue = parseInt(obj[key]);
-				if (obj[key] == digitValue.toString()) {
-					obj[key] = digitValue;
+			if (key != '_id') {
+				if (typeof obj[key] == 'string') {
+					digitValue = parseInt(obj[key]);
+					if (obj[key] == digitValue.toString()) {
+						obj[key] = digitValue;
+					}
+				} else {
+					autoType(obj[key]);
 				}
-			} else {
-				autoType(obj[key]);
 			}
 		}
 	}
@@ -249,7 +251,16 @@ module.exports = function (app) {
 					) {
 					var db = app.get('db');
 					if (query.hasOwnProperty('_id')) {
-						query._id = new mongodb.ObjectID(query._id.toString());
+						if (query._id instanceof Object) {
+							if (query._id.hasOwnProperty('$in')) {
+								query._id.$in.forEach(function (item, i) {
+									query._id.$in[i] = new mongodb.ObjectID(item.toString());
+								});
+							}
+						} else {
+							query._id = new mongodb.ObjectID(query._id.toString());
+						}
+
 					}
 					var fields = [];
 					if (query.hasOwnProperty('fields')) {
