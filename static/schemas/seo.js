@@ -1,4 +1,4 @@
-var seoSchema = {
+var schema = {
 	properties: {
 		route: {
 			type: 'string',
@@ -28,9 +28,15 @@ var seoSchema = {
 	},
 	info: {
 		titleField: 'route'
-	}
+	},
+	name: 'Seo'
 };
-try {
-	module.exports = seoSchema;
-} catch (e) {
+
+if (typeof exports === 'object') {
+	module.exports = schema;
+}
+if (typeof define === 'function') {
+	define(function () {
+		return schema;
+	});
 }

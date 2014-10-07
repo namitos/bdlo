@@ -10,6 +10,9 @@
 		"vow": "dfilatov/vow",
 		"bootstrap": "3.x",
 		"ace": "1.x",
-		"ckeditor": "4.x"
+		"ckeditor": "4.x",
+		"requirejs": "2.x",
+		"requirejs-text": "2.x",
+		"namitos-fc": "1.x"
 	}
 }

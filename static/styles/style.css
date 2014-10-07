@@ -13,6 +13,32 @@ body {
 	font-family: 'Open Sans', sans-serif;
 }
 
+.container {
+	position: relative;
+}
+
+a {
+	cursor: pointer;
+}
+
+:focus,
+:active:focus {
+	outline: none !important;
+}
+
+label {
+	font-weight: 600;
+}
+
+.form-control {
+	border-radius: 0;
+	box-shadow: none;
+}
+
+.form-control:focus {
+	box-shadow: none;
+}
+
 .form-control-code {
 	min-height: 600px;
 }
@@ -21,53 +47,50 @@ body {
 	font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
 }
 
-a {
-	cursor: pointer;
-}
-
-:focus {
-	outline: none;
-}
-
-
-
-.navbar{
-	background:#fff;
-	box-shadow: 0 2px 2px rgba(0,0,0,.05),0 1px 0 rgba(0,0,0,.05);
-	border:none;
+.navbar {
+	background: #fff;
+	box-shadow: 0 2px 2px rgba(0, 0, 0, .05), 0 1px 0 rgba(0, 0, 0, .05);
+	border: none;
 	min-height: 46px;
 }
-.navbar a{
+
+.navbar a {
 	color: #555;
 	font-size: 13px;
 }
-.navbar .navbar-brand{
-	padding:13px 20px;
+
+.navbar .navbar-brand {
+	padding: 13px 20px;
 	height: 46px;
 	font-size: 20px;
 	border-right: 1px solid #f1f1f1;
 }
-.navbar .navbar-nav.navbar-right{
-	margin-right:0px;
+
+.navbar .navbar-nav.navbar-right {
+	margin-right: 0px;
 }
-.navbar .navbar-nav>li{
+
+.navbar .navbar-nav > li {
 	border-left: 1px solid #f1f1f1;
 	border-right: 1px solid #f1f1f1;
-	margin-left:-1px;
+	margin-left: -1px;
 }
-.navbar .navbar-nav>li>a{
-	padding:13px 20px;
+
+.navbar .navbar-nav > li > a {
+	padding: 13px 20px;
 	transition: all .2s;
 }
-.navbar .navbar-nav>li>a .label{
-	background:#5ebd5e;
+
+.navbar .navbar-nav > li > a .label {
+	background: #5ebd5e;
 	text-shadow: none;
 }
-.navbar .navbar-nav>li>a:hover{
+
+.navbar .navbar-nav > li > a:hover {
 	background: #f8f8f8;
 }
 
-.navbar-toggle .icon-bar{
+.navbar-toggle .icon-bar {
 	background: #555;
 }
 
@@ -75,37 +98,35 @@ a {
 	border-bottom: 2px solid #e4e4e4;
 }
 
-.nav-tabs>li {
-	margin-bottom:-2px;
+.nav-tabs > li {
+	margin-bottom: -2px;
 }
+
 .nav-tabs > li > a,
-.nav-tabs > li > a:hover{
-	background-color: rgba(0,0,0,.05);
+.nav-tabs > li > a:hover {
+	background-color: rgba(0, 0, 0, .05);
 	border: none;
 	border-bottom: 2px solid #e4e4e4;
 	color: #777;
 	margin: 0 6px 0 0;
 	padding: 8px 20px;
-	border-radius:2px 2px 0 0;
+	border-radius: 2px 2px 0 0;
 	font-size: 13px;
 }
+
 .nav-tabs > li.active > a,
-.nav-tabs > li.active > a:hover{
+.nav-tabs > li.active > a:hover {
 	background: #1d89cf;
 	border: none;
-	color:#fff;
+	color: #fff;
 	border-bottom: 2px solid #1a7ab9;
 }
-.tab-content > .tab-pane{
-	padding:10px;
-	background:#fff;
+
+.tab-content > .tab-pane {
+	padding: 10px;
+	background: #fff;
 	border: 1px solid #e4e4e4;
-	border-top:none;
-}
-
-
-.container {
-	position: relative;
+	border-top: none;
 }
 
 #notifications {
@@ -124,103 +145,36 @@ a {
 	font-size: 12px;
 	padding: 3px 5px;
 	border-radius: 0;
-	border: none;
-	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
-	background:#fff;
-}
-
-.rows-multiple,
-.rows-multiple .row {
-	margin-bottom: 10px;
-}
-
-.form-row-view {
-}
-
-.form-row-view fieldset,
-.form-row-view .multi {
-	padding: 5px 5px 5px 5px;
-	background: rgba(0, 0, 0, 0.05);
 	margin-bottom: 5px;
 }
 
-.form-row-view .multi-item {
-	position: relative;
-}
-
-.form-row-view .multi-item fieldset {
-	margin-right: 45px;
-}
-
-.form-row-view fieldset legend {
-	font-weight: 300;
-	font-style: italic;
-	margin: 0;
-	padding: 0;
-	border: none;
-	font-size: inherit;
-}
-
-.form-row-view .multi-item .btn-multi-delete {
-	position: absolute;
+.list-schemas {
+	position: fixed;
+	z-index: 100;
+	width: 240px;
+	height: 100%;
 	top: 0;
-	right: 0;
-}
-
-.form-row-view fieldset .form-group:last-child {
-	margin-bottom: 0;
-}
-
-.form-row-view .form-group {
-	margin-bottom: 5px;
-}
-
-.form-row-view .file-list {
-	margin: 0;
-	padding: 0;
-}
-
-.form-row-view .file-list li {
-	display: inline-block;
-	margin: 0 10px 0 0;
-	padding: 0;
-}
-
-.form-row-view .file-list li a {
-	display: inline-block;
-	vertical-align: middle;
-}
-
-.form-row-view .btn-multi-add .text,
-.form-row-view .btn-multi-delete .text,
-.form-row-view .file-list li a .text {
-	display: none;
-}
-
-
-.list-schemas{
-	position:fixed;
-	z-index:100;
-	width:240px;
-	height:100%;
-	top: 0;
-	left:0;
-	background:#23272d;
+	left: 0;
+	background: #23272d;
 	font-size: 13px;
 	padding-top: 46px;
 }
-.list-schemas > ul > li > a{
+
+.list-schemas > ul > li > a {
 	color: #808b9c;
 	transition: all .2s;
 }
-.list-schemas > ul > li > a:hover{
+
+.list-schemas > ul > li > a:hover {
 	color: #fff;
-	background:none;
+	background: none;
 }
-.list-schemas > ul > li.active > a{
-	background:rgba(0,0,0,0.2);
+
+.list-schemas > ul > li.active > a {
+	background: rgba(0, 0, 0, 0.2);
 }
-.list-collection{
+
+.list-collection {
 	position: fixed;
 	z-index: 100;
 	width: 240px;
@@ -230,21 +184,72 @@ a {
 	background: #5ebd5e;
 	font-size: 13px;
 	padding-top: 46px;
-	color:#fff;
+	color: #fff;
 }
+
 .list-collection > ul,
-.list-schemas > ul{
+.list-schemas > ul {
 	overflow-y: auto;
-	height:100%;
+	height: 100%;
 }
-.list-collection > ul > li > a{
+
+.list-collection > ul > li > a {
 	color: #fff;
 	transition: all .2s;
 }
-.list-collection > ul > li > a:hover{
+
+.list-collection > ul > li > a:hover {
 	color: #fff;
-	background:none;
+	background: none;
 }
-.list-collection > ul > li.active > a{
-	background:rgba(0,0,0,0.1);
+
+.list-collection > ul > li.active > a {
+	background: rgba(0, 0, 0, 0.1);
+}
+
+.form-schema {
+	padding-bottom: 20px;
+}
+
+.form-schema .btn.save .text,
+.form-schema .btn.delete .text {
+	margin-left: 5px;
+}
+
+.form-schema .form-group,
+.form-schema .array {
+	display: inline-block;
+	width: 49%;
+	vertical-align: top;
+}
+
+.form-schema .form-group:nth-child(odd),
+.form-schema .array:nth-child(odd) {
+	margin-right: 2%;
+}
+
+.form-schema .array {
+	margin-bottom: 15px;
+}
+
+.form-schema .array .btn .text {
+	display: none;
+}
+
+.form-schema .array .items {
+
+}
+
+.form-schema .array .items > div {
+	padding-right: 50px;
+	position: relative;
+}
+
+.form-schema .array .items > div > .btn {
+	position: absolute;
+	top: 0;
+	right: 0;
+	color: #fff;
+	background-color: #31b0d5;
+	border-color: #269abc;
 }

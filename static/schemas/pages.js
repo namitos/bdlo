@@ -1,23 +1,27 @@
-var pagesSchema = {
+var schema = {
+	type: 'object',
 	properties: {
 		route: {
 			type: 'string',
-			required: true
+			required: true,
+			label: 'Route'
 		},
 		title: {
 			type: 'string',
-			required: true
+			required: true,
+			label: 'Title'
 		},
-		parent: {
-			type: 'any',
-			info: {
-				type: 'select',
-				schema: 'pages'
-			}
-		},
+		/*parent: {
+		 type: 'string',
+		 info: {
+		 type: 'select',
+		 schema: 'pages'
+		 }
+		 },*/
 		content: {
 			type: 'string',
 			required: true,
+			label: 'Content',
 			info: {
 				type: 'textarea',
 				wysiwyg: true
@@ -26,9 +30,15 @@ var pagesSchema = {
 	},
 	info: {
 		titleField: 'title'
-	}
+	},
+	name: 'Pages'
 };
-try {
-	module.exports = pagesSchema;
-} catch (e) {
+
+if (typeof exports === 'object') {
+	module.exports = schema;
+}
+if (typeof define === 'function') {
+	define(function () {
+		return schema;
+	});
 }

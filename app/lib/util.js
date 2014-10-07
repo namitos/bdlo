@@ -30,7 +30,7 @@ module.exports = function (app) {
 			if (schema.type == 'array') {
 				objNew = [];
 				if (obj instanceof Array) {
-					obj.forEach(function (val, key) {
+					_.compact(obj).forEach(function (val, key) {
 						objNew[key] = app.util.forceSchema(schema.items, val);
 					});
 				} else {
