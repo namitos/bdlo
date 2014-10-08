@@ -22,10 +22,7 @@ var schema = {
 			type: 'string',
 			required: true,
 			label: 'Content',
-			info: {
-				type: 'textarea',
-				wysiwyg: true
-			}
+			widget: 'wysiwyg'
 		}
 	},
 	info: {

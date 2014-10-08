@@ -3,13 +3,10 @@
 define([
 	'backbone',
 	'fc',
-	'util'
-	/*'ckeditor',
-	 'ace',
-	 'jquery',*/
-	//'jqueryui'
-	//'twbs'
-], function (Backbone, fc, util/*, ckeditor, ace, $*/) {
+	'util',
+	'ckeditor',
+	'ace'
+], function (Backbone, fc, util, CKEDITOR, ace) {
 
 	var ObjModel = Backbone.Model.extend({
 		idAttribute: '_id'
@@ -125,12 +122,48 @@ define([
 		},
 		render: function () {
 			var view = this;
-			var $form = $("<form></form>");
 			var $fields = $(fc(view.schemas[view.schemaName], view.model.attributes));
+
+
+			//adding wysiwyg
+			$fields.find('.widget-wysiwyg').each(function () {
+				CKEDITOR.replace(this, {
+					allowedContent: true
+				});
+			});
+			var instance;
+			for (var i in CKEDITOR.instances) {
+				instance = CKEDITOR.instances[i];
+				instance.el = $fields.find('[name=' + instance.name + ']')[0];
+				instance.on('change', function () {
+					this.updateElement();
+					this.el.changeField();
+				});
+			}
+
+
+			//code input
+			$fields.find('.widget-code').each(function () {
+				var $textarea = $(this);
+				var $wrapper = $("<div class='form-control-code' id='code-" + this.name + "'>");
+				$textarea.hide().after($wrapper);
+				var editor = ace.edit($wrapper[0]);
+				editor.getSession().setValue($textarea.val());
+				editor.getSession().on('change', function () {
+					$textarea.val(editor.getSession().getValue())[0].changeField();
+				});
+				if($textarea.attr('language')){
+					editor.getSession().setMode("ace/mode/" + $textarea.attr('language'));
+				}
+
+				//editor.setTheme("ace/theme/monokai");
+			});
+
 			var $btns = $("<div class='btn-group'><button type='submit' class='btn btn-primary save'><span class='glyphicon glyphicon-save'></span><span class='text'>Save</span></button></div>");
 			if (view.model.id) {
 				$btns.append("<button type='button' class='btn btn-danger delete'><span class='glyphicon glyphicon-remove'></span><span class='text'>Delete</span></button>");
 			}
+			var $form = $("<form></form>");
 			$form.append($fields);
 			$form.append($btns);
 			view.$el.html($form);

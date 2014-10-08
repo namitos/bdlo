@@ -40,12 +40,18 @@ label {
 }
 
 .form-control-code {
-	min-height: 600px;
+	min-height: 304px;
+	border: 1px solid #ccc;
 }
 
 .form-control-code * {
 	font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
 }
+.cke_editor_content{
+	box-shadow: none!important;
+	border: 1px solid #ccc!important;
+}
+
 
 .navbar {
 	background: #fff;
