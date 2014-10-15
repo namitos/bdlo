@@ -225,14 +225,18 @@ label {
 .form-schema .form-group,
 .form-schema .array {
 	display: inline-block;
-	width: 49%;
+	width: 48%;
 	vertical-align: top;
+	margin-right: 2%;
 }
 
+/*
 .form-schema .form-group:nth-child(odd),
 .form-schema .array:nth-child(odd) {
 	margin-right: 2%;
+	border:1px solid red;
 }
+*/
 
 .form-schema .array {
 	margin-bottom: 15px;
@@ -243,7 +247,7 @@ label {
 }
 
 .form-schema .array .items {
-
+	margin-right: -2%;
 }
 
 .form-schema .array .items > div {
@@ -258,4 +262,9 @@ label {
 	color: #fff;
 	background-color: #31b0d5;
 	border-color: #269abc;
+}
+
+
+.form-schema .object > label{
+	display: block;
 }
