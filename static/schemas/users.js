@@ -30,8 +30,8 @@ var schema = {
 	},
 	info: {
 		ownerField: '_id',
-		titleField: 'username',
 	},
+	titleField: 'username',
 	name: 'Users'
 };
 

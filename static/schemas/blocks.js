@@ -59,9 +59,7 @@ var schema = {
 			}
 		}
 	},
-	info: {
-		titleField: 'title'
-	},
+	titleField: 'title',
 	name: 'Blocks'
 };
 

@@ -54,7 +54,7 @@ define([
 			this.listenTo(this.menuCollection, 'sync', this.render);
 
 			var fields = {};
-			fields[this.schema.info.titleField] = true;
+			fields[this.schema.titleField] = true;
 			this.menuCollection.fetch({
 				data: {
 					fields: fields
@@ -66,7 +66,7 @@ define([
 			var items = view.menuCollection.toJSON();
 			if (items.length) {
 				items.forEach(function (row) {
-					var $el = $("<li><a href='#" + view.schemaName + "/" + row._id + "'>" + row[view.schema.info.titleField] + "</a></li>");
+					var $el = $("<li><a href='#" + view.schemaName + "/" + row._id + "'>" + row[view.schema.titleField] + "</a></li>");
 					if (view.activeId == row._id) {
 						$el.addClass('active');
 					}

@@ -50,23 +50,27 @@ require([
 				this.navigate(schemaName + "/new", {trigger: true});
 			},
 			':schemaName/:id': function (schemaName, id) {
-				this.schemasView.activateLink(schemaName);
-				if (this.activeSchema != schemaName) {
-					this.activeSchema = schemaName;
-					this.listView = new editor.ListView({
+				var router = this;
+				router.schemasView.activateLink(schemaName);
+				if (router.activeSchema != schemaName) {
+					router.activeSchema = schemaName;
+					router.listView = new editor.ListView({
 						schemaName: schemaName,
-						schema: this.schemasView.schemas[schemaName],
+						schema: router.schemasView.schemas[schemaName],
 						$target: $('.list-collection'),
 						activeId: id
 					});
 				} else {
 				}
-				var formView = new editor.FormView({
-					schemaName: schemaName,
-					schemas: this.schemasView.schemas,
-					$target: $('.form-schema'),
-					activeId: id
+				schemas.loadVocabularies(router.schemasView.schemas, schemaName, function(){
+					var formView = new editor.FormView({
+						schemaName: schemaName,
+						schemas: router.schemasView.schemas,
+						$target: $('.form-schema'),
+						activeId: id
+					});
 				});
+
 			}
 		}
 	});

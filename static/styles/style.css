@@ -227,16 +227,8 @@ label {
 	display: inline-block;
 	width: 48%;
 	vertical-align: top;
-	margin-right: 2%;
+	margin: 0 2% 6px 0;
 }
-
-/*
-.form-schema .form-group:nth-child(odd),
-.form-schema .array:nth-child(odd) {
-	margin-right: 2%;
-	border:1px solid red;
-}
-*/
 
 .form-schema .array {
 	margin-bottom: 15px;
@@ -251,20 +243,29 @@ label {
 }
 
 .form-schema .array .items > div {
-	padding-right: 50px;
 	position: relative;
+	background:rgba(0,0,0,0.05);
+	padding: 5px 50px 5px 5px;
 }
 
 .form-schema .array .items > div > .btn {
 	position: absolute;
-	top: 0;
-	right: 0;
+	top: 5px;
+	right: 5px;
 	color: #fff;
 	background-color: #31b0d5;
 	border-color: #269abc;
 }
 
+.form-schema .array .items > .object > .form-group{
+	vertical-align: bottom;
+}
 
 .form-schema .object > label{
 	display: block;
+}
+
+.form-schema .input-file-inner .btn{
+	background: none;
+	padding: 0;
 }

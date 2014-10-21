@@ -25,9 +25,7 @@ var schema = {
 			widget: 'wysiwyg'
 		}
 	},
-	info: {
-		titleField: 'title'
-	},
+	titleField: 'title',
 	name: 'Pages'
 };
 

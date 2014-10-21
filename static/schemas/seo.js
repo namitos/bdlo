@@ -26,9 +26,7 @@ var schema = {
 			}
 		}
 	},
-	info: {
-		titleField: 'route'
-	},
+	titleField: 'route',
 	name: 'Seo'
 };
 

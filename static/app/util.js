@@ -21,6 +21,21 @@ define(function () {
 					$el.remove();
 				}, data.hide);
 			}
+		},
+		load: function(toLoad, cb) {
+			var toLoad1 = [];
+			for (var key in toLoad) {
+				toLoad1.push(toLoad[key]);
+			}
+			require(toLoad1, function () {
+				var i = 0;
+				var schemas = {};
+				for (var key in toLoad) {
+					schemas[key] = arguments[i];
+					++i;
+				}
+				cb(schemas);
+			});
 		}
 	}
 });
