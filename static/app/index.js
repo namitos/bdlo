@@ -26,11 +26,9 @@ require.config({
 
 require([
 	'backbone',
-	'underscore',
-	'jquery',
 	'editor',
 	'schemas'
-], function (Backbone, _, $, editor, schemas) {
+], function (Backbone, editor, schemas) {
 	schemas.load(function (loadedSchemas) {
 		var app = new Router({
 			schemasView: new schemas.ListView({
@@ -56,21 +54,16 @@ require([
 					router.activeSchema = schemaName;
 					router.listView = new editor.ListView({
 						schemaName: schemaName,
-						schema: router.schemasView.schemas[schemaName],
-						$target: $('.list-collection'),
-						activeId: id
+						activeId: id,
+						$target: $('.list-collection')
 					});
-				} else {
 				}
-				schemas.loadVocabularies(router.schemasView.schemas, schemaName, function(){
-					var formView = new editor.FormView({
-						schemaName: schemaName,
-						schemas: router.schemasView.schemas,
-						$target: $('.form-schema'),
-						activeId: id
-					});
-				});
 
+				new editor.FormView({
+					schemaName: schemaName,
+					activeId: id,
+					$target: $('.form-schema')
+				});
 			}
 		}
 	});

@@ -168,7 +168,7 @@ label {
 
 .list-schemas > ul > li > a {
 	color: #808b9c;
-	transition: all .2s;
+	transition: all .1s;
 }
 
 .list-schemas > ul > li > a:hover {
@@ -189,27 +189,79 @@ label {
 	left: 240px;
 	background: #5ebd5e;
 	font-size: 13px;
-	padding-top: 46px;
+	/*padding-top: 46px;*/
+	padding-top: 84px;
 	color: #fff;
 }
 
-.list-collection > ul,
 .list-schemas > ul {
 	overflow-y: auto;
 	height: 100%;
 }
 
-.list-collection > ul > li > a {
-	color: #fff;
-	transition: all .2s;
+.list-collection .view-list{
+	height: 100%;
 }
 
-.list-collection > ul > li > a:hover {
+.list-collection .filter{
+	background: rgb(198, 128, 70);
+	position: absolute;
+	top:46px;
+	left: 0;
+	width: 100%;
+	z-index: 110;
+}
+.list-collection .filter .toggle,
+.list-collection .filter .alert{
+	color:#fff;
+	padding: 10px 15px;
+	margin:0;
+	font-size: 13px;
+	border:none;
+	display: block;
+	transition: all .1s;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+.list-collection .filter .toggle:hover{
+	text-decoration: none;
+	background: rgba(0,0,0,0.1);
+}
+
+.list-collection .filter .content{
+	padding: 10px 15px;
+	position: absolute;
+	top:0;
+	left: -240px;
+	width: 240px;
+	background: rgb(198, 128, 70);
+}
+
+.list-collection .filter .content .form-group{
+	margin: 0 0 6px 0;
+}
+
+
+.list-collection .nav{
+	overflow-y: auto;
+	height: 100%;
+}
+
+.list-collection .nav > li > a {
+	color: #fff;
+	transition: all .1s;
+}
+
+.list-collection .nav > li > a:hover {
 	color: #fff;
 	background: none;
 }
 
-.list-collection > ul > li.active > a {
+.list-collection .nav > li.active > a {
 	background: rgba(0, 0, 0, 0.1);
 }
 

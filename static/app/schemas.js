@@ -43,7 +43,7 @@ define([
 				forEachPrimitives(schema.properties[key], fn);
 			}
 		} else if (schema.type == 'array') {
-			forEachPrimitives(schema.properties[key].items, fn);
+			forEachPrimitives(schema.items, fn);
 		} else {
 			fn(schema);
 		}

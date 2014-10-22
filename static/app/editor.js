@@ -4,10 +4,10 @@ define([
 	'backbone',
 	'fc',
 	'util',
+	'schemas',
 	'ckeditor',
 	'ace'
-], function (Backbone, fc, util, CKEDITOR, ace) {
-
+], function (Backbone, fc, util, schemas, CKEDITOR, ace) {
 	var ObjModel = Backbone.Model.extend({
 		idAttribute: '_id'
 	});
@@ -44,45 +44,95 @@ define([
 	});
 
 	var ListView = Backbone.View.extend({
-		tagName: 'ul',
-		className: 'nav',
-		initialize: function (args) {
-			_.merge(this, args);
-			this.menuCollection = new ObjCollection({
-				schemaName: this.schemaName
-			});
-			this.listenTo(this.menuCollection, 'sync', this.render);
-
+		className: 'view-list',
+		fetch: function(data){
+			if(!data){
+				data = {};
+			}
 			var fields = {};
 			fields[this.schema.titleField] = true;
-			this.menuCollection.fetch({
-				data: {
+			this.collection.fetch({
+				data: _.merge(data, {
 					fields: fields
-				}
+				})
+			});
+		},
+		initialize: function (args) {
+			_.merge(this, args);
+			var view = this;
+			view.collection = new ObjCollection({
+				schemaName: view.schemaName
+			});
+			view.listenTo(view.collection, 'sync', this.render);
+			schemas.load(function(loadedSchemas){
+				schemas.loadVocabularies(loadedSchemas, view.schemaName, function(){
+					view.schemas = loadedSchemas;
+					view.schema = loadedSchemas[view.schemaName];
+					view.fetch();
+				});
+
 			});
 		},
 		render: function () {
 			var view = this;
-			var items = view.menuCollection.toJSON();
+			var items = view.collection.toJSON();
+
+			if(!view.initialRender){
+				view.$el.html("<div class='filter'><a class='toggle'><span class='glyphicon glyphicon-filter'></span> Filter</a><div class='content' hidden></div></div><ul class='nav'></ul>");
+
+				var filterSchema = _.cloneDeep(view.schema);
+				for(var key in filterSchema.properties){
+					if(!filterSchema.properties[key].hasOwnProperty('filterable')){
+						delete filterSchema.properties[key];
+					}
+				}
+				view.filterSchema = filterSchema;
+
+				if(_.size(view.filterSchema.properties)){
+					view.$el.find('.filter .content').html(fc(view.filterSchema, {}));
+				} else {
+					view.$el.find('.filter').html("<div class='alert'><span class='glyphicon glyphicon-filter'></span> No filter</div>");
+				}
+				view.initialRender = true;
+			}
+
+			var $nav = view.$el.find('.nav');
+
 			if (items.length) {
+				$nav.html('');
 				items.forEach(function (row) {
 					var $el = $("<li><a href='#" + view.schemaName + "/" + row._id + "'>" + row[view.schema.titleField] + "</a></li>");
 					if (view.activeId == row._id) {
 						$el.addClass('active');
 					}
-					view.$el.append($el);
+					$nav.append($el);
 				});
 			} else {
-				view.$el = $("<div class='alert'>No documents</div>");
+				$nav.html("<div class='alert'>No documents</div>");
 			}
 			view.$target.html(view.$el);
+
+			view.delegateEvents();
+			//костыль потому что бекбон не поддерживает нестандартные события
+			view.$el.find('.filter .object-root').on('changeObj', function(e){
+				var data = e.originalEvent.detail;
+				for(var key in data){
+					if(!data[key]){
+						delete data[key];
+					}
+				}
+				view.fetch(data);
+			});
 			return view;
 		},
 		events: {
 			'click li a': function (e) {
-				var $el = $(e.target).parent();
+				var $el = $(e.currentTarget).parent();
 				$el.parent().find('.active').removeClass('active');
 				$el.addClass('active');
+			},
+			'click .toggle': function(e){
+				$(e.currentTarget).next().toggle();
 			}
 		}
 	});
@@ -107,23 +157,26 @@ define([
 		},
 		initialize: function (args) {
 			_.merge(this, args);
-			//this.render();
 			var view = this;
-			this.getObj(this.activeId, function (obj) {
-				view.model = obj;
-				if (view.model) {
-					view.$target.html(view.$el);
-					view.render();
-					view.listenTo(view.model, 'sync', view.render);
-				} else {
-					view.$el.html("<div class='alert alert-danger'>Object is not exists</div>");
-				}
+			schemas.load(function(loadedSchemas){
+				view.schemas = loadedSchemas;
+				schemas.loadVocabularies(view.schemas, view.schemaName, function(){
+					view.getObj(view.activeId, function (obj) {
+						view.model = obj;
+						if (view.model) {
+							view.$target.html(view.$el);
+							view.render();
+							view.listenTo(view.model, 'sync', view.render);
+						} else {
+							view.$el.html("<div class='alert alert-danger'>Object is not exists</div>");
+						}
+					});
+				});
 			});
 		},
 		render: function () {
 			var view = this;
 			var $fields = $(fc(view.schemas[view.schemaName], view.model.attributes));
-
 
 			//adding wysiwyg
 			$fields.find('.widget-wysiwyg').each(function () {
@@ -140,7 +193,6 @@ define([
 					this.el.changeField();
 				});
 			}
-
 
 			//code input
 			$fields.find('.widget-code').each(function () {
