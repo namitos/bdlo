@@ -1,4 +1,4 @@
-var blocksSchema = {
+var schema = {
 	properties: {
 		title: {
 			type: 'string',
@@ -59,11 +59,15 @@ var blocksSchema = {
 			}
 		}
 	},
-	info: {
-		titleField: 'title'
-	}
+	titleField: 'title',
+	name: 'Blocks'
 };
-try {
-	module.exports = blocksSchema;
-} catch (e) {
+
+if (typeof exports === 'object') {
+	module.exports = schema;
+}
+if (typeof define === 'function') {
+	define(function () {
+		return schema;
+	});
 }

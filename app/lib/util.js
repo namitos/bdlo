@@ -30,7 +30,7 @@ module.exports = function (app) {
 			if (schema.type == 'array') {
 				objNew = [];
 				if (obj instanceof Array) {
-					obj.forEach(function (val, key) {
+					_.compact(obj).forEach(function (val, key) {
 						objNew[key] = app.util.forceSchema(schema.items, val);
 					});
 				} else {
@@ -58,7 +58,7 @@ module.exports = function (app) {
 					objNew = 0;
 				}
 			} else if (schema.type == 'string') {
-				objNew = obj.toString();
+				objNew = obj ? obj.toString() : '';
 			} else if (schema.type == 'boolean') {
 				objNew = !_.contains([false, 0, '', '0', 'false', undefined, null], obj);
 			} else if (schema.type == 'any') {

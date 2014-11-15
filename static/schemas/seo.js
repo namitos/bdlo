@@ -1,36 +1,43 @@
-var seoSchema = {
+var schema = {
+	type: 'object',
 	properties: {
 		route: {
 			type: 'string',
-			required: true
+			required: true,
+			label: 'Route'
 		},
 		title: {
 			type: 'string',
-			required: true
+			required: true,
+			label: 'Title'
 		},
 		keywords: {
-			type: 'string'
+			type: 'string',
+			label: 'Meta keywords'
 		},
 		description: {
-			type: 'string'
+			type: 'string',
+			label: 'Meta description'
 		},
 		h1Title: {
-			type: 'string'
+			type: 'string',
+			label: 'H1 title'
 		},
 		content: {
 			type: 'string',
-			required: true,
-			info: {
-				type: 'textarea',
-				wysiwyg: true
-			}
+			label: 'Additional text',
+			widget: 'textarea'
 		}
 	},
-	info: {
-		titleField: 'route'
-	}
+	titleField: 'route',
+	name: 'Seo'
 };
-try {
-	module.exports = seoSchema;
-} catch (e) {
+
+if (typeof exports === 'object') {
+	module.exports = schema;
+}
+if (typeof define === 'function') {
+	define(function () {
+		return schema;
+	});
 }

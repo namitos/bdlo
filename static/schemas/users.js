@@ -1,4 +1,5 @@
-var usersSchema = {
+var schema = {
+	type: 'object',
 	properties: {
 		username: {
 			type: 'string',
@@ -29,10 +30,16 @@ var usersSchema = {
 	},
 	info: {
 		ownerField: '_id',
-		titleField: 'username'
-	}
+	},
+	titleField: 'username',
+	name: 'Users'
 };
-try {
-	module.exports = usersSchema;
-} catch (e) {
+
+if (typeof exports === 'object') {
+	module.exports = schema;
+}
+if (typeof define === 'function') {
+	define(function () {
+		return schema;
+	});
 }

@@ -5,7 +5,10 @@
 </style>
 <div class='list-schemas'></div>
 <div class='list-collection'>
-	<div class='alert'>Select any material</div>
+	<div class="filter-container"></div>
+	<div class="list">
+		<div class='alert'>Select any material</div>
+	</div>
 </div>
 
 <div class='row'>
@@ -14,5 +17,4 @@
 		<div class='form-schema'></div>
 	</div>
 </div>
-<script>var schemas = <%= JSON.stringify(conf.editableSchemas) %>;</script>
-<script src='/core/js/admineditor.js'></script>
+<script data-main="/core/app/index" src='/core/vendor/requirejs/require.js'></script>
