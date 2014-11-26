@@ -3,7 +3,7 @@ var fs = require('fs');
 var cluster = require('cluster');
 var exec = require('child_process').exec;
 var vow = require('vow');
-
+var colors = require('colors');
 if(!process.env.NODE_ENV){
 	process.env.NODE_ENV = 'production';
 }
@@ -17,9 +17,9 @@ function clearPids(callback) {
 	var killPromise = function (pid) {
 		return new vow.Promise(function (resolve, reject, notify) {
 			exec('kill ' + pid, function (error, stdout, stderr) {
-				console.log('kill ' + pid, error, stdout, stderr);
+				//console.log('kill ' + pid, error, stdout, stderr);
 				fs.unlink('./pids/' + pid, function (err) {
-					console.log('delete ' + pid);
+					//console.log('delete ' + pid);
 					resolve();
 				});
 			});
@@ -69,7 +69,7 @@ module.exports = function (conf, middlewares) {
 				});
 				var port = ports[worker.process.pid];
 				delete ports[worker.process.pid];
-				console.log('Worker ' + worker.process.pid + ' died.', address);
+				console.log(('Worker ' + worker.process.pid + ' died.').red, address);
 				var newWorker = cluster.fork({
 					port: port
 				});
@@ -80,7 +80,7 @@ module.exports = function (conf, middlewares) {
 			cluster.on('listening', function (worker, address) {
 				fs.writeFile('./pids/' + worker.process.pid, '', function (err) {
 				});
-				console.log('Worker ' + worker.process.pid + ' is now listening on port ' + address.port + ' in ' + process.env.NODE_ENV + ' mode.');
+				console.log(('Worker ' + worker.process.pid + ' is now listening on port ' + address.port + ' in ' + process.env.NODE_ENV + ' mode.').green);
 				worker.on('message', function (msg) {
 					if (msg.cmd == 'restart') {
 						console.log('restart all children instances');
