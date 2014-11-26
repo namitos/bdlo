@@ -62,7 +62,8 @@ module.exports = function (conf, modifyApp) {
 				h1Title: h1Title,
 				seoContent: '',
 				seoKeywords: '',
-				seoDescription: ''
+				seoDescription: '',
+				url: req.url
 			};
 			if (res.seo) {
 				toRender.title = res.seo.title;
