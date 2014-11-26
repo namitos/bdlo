@@ -14,18 +14,13 @@ module.exports = function (app) {
 		}
 	});
 
-	app.post('/login', passport.authenticate('local', { failureRedirect: '/login?err=1' }), function (req, res) {
+	app.post('/login', passport.authenticate('local', {failureRedirect: '/login?err=1'}), function (req, res) {
 		res.redirect('/');
 	});
 
-	app.get('/userscript', function (req, res) {
-		var user = {};
-		if (req.hasOwnProperty('user')) {
-			var user = req.user;
-			delete user.password;
-		}
-		res.header({'Content-Type': 'application/javascript'});
-		res.send("var user = new User(" + JSON.stringify(user) + "); try{ module.exports = user; } catch(e) {}");
+	app.get('/user/current', function (req, res) {
+		delete req.user.password;
+		res.send(req.user);
 	});
 
 };

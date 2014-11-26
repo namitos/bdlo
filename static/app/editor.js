@@ -45,8 +45,8 @@ define([
 
 	var ListView = Backbone.View.extend({
 		className: 'view-list',
-		fetch: function(data){
-			if(!data){
+		fetch: function (data) {
+			if (!data) {
 				data = {};
 			}
 			var fields = {};
@@ -64,8 +64,8 @@ define([
 				schemaName: view.schemaName
 			});
 			view.listenTo(view.collection, 'sync', this.render);
-			schemas.load(function(loadedSchemas){
-				schemas.loadVocabularies(loadedSchemas, view.schemaName, function(){
+			schemas.load(function (loadedSchemas) {
+				schemas.loadVocabularies(loadedSchemas, view.schemaName, function () {
 					view.schemas = loadedSchemas;
 					view.schema = loadedSchemas[view.schemaName];
 					view.fetch();
@@ -77,18 +77,18 @@ define([
 			var view = this;
 			var items = view.collection.toJSON();
 
-			if(!view.initialRender){
+			if (!view.initialRender) {
 				view.$el.html("<div class='filter'><a class='toggle'><span class='glyphicon glyphicon-filter'></span> Filter</a><div class='content' hidden></div></div><ul class='nav'></ul>");
 
 				var filterSchema = _.cloneDeep(view.schema);
-				for(var key in filterSchema.properties){
-					if(!filterSchema.properties[key].hasOwnProperty('filterable')){
+				for (var key in filterSchema.properties) {
+					if (!filterSchema.properties[key].hasOwnProperty('filterable')) {
 						delete filterSchema.properties[key];
 					}
 				}
 				view.filterSchema = filterSchema;
 
-				if(_.size(view.filterSchema.properties)){
+				if (_.size(view.filterSchema.properties)) {
 					view.$el.find('.filter .content').html(fc(view.filterSchema, {}));
 				} else {
 					view.$el.find('.filter').html("<div class='alert'><span class='glyphicon glyphicon-filter'></span> No filter</div>");
@@ -97,6 +97,12 @@ define([
 			}
 
 			var $nav = view.$el.find('.nav');
+
+			items.sort(function (a, b) {
+				if (a[view.schema.titleField] > b[view.schema.titleField]) return 1;
+				if (a[view.schema.titleField] < b[view.schema.titleField]) return -1;
+				return 0;
+			});
 
 			if (items.length) {
 				$nav.html('');
@@ -114,10 +120,10 @@ define([
 
 			view.delegateEvents();
 			//костыль потому что бекбон не поддерживает нестандартные события
-			view.$el.find('.filter .object-root').on('changeObj', function(e){
+			view.$el.find('.filter .object-root').on('changeObj', function (e) {
 				var data = e.originalEvent.detail;
-				for(var key in data){
-					if(!data[key]){
+				for (var key in data) {
+					if (!data[key]) {
 						delete data[key];
 					}
 				}
@@ -131,7 +137,7 @@ define([
 				$el.parent().find('.active').removeClass('active');
 				$el.addClass('active');
 			},
-			'click .toggle': function(e){
+			'click .toggle': function (e) {
 				$(e.currentTarget).next().toggle();
 			}
 		}
@@ -158,9 +164,9 @@ define([
 		initialize: function (args) {
 			_.merge(this, args);
 			var view = this;
-			schemas.load(function(loadedSchemas){
+			schemas.load(function (loadedSchemas) {
 				view.schemas = loadedSchemas;
-				schemas.loadVocabularies(view.schemas, view.schemaName, function(){
+				schemas.loadVocabularies(view.schemas, view.schemaName, function () {
 					view.getObj(view.activeId, function (obj) {
 						view.model = obj;
 						if (view.model) {
@@ -204,7 +210,7 @@ define([
 				editor.getSession().on('change', function () {
 					$textarea.val(editor.getSession().getValue())[0].changeField();
 				});
-				if($textarea.attr('language')){
+				if ($textarea.attr('language')) {
 					editor.getSession().setMode("ace/mode/" + $textarea.attr('language'));
 				}
 
@@ -250,7 +256,7 @@ define([
 		}
 	});
 
-	return  {
+	return {
 		ObjModel: ObjModel,
 		ObjCollection: ObjCollection,
 		ListView: ListView,
