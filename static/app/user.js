@@ -1,6 +1,6 @@
 define([
 	'text!/user/current',
-	'models/user'
+	'models/User'
 ], function (userJson, User) {
 	return new User(JSON.parse(userJson));
 });
