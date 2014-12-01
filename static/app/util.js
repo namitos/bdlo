@@ -1,6 +1,8 @@
 'use strict';
 
-define(function () {
+define([
+	'backbone'
+], function (Backbone) {
 	return {
 		notify: function (data) {
 			var $wrapper = $('#notifications');
@@ -22,7 +24,7 @@ define(function () {
 				}, data.hide);
 			}
 		},
-		load: function(toLoad, cb) {
+		load: function (toLoad, cb) {
 			var toLoad1 = [];
 			for (var key in toLoad) {
 				toLoad1.push(toLoad[key]);
@@ -36,6 +38,20 @@ define(function () {
 				}
 				cb(schemas);
 			});
+		},
+		loadCollections: function (collections) {
+			var promises = [];
+			collections.forEach(function (collection) {
+				promises.push(new Promise(function (resolve, reject) {
+					collection.collection.fetch({
+						data: collection.where,
+						complete: function () {
+							resolve(collection.collection);
+						}
+					});
+				}));
+			});
+			return Promise.all(promises);
 		}
 	}
 });
