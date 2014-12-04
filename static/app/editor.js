@@ -14,8 +14,12 @@ define([
 
 	var ObjCollection = Backbone.Collection.extend({
 		model: ObjModel,
-		initialize: function (args) {
-			_.merge(this, args);
+		initialize: function (models, args) {
+			if (!args) {//stupid crunch
+				_.merge(this, models);
+			} else {
+				_.merge(this, args);
+			}
 		},
 		url: function () {
 			return '/rest/' + this.schemaName;
