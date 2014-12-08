@@ -1,4 +1,4 @@
-define(function () {
+define(['underscore'], function () {
 	function User(data) {
 		_.merge(this, data);
 	}
