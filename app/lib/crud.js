@@ -23,27 +23,6 @@ module.exports = function (app) {
 		return false;
 	}
 
-	/**
-	 * рекурсивная функция, которая приводит аттрибуты объекта автоматически к нужному типу. на сей момент нужна только для поиска и приводит только к числу, чтобы искало и по чистам тоже
-	 *
-	 * @param obj
-	 */
-	function autoType(obj) {
-		var digitValue;
-		for (var key in obj) {
-			if (key != '_id') {
-				if (typeof obj[key] == 'string') {
-					digitValue = parseInt(obj[key]);
-					if (obj[key] == digitValue.toString()) {
-						obj[key] = digitValue;
-					}
-				} else {
-					autoType(obj[key]);
-				}
-			}
-		}
-	}
-
 
 	/**
 	 * проверка на то, файл ли к нам пришёл в строке (она должна быть base64 файла, а если нет, то это не файл)
@@ -202,8 +181,6 @@ module.exports = function (app) {
 					} else {
 						data = app.util.forceSchema(schema, data);
 					}
-				} else {
-					autoType(data);
 				}
 				prepareFiles(schema, data, function (result) {
 					if (
@@ -273,7 +250,6 @@ module.exports = function (app) {
 						options[key] = query[key];
 						delete query[key];
 					});
-					autoType(query);
 					db.collection(collectionName).find(query, fields, options).toArray(function (err, result) {
 						if (err) {
 							reject({
@@ -295,8 +271,6 @@ module.exports = function (app) {
 				var schema = app.util.getSchema(collectionName);
 				if (schema) {
 					data = app.util.forceSchema(schema, data);
-				} else {
-					autoType(data);
 				}
 				prepareFiles(schema, data, function (result) {
 					var where = {

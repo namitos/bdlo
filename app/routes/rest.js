@@ -1,5 +1,26 @@
+function autoType(obj) {
+	var digitValue;
+	for (var key in obj) {
+		if (key != '_id') {
+			if (typeof obj[key] == 'string') {
+				digitValue = parseInt(obj[key]);
+				if (obj[key] == digitValue.toString()) {
+					obj[key] = digitValue;
+				}
+			} else {
+				autoType(obj[key]);
+			}
+		}
+	}
+}
+
 module.exports = function (app) {
 	app.get('/rest/:collection', function (req, res) {
+		if (req.query.hasOwnProperty('noAutoType')) {
+			delete req.query.noAutoType;
+		} else {
+			autoType(req.query);
+		}
 		app.crud.read(req.params.collection, req.query, req.user).then(function (result) {
 			res.send(result);
 		}, function (err) {
