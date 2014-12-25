@@ -11,18 +11,21 @@ module.exports = function (conf, modifyApp) {
 		host: conf.session.redis.host,
 		port: conf.session.redis.port
 	}));
-	var redisClient = require("redis").createClient(conf.session.redis.port, conf.session.redis.host, {
+
+	app.redis = require("redis").createClient(conf.session.redis.port, conf.session.redis.host, {
 		return_buffers: true
 	});
-	app.ioEmitter = require('socket.io-emitter')(redisClient);
+	app.ioEmitter = require('socket.io-emitter')(app.redis);
 
 	var session = require('express-session');
 	var RedisStore = require('connect-redis')(session);
 	var sessionConfiguration = {
-		store: new RedisStore({ host: conf.session.redis.host, port: conf.session.redis.port, ttl: 604800 }),
+		store: new RedisStore({
+			client: app.redis
+		}),
 		secret: conf.session.secret,
 		key: 'session',
-		cookie: { maxAge: 604800000 },
+		cookie: {maxAge: 604800000},
 		resave: true,
 		saveUninitialized: true,
 		fail: function (data, accept) {
@@ -32,6 +35,7 @@ module.exports = function (conf, modifyApp) {
 			accept(null, true);
 		}
 	};
+
 	var passport = require('passport');
 	var LocalStrategy = require('passport-local').Strategy;
 
@@ -88,11 +92,11 @@ module.exports = function (conf, modifyApp) {
 	var middleWares = [
 		{
 			key: 'bodyParserJson',
-			fn: require('body-parser').json({ limit: '500mb'})
+			fn: require('body-parser').json({limit: '500mb'})
 		},
 		{
 			key: 'bodyParserUrlencoded',
-			fn: require('body-parser').urlencoded({ extended: true, limit: '50mb'})
+			fn: require('body-parser').urlencoded({extended: true, limit: '50mb'})
 		},
 		{
 			key: 'cookieParser',
@@ -229,13 +233,14 @@ module.exports = function (conf, modifyApp) {
 			res.renderPage(app.get('coreViewsPath') + '/staticpage', {
 				title: '404',
 				page: {
-					content:'Not found'
+					content: 'Not found'
 				}
 			});
 		});
 
-		var db = result.db;
-		app.set('db', db);
+		app.db = result.db;
+		app.set('db', app.db);//@TODO remove
+
 		passport.use(new LocalStrategy(
 			function (username, password, done) {
 				//console.log('trying', username, password);
@@ -261,7 +266,7 @@ module.exports = function (conf, modifyApp) {
 		});
 		passport.deserializeUser(function (id, done) {
 			//console.log('user deserialize', id);
-			db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function (err, result) {
+			app.db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function (err, result) {
 				if (err) {
 					done(err, null);
 				} else {
