@@ -19,32 +19,25 @@ module.exports = function (conf, modifyApp) {
 
 	var session = require('express-session');
 	var RedisStore = require('connect-redis')(session);
-	var sessionConfiguration = {
-		store: new RedisStore({
-			client: app.redis
-		}),
-		secret: conf.session.secret,
-		key: 'session',
-		cookie: {maxAge: 604800000},
-		resave: true,
-		saveUninitialized: true,
-		fail: function (data, accept) {
-			accept(null, true);
-		},
-		success: function (data, accept) {
-			accept(null, true);
-		}
-	};
+	app.sessionStore = new RedisStore({
+		client: app.redis
+	});
+
+	var cookieParser = require('cookie-parser');
+	var auth = require('./app/lib/auth')(app);
+
+	app.io.use(auth.ioUserMiddleware);
 
 	var passport = require('passport');
 	var LocalStrategy = require('passport-local').Strategy;
+	passport.use(new LocalStrategy(auth.auth));
+	passport.serializeUser(auth.serialize);
+	passport.deserializeUser(auth.deserialize);
 
 	var mongodb = require('mongodb');
 	var fs = require('fs');
 	var vow = require('vow');
 	var vowFs = require('vow-fs');
-
-	var User = require('./app/models/user');
 
 	app.response.__proto__.renderPage = function (template, parameters) {
 		if (!parameters) {
@@ -100,11 +93,18 @@ module.exports = function (conf, modifyApp) {
 		},
 		{
 			key: 'cookieParser',
-			fn: require('cookie-parser')()
+			fn: cookieParser()
 		},
 		{
 			key: 'session',
-			fn: session(sessionConfiguration)
+			fn: session({
+				store: app.sessionStore,
+				secret: conf.session.secret,
+				key: 'session',
+				cookie: {maxAge: 604800000},
+				resave: true,
+				saveUninitialized: true
+			})
 		},
 		{
 			key: 'passportInitialize',
@@ -126,21 +126,7 @@ module.exports = function (conf, modifyApp) {
 		},
 		{
 			key: 'permissions',
-			fn: function (req, res, next) {
-				if (!req.hasOwnProperty('user')) {
-					req.user = new User({roles: ['anon']}, conf);
-				}
-				var url = req.url.split('/');
-				if (url[1] == 'admin') {
-					if (req.user.permission('full access')) {
-						next();
-					} else {
-						res.send(403, 'access denied');
-					}
-				} else {
-					next();
-				}
-			}
+			fn: auth.permissionsMiddleware
 		},
 		{
 			key: 'seo',
@@ -241,44 +227,6 @@ module.exports = function (conf, modifyApp) {
 		app.db = result.db;
 		app.set('db', app.db);//@TODO remove
 
-		passport.use(new LocalStrategy(
-			function (username, password, done) {
-				//console.log('trying', username, password);
-				password = require('crypto').createHash('sha512').update(password).digest("hex");
-				db.collection('users').find({username: username, password: password}).toArray(function (err, result) {
-					if (err) {
-						done(err, null);
-					} else {
-						if (result.length) {
-							console.log('user exists');
-							done(null, new User(result[0], conf));
-						} else {
-							console.log('user not exists');
-							done(null, null);
-						}
-					}
-				});
-			}
-		));
-		passport.serializeUser(function (user, done) {
-			//console.log('user serialize', user);
-			done(null, user._id.toString());
-		});
-		passport.deserializeUser(function (id, done) {
-			//console.log('user deserialize', id);
-			app.db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function (err, result) {
-				if (err) {
-					done(err, null);
-				} else {
-					if (result.length) {
-						done(null, new User(result[0], conf));
-					} else {
-						console.log('user not exists');
-						done(null, null);
-					}
-				}
-			});
-		});
 		app.set('projectInfo', JSON.parse(result.projectInfo));
 		server.listen(process.env.port, function () {
 		});

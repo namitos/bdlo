@@ -103,19 +103,19 @@ module.exports = function (app) {
 			//console.log('fieldName', fieldName, 'type', schema.properties[fieldName].type);
 			if (obj.hasOwnProperty(fieldName)) {
 				if (//если просто файловое поле
-					schema.properties[fieldName].type == 'any' &&
-					schema.properties[fieldName].hasOwnProperty('info') &&
-					schema.properties[fieldName].info.type == 'file'
-					) {
+				schema.properties[fieldName].type == 'any' &&
+				schema.properties[fieldName].hasOwnProperty('info') &&
+				schema.properties[fieldName].info.type == 'file'
+				) {
 
 					obj[fieldName] = _.compact(obj[fieldName]);
 					promises.push(saveFilePromise(schema.properties[fieldName], obj[fieldName]));
 
 				} else if (//если массив из простых файловых полей
-					schema.properties[fieldName].type == 'array' &&
-					schema.properties[fieldName].items.hasOwnProperty('info') &&
-					schema.properties[fieldName].items.info.type == 'file'
-					) {
+				schema.properties[fieldName].type == 'array' &&
+				schema.properties[fieldName].items.hasOwnProperty('info') &&
+				schema.properties[fieldName].items.info.type == 'file'
+				) {
 
 					obj[fieldName].forEach(function (item, i) {
 						item = _.compact(item);
@@ -127,16 +127,16 @@ module.exports = function (app) {
 					});
 
 				} else if (//если файловое поле часть объекта
-					schema.properties[fieldName].type == 'object'
-					) {
+				schema.properties[fieldName].type == 'object'
+				) {
 
 					prepareFilesPromises(schema.properties[fieldName], obj[fieldName]).forEach(function (promise) {//рекурсия чтобы это файловое поле было как простое файловое поле
 						promises.push(promise);
 					});
 
 				} else if (//если массив из объектов, в которых файловые поля
-					schema.properties[fieldName].type == 'array'
-					) {
+				schema.properties[fieldName].type == 'array'
+				) {
 
 					obj[fieldName] = _.compact(obj[fieldName]);
 					obj[fieldName].forEach(function (item, i) {
@@ -187,17 +187,16 @@ module.exports = function (app) {
 						user.permission(collectionName + ' all all') ||
 						user.permission(collectionName + ' create all') ||
 						user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
-						data[ownerField] = user._id.toString()
-					}) ||
+							data[ownerField] = user._id.toString()
+						}) ||
 						user.permission(collectionName + ' create his') && getSchemaOwnerField(collectionName, function (ownerField) {
-						data[ownerField] = user._id.toString()
-					})
-						) {
-						var db = app.get('db');
+							data[ownerField] = user._id.toString()
+						})
+					) {
 						if (data.hasOwnProperty('_id')) {
 							delete data._id;
 						}
-						db.collection(collectionName).insert(data, function (err, results) {
+						app.db.collection(collectionName).insert(data, function (err, results) {
 							if (err) {
 								reject({
 									error: err
@@ -220,13 +219,12 @@ module.exports = function (app) {
 					user.permission(collectionName + ' all all') ||
 					user.permission(collectionName + ' read all') ||
 					user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
-					query[ownerField] = user._id.toString()
-				}) ||
+						query[ownerField] = user._id.toString()
+					}) ||
 					user.permission(collectionName + ' read his') && getSchemaOwnerField(collectionName, function (ownerField) {
-					query[ownerField] = user._id.toString()
-				})
-					) {
-					var db = app.get('db');
+						query[ownerField] = user._id.toString()
+					})
+				) {
 					if (query.hasOwnProperty('_id')) {
 						if (query._id instanceof Object) {
 							if (query._id.hasOwnProperty('$in')) {
@@ -250,7 +248,7 @@ module.exports = function (app) {
 						options[key] = query[key];
 						delete query[key];
 					});
-					db.collection(collectionName).find(query, fields, options).toArray(function (err, result) {
+					app.db.collection(collectionName).find(query, fields, options).toArray(function (err, result) {
 						if (err) {
 							reject({
 								error: err
@@ -280,17 +278,16 @@ module.exports = function (app) {
 						user.permission(collectionName + ' all all') ||
 						user.permission(collectionName + ' update all') ||
 						user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
-						where[ownerField] = user._id.toString()
-					}) ||
+							where[ownerField] = user._id.toString()
+						}) ||
 						user.permission(collectionName + ' update his') && getSchemaOwnerField(collectionName, function (ownerField) {
-						where[ownerField] = user._id.toString()
-					})
-						) {
-						var db = app.get('db');
+							where[ownerField] = user._id.toString()
+						})
+					) {
 						if (data.hasOwnProperty('_id')) {
 							delete data._id;
 						}
-						db.collection(collectionName).update(where, {
+						app.db.collection(collectionName).update(where, {
 							"$set": data
 						}, function (err, results) {
 							if (err) {
@@ -319,14 +316,13 @@ module.exports = function (app) {
 					user.permission(collectionName + ' all all') ||
 					user.permission(collectionName + ' delete all') ||
 					user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
-					where[ownerField] = user._id.toString()
-				}) ||
+						where[ownerField] = user._id.toString()
+					}) ||
 					user.permission(collectionName + ' delete his') && getSchemaOwnerField(collectionName, function (ownerField) {
-					where[ownerField] = user._id.toString()
-				})
-					) {
-					var db = app.get('db');
-					db.collection(collectionName).remove(where, function (err, numRemoved) {
+						where[ownerField] = user._id.toString()
+					})
+				) {
+					app.db.collection(collectionName).remove(where, function (err, numRemoved) {
 						if (err) {
 							reject({
 								error: err

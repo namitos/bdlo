@@ -1,6 +1,6 @@
 {
 	"name": "bdlo",
-	"version": "0.5.2",
+	"version": "0.5.3",
 	"private": false,
 	"dependencies": {
 		"express": "4.x.x",
@@ -19,8 +19,7 @@
 		"consolidate": "0.10.x",
 		"mongodb": "1.x",
 		"passport": "0.2.x",
-		"passport-local": "1.x.x",
-		"passport.socketio": "3.2.x",
+		"passport-local": "1.x.x"
 		"bower": "1.3.x",
 		"colors": "1.x.x"
 	},
