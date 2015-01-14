@@ -23,16 +23,11 @@ module.exports = function (conf, modifyApp) {
 		client: app.redis
 	});
 
-	var cookieParser = require('cookie-parser');
 	var auth = require('./app/lib/auth')(app);
 
-	app.io.use(auth.ioUserMiddleware);
-
-	var passport = require('passport');
-	var LocalStrategy = require('passport-local').Strategy;
-	passport.use(new LocalStrategy(auth.auth));
-	passport.serializeUser(auth.serialize);
-	passport.deserializeUser(auth.deserialize);
+	app.passport = require('passport');
+	app.passport.serializeUser(auth.serialize);
+	app.passport.deserializeUser(auth.deserialize);
 
 	var mongodb = require('mongodb');
 	var fs = require('fs');
@@ -82,7 +77,7 @@ module.exports = function (conf, modifyApp) {
 	app.set('view engine', 'ejs');
 	app.set('coreViewsPath', __dirname + '/static/views');
 
-	var middleWares = [
+	var middlewares = [
 		{
 			key: 'bodyParserJson',
 			fn: require('body-parser').json({limit: '500mb'})
@@ -93,7 +88,7 @@ module.exports = function (conf, modifyApp) {
 		},
 		{
 			key: 'cookieParser',
-			fn: cookieParser()
+			fn: require('cookie-parser')()
 		},
 		{
 			key: 'session',
@@ -108,11 +103,11 @@ module.exports = function (conf, modifyApp) {
 		},
 		{
 			key: 'passportInitialize',
-			fn: passport.initialize()
+			fn: app.passport.initialize()
 		},
 		{
 			key: 'passportSession',
-			fn: passport.session()
+			fn: app.passport.session()
 		},
 		{
 			key: 'coreStatic',
@@ -163,16 +158,35 @@ module.exports = function (conf, modifyApp) {
 		}
 	];
 
-	if (modifyApp) {
-		modifyApp(app, middleWares);
-	}
+	var middlewaresIo = [
+		{
+			key: 'ioUserMiddleware',
+			fn: auth.ioUserMiddleware
+		}
+	];
 
-	middleWares.forEach(function (obj) {
+	var middlewaresPassport = [
+		{
+			key: 'local',
+			fn: auth.strategy()
+		}
+	];
+
+	if (modifyApp) {
+		modifyApp(app, middlewares, middlewaresIo, middlewaresPassport);
+	}
+	middlewaresPassport.forEach(function (obj) {
+		app.passport.use(obj.fn);
+	});
+	middlewares.forEach(function (obj) {
 		if (obj.hasOwnProperty('url')) {
 			app.use(obj.url, obj.fn);
 		} else {
 			app.use(obj.fn);
 		}
+	});
+	middlewaresIo.forEach(function (obj) {
+		app.io.use(obj.fn);
 	});
 
 	function mongoConnectPromise(connectionString) {
