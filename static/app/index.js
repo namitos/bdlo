@@ -15,20 +15,26 @@ require.config({
 		text: coreStaticPath + '/vendor/requirejs-text/text',
 		fc: coreStaticPath + '/vendor/namitos-fc/fc',
 		underscore: coreStaticPath + '/vendor/lodash/dist/lodash.min',
-		backbone: coreStaticPath + '/vendor/backbone/backbone',
+		backboneCore: coreStaticPath + '/vendor/backbone/backbone',
+		backbone: coreStaticPath + '/app/backboneSocketSync',
 		jquery: coreStaticPath + '/vendor/jquery/dist/jquery',
 		twbs: coreStaticPath + '/vendor/bootstrap/dist/js/bootstrap.min',
 		jqueryui: coreStaticPath + '/vendor/jquery-ui/jquery-ui.min',
 		ckeditor: coreStaticPath + '/vendor/ckeditor/ckeditor',
-		ace: 'http://cdnjs.cloudflare.com/ajax/libs/ace/1.1.3/ace'
+		ace: 'http://cdnjs.cloudflare.com/ajax/libs/ace/1.1.3/ace',
+
+		io: '/socket.io/socket.io'
 	}
 });
 
 require([
 	'backbone',
 	'editor',
-	'schemas'
-], function (Backbone, editor, schemas) {
+	'schemas',
+	'io'
+], function (Backbone, editor, schemas, io) {
+	window.socket = io();
+
 	schemas.load(function (loadedSchemas) {
 		var app = new Router({
 			schemasView: new schemas.ListView({

@@ -24,7 +24,7 @@ define([
 				}, data.hide);
 			}
 		},
-		load: function (toLoad, cb) {//todo: remove this
+		load: function (toLoad, cb) {
 			var toLoad1 = [];
 			for (var key in toLoad) {
 				toLoad1.push(toLoad[key]);

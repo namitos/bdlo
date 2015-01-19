@@ -6,47 +6,9 @@ define([
 	'util',
 	'schemas',
 	'ckeditor',
-	'ace'
-], function (Backbone, fc, util, schemas, CKEDITOR, ace) {
-	var ObjModel = Backbone.Model.extend({
-		idAttribute: '_id'
-	});
-
-	var ObjCollection = Backbone.Collection.extend({
-		model: ObjModel,
-		initialize: function (models, args) {
-			if (!args) {//stupid crunch
-				_.merge(this, models);
-			} else {
-				_.merge(this, args);
-			}
-		},
-		url: function () {
-			return '/rest/' + this.schemaName;
-		},
-		toJSONTree: function () {
-			var data = this.toJSON();
-			data.forEach(function (el, i) {
-				if (el.hasOwnProperty('parent') && el.parent != '') {
-					try {
-						var parent = _.find(data, {
-							_id: el.parent
-						});
-						if (parent) {
-							if (!parent.hasOwnProperty('children')) {
-								parent.children = [];
-							}
-							parent.children.push(el);
-							delete data[i];
-						}
-					} catch (e) {
-					}
-				}
-			});
-			return _.compact(data);
-		}
-	});
-
+	'ace',
+	'models/primitives'
+], function (Backbone, fc, util, schemas, CKEDITOR, ace, primitives) {
 	var ListView = Backbone.View.extend({
 		className: 'view-list',
 		fetch: function (data) {
@@ -64,7 +26,7 @@ define([
 		initialize: function (args) {
 			_.merge(this, args);
 			var view = this;
-			view.collection = new ObjCollection({
+			view.collection = new primitives.ObjCollection({
 				schemaName: view.schemaName
 			});
 			view.listenTo(view.collection, 'sync', this.render);
@@ -149,17 +111,17 @@ define([
 
 	var FormView = Backbone.View.extend({
 		getObj: function (id, cb) {
-			var collection = new ObjCollection({
+			var collection = new primitives.ObjCollection({
 				schemaName: this.schemaName
 			});
 			if (id == 'new') {
-				cb(collection.add(new ObjModel()));
+				cb(collection.add(new primitives.ObjModel()));
 			} else {
 				collection.fetch({
 					data: {
 						_id: id
 					},
-					complete: function () {
+					success: function () {
 						cb(collection.get(id));
 					}
 				});
@@ -261,8 +223,6 @@ define([
 	});
 
 	return {
-		ObjModel: ObjModel,
-		ObjCollection: ObjCollection,
 		ListView: ListView,
 		FormView: FormView
 	};

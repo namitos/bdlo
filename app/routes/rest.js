@@ -109,4 +109,21 @@ module.exports = function (app) {
 			res.status(403).send(err);
 		});
 	});
+
+	app.get('/schemas/available', function (req, res) {
+		var schemas = {};
+		var schemasAll = app.get('conf').editableSchemas;
+		var user = req.user;
+		for (var collectionName in schemasAll) {
+			if (
+				user.permission(collectionName + ' all all') ||
+				user.permission(collectionName + ' read all') ||
+				user.permission(collectionName + ' all his') ||
+				user.permission(collectionName + ' read his')
+			) {
+				schemas[collectionName] = schemasAll[collectionName];
+			}
+		}
+		res.send(schemas);
+	});
 };

@@ -3,11 +3,12 @@
 define([
 	'backbone',
 	'util',
-	'text!/admin/schemas/available'
-], function (Backbone, util, availableSchemas) {
+	'models/primitives',
+	'text!/schemas/available'
+], function (Backbone, util, primitives, availableSchemas) {
 	availableSchemas = JSON.parse(availableSchemas);
 
-	function load (cb) {
+	function load(cb) {
 		var toLoad = {};
 		for (var key in availableSchemas) {
 			toLoad[key] = availableSchemas[key].hasOwnProperty('path') ? availableSchemas[key].path : '/core/schemas/' + key + '.js';
@@ -16,19 +17,25 @@ define([
 	}
 
 	function loadVocabularies(schemas, schemaName, cb) {
-		var primitives = [];
+		var primitiveFields = [];
 		var toLoad = [];
-		forEachPrimitives(schemas[schemaName], function(primitive){
-			if(primitive.widget && primitive.widget == 'select' && primitive.schema && availableSchemas[primitive.schema]) {
-				primitives.push(primitive);
-				toLoad.push('text!/rest/' + primitive.schema + '?fields[' + schemas[primitive.schema].titleField + ']=true');
+		forEachPrimitives(schemas[schemaName], function (primitive) {
+			if (primitive.widget && primitive.widget == 'select' && primitive.schema && availableSchemas[primitive.schema]) {
+				primitiveFields.push(primitive);
+				var fields = {};
+				fields[schemas[primitive.schema].titleField] = true;
+				toLoad.push({
+					collection: new primitives.ObjCollection([], {schemaName: primitive.schema}),
+					where: {fields: fields}
+				});
 			}
 		});
-		util.load(toLoad, function(loaded){
-			primitives.forEach(function(primitive, i){
-				var data = JSON.parse(loaded[i]);
+		util.loadCollections(toLoad).then(function () {
+			primitiveFields.forEach(function (primitive, i) {
+				var data = toLoad[i].collection.models;
 				var options = {};
-				data.forEach(function(item){
+				data.forEach(function (item) {
+					item = item.toJSON();
 					options[item._id] = item[schemas[primitive.schema].titleField];
 				})
 				primitive.options = options;
