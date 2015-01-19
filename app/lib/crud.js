@@ -168,93 +168,50 @@ module.exports = function (app) {
 		}
 	}
 
-	var crud = {
-		create: function (collectionName, data, user) {
-			return new vow.Promise(function (resolve, reject) {
-				var schema = app.util.getSchema(collectionName);
-				if (schema) {
-					if (data instanceof Array) {
-						data.forEach(function (row, i) {
-							data[i] = app.util.forceSchema(schema, data[i]);
-						});
-						data = _.compact(data);
-					} else {
-						data = app.util.forceSchema(schema, data);
-					}
+	var Crud = function () {
+	}
+
+	require('util').inherits(Crud, require('events').EventEmitter);
+
+	Crud.prototype.create = function (collectionName, data, user) {
+		var crud = this;
+		return new vow.Promise(function (resolve, reject) {
+			var schema = app.util.getSchema(collectionName);
+			if (schema) {
+				if (data instanceof Array) {
+					data.forEach(function (row, i) {
+						data[i] = app.util.forceSchema(schema, data[i]);
+					});
+					data = _.compact(data);
+				} else {
+					data = app.util.forceSchema(schema, data);
 				}
-				prepareFiles(schema, data, function (result) {
-					if (
-						user.permission(collectionName + ' all all') ||
-						user.permission(collectionName + ' create all') ||
-						user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
-							data[ownerField] = user._id.toString()
-						}) ||
-						user.permission(collectionName + ' create his') && getSchemaOwnerField(collectionName, function (ownerField) {
-							data[ownerField] = user._id.toString()
-						})
-					) {
-						if (data.hasOwnProperty('_id')) {
-							delete data._id;
-						}
-						app.db.collection(collectionName).insert(data, function (err, results) {
-							if (err) {
-								reject({
-									error: err
-								});
-							} else {
-								resolve(results[0]);
-							}
-						});
-					} else {
-						reject({
-							error: 'not allowed'
-						});
-					}
-				});
-			});
-		},
-		read: function (collectionName, query, user) {
-			return new vow.Promise(function (resolve, reject) {
+			}
+			prepareFiles(schema, data, function (result) {
 				if (
 					user.permission(collectionName + ' all all') ||
-					user.permission(collectionName + ' read all') ||
+					user.permission(collectionName + ' create all') ||
 					user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
-						query[ownerField] = user._id.toString()
+						data[ownerField] = user._id.toString()
 					}) ||
-					user.permission(collectionName + ' read his') && getSchemaOwnerField(collectionName, function (ownerField) {
-						query[ownerField] = user._id.toString()
+					user.permission(collectionName + ' create his') && getSchemaOwnerField(collectionName, function (ownerField) {
+						data[ownerField] = user._id.toString()
 					})
 				) {
-					if (query.hasOwnProperty('_id')) {
-						if (query._id instanceof Object) {
-							if (query._id.hasOwnProperty('$in')) {
-								query._id.$in.forEach(function (item, i) {
-									query._id.$in[i] = new mongodb.ObjectID(item.toString());
-								});
-							}
-						} else {
-							query._id = new mongodb.ObjectID(query._id.toString());
-						}
-
+					if (data.hasOwnProperty('_id')) {
+						delete data._id;
 					}
-					var fields = [];
-					if (query.hasOwnProperty('fields')) {
-						fields = query.fields;
-						delete query.fields;
-					}
-					var optionKeys = ['skip', 'limit', 'sort'];
-					var options = {};
-					optionKeys.forEach(function (key) {
-						options[key] = query[key];
-						delete query[key];
-					});
-					app.db.collection(collectionName).find(query, fields, options).toArray(function (err, result) {
+					app.db.collection(collectionName).insert(data, function (err, results) {
 						if (err) {
 							reject({
 								error: err
 							});
 						} else {
-							resolve(result);
+							crud.emit('create', {
+								collection: collectionName,
+								id: results[0]._id
+							})
+							resolve(results[0]);
 						}
 					});
 				} else {
@@ -263,72 +220,103 @@ module.exports = function (app) {
 					});
 				}
 			});
-		},
-		update: function (collectionName, _id, data, user) {
-			return new vow.Promise(function (resolve, reject) {
-				var schema = app.util.getSchema(collectionName);
-				if (schema) {
-					data = app.util.forceSchema(schema, data);
-				}
-				prepareFiles(schema, data, function (result) {
-					var where = {
-						_id: new mongodb.ObjectID(_id)
-					};
-					if (
-						user.permission(collectionName + ' all all') ||
-						user.permission(collectionName + ' update all') ||
-						user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
-							where[ownerField] = user._id.toString()
-						}) ||
-						user.permission(collectionName + ' update his') && getSchemaOwnerField(collectionName, function (ownerField) {
-							where[ownerField] = user._id.toString()
-						})
-					) {
-						if (data.hasOwnProperty('_id')) {
-							delete data._id;
+		});
+	};
+
+	Crud.prototype.read = function (collectionName, query, user) {
+		var crud = this;
+		return new vow.Promise(function (resolve, reject) {
+			if (
+				user.permission(collectionName + ' all all') ||
+				user.permission(collectionName + ' read all') ||
+				user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
+					query[ownerField] = user._id.toString()
+				}) ||
+				user.permission(collectionName + ' read his') && getSchemaOwnerField(collectionName, function (ownerField) {
+					query[ownerField] = user._id.toString()
+				})
+			) {
+				if (query.hasOwnProperty('_id')) {
+					if (query._id instanceof Object) {
+						if (query._id.hasOwnProperty('$in')) {
+							query._id.$in.forEach(function (item, i) {
+								query._id.$in[i] = new mongodb.ObjectID(item.toString());
+							});
 						}
-						app.db.collection(collectionName).update(where, {
-							"$set": data
-						}, function (err, results) {
-							if (err) {
-								reject({
-									error: err
-								});
-							} else {
-								data._id = _id;
-								resolve(data);
-							}
+					} else {
+						query._id = new mongodb.ObjectID(query._id.toString());
+					}
+
+				}
+				var fields = [];
+				if (query.hasOwnProperty('fields')) {
+					fields = query.fields;
+					delete query.fields;
+				}
+				var optionKeys = ['skip', 'limit', 'sort'];
+				var options = {};
+				optionKeys.forEach(function (key) {
+					options[key] = query[key];
+					delete query[key];
+				});
+				app.db.collection(collectionName).find(query, fields, options).toArray(function (err, result) {
+					if (err) {
+						reject({
+							error: err
 						});
 					} else {
-						reject({
-							error: 'not allowed'
+						crud.emit('read', {
+							collection: collectionName
 						});
+						resolve(result);
 					}
 				});
-			});
-		},
-		delete: function (collectionName, _id, user) {
-			return new vow.Promise(function (resolve, reject) {
+			} else {
+				reject({
+					error: 'not allowed'
+				});
+			}
+		});
+	};
+
+	Crud.prototype.update = function (collectionName, _id, data, user) {
+		var crud = this;
+		return new vow.Promise(function (resolve, reject) {
+			var schema = app.util.getSchema(collectionName);
+			if (schema) {
+				data = app.util.forceSchema(schema, data);
+			}
+			prepareFiles(schema, data, function (result) {
 				var where = {
 					_id: new mongodb.ObjectID(_id)
 				};
 				if (
 					user.permission(collectionName + ' all all') ||
-					user.permission(collectionName + ' delete all') ||
+					user.permission(collectionName + ' update all') ||
 					user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
 						where[ownerField] = user._id.toString()
 					}) ||
-					user.permission(collectionName + ' delete his') && getSchemaOwnerField(collectionName, function (ownerField) {
+					user.permission(collectionName + ' update his') && getSchemaOwnerField(collectionName, function (ownerField) {
 						where[ownerField] = user._id.toString()
 					})
 				) {
-					app.db.collection(collectionName).remove(where, function (err, numRemoved) {
+					if (data.hasOwnProperty('_id')) {
+						delete data._id;
+					}
+					app.db.collection(collectionName).update(where, {
+						"$set": data
+					}, function (err, results) {
 						if (err) {
 							reject({
 								error: err
 							});
 						} else {
-							resolve(numRemoved);
+							data._id = _id;
+							crud.emit('update', {
+								collection: collectionName,
+								id: where._id.toString()
+							});
+							resolve(data);
 						}
 					});
 				} else {
@@ -337,7 +325,45 @@ module.exports = function (app) {
 					});
 				}
 			});
-		}
+		});
 	};
-	app.crud = crud;
+
+	Crud.prototype.delete = function (collectionName, _id, user) {
+		var crud = this;
+		return new vow.Promise(function (resolve, reject) {
+			var where = {
+				_id: new mongodb.ObjectID(_id)
+			};
+			if (
+				user.permission(collectionName + ' all all') ||
+				user.permission(collectionName + ' delete all') ||
+				user.permission(collectionName + ' all his') && getSchemaOwnerField(collectionName, function (ownerField) {
+					where[ownerField] = user._id.toString()
+				}) ||
+				user.permission(collectionName + ' delete his') && getSchemaOwnerField(collectionName, function (ownerField) {
+					where[ownerField] = user._id.toString()
+				})
+			) {
+				app.db.collection(collectionName).remove(where, function (err, numRemoved) {
+					if (err) {
+						reject({
+							error: err
+						});
+					} else {
+						crud.emit('delete', {
+							collection: collectionName,
+							id: where._id.toString()
+						});
+						resolve(numRemoved);
+					}
+				});
+			} else {
+				reject({
+					error: 'not allowed'
+				});
+			}
+		});
+	}
+
+	app.crud = new Crud();
 };
