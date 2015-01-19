@@ -24,7 +24,7 @@ define([
 				}, data.hide);
 			}
 		},
-		load: function (toLoad, cb) {
+		load: function (toLoad, cb) {//todo: remove this
 			var toLoad1 = [];
 			for (var key in toLoad) {
 				toLoad1.push(toLoad[key]);
@@ -45,7 +45,7 @@ define([
 				promises.push(new Promise(function (resolve, reject) {
 					collection.collection.fetch({
 						data: collection.where,
-						complete: function () {
+						success: function () {
 							resolve(collection.collection);
 						}
 					});
