@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 function autoType(obj) {
 	var digitValue;
 	for (var key in obj) {
@@ -15,6 +17,60 @@ function autoType(obj) {
 }
 
 module.exports = function (app) {
+	app.io.on('connect', function (socket) {
+		socket.on('read', function (input, fn) {
+			if (input.collection) {
+				app.crud.read(input.collection, input.where || {}, socket.request.user).then(function (result) {
+					fn(result);
+				}, function (err) {
+					fn({
+						error: err
+					});
+				});
+			}
+		});
+
+		socket.on('delete', function (input, fn) {
+			if (input.collection && input.id) {
+				app.crud.delete(input.collection, input.id, socket.request.user).then(function (result) {
+					fn({
+						_id: req.params.id
+					});
+				}, function (err) {
+					fn({
+						error: err
+					});
+				});
+			}
+		});
+
+		socket.on('update', function (input, fn) {
+			if (input.collection && input.id && input.data) {
+				app.crud.update(input.collection, input.id, input.data, socket.request.user).then(function (result) {
+					fn(result);
+				}, function (err) {
+					fn({
+						error: err
+					});
+				});
+			}
+		});
+
+		socket.on('create', function (input, fn) {
+			if (input.collection && input.data) {
+				app.crud.create(input.collection, input.data, socket.request.user).then(function (result) {
+					fn(result);
+				}, function (err) {
+					fn({
+						error: err
+					});
+				});
+			}
+		});
+
+	});
+
+
 	app.get('/rest/:collection', function (req, res) {
 		if (req.query.hasOwnProperty('noAutoType')) {
 			delete req.query.noAutoType;
