@@ -18,9 +18,10 @@ function autoType(obj) {
 
 module.exports = function (app) {
 	app.io.on('connect', function (socket) {
+
 		socket.on('read', function (input, fn) {
 			if (input.collection) {
-				app.crud.read(input.collection, input.where || {}, socket.request.user).then(function (result) {
+				app.crud.read(input.collection, input.data || {}, socket.request.user).then(function (result) {
 					fn(result);
 				}, function (err) {
 					fn({

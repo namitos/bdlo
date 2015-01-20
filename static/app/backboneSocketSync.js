@@ -11,7 +11,7 @@ define(['backboneCore'], function (Backbone) {
 
 			} else if (method == 'read') {
 				toSend.collection = model.schemaName;
-				toSend.where = options.data;
+				toSend.data = options.data;
 
 			} else if (method == 'update') {
 				toSend.collection = model.collection.schemaName;

@@ -2,6 +2,9 @@ var mongodb = require('mongodb');
 var _ = require('lodash');
 var vow = require('vow');
 var vowFs = require('vow-fs');
+var inherits = require('util').inherits;
+
+var Middleware = require('../models/middleware');
 
 
 module.exports = function (app, callbacks) {
@@ -175,11 +178,14 @@ module.exports = function (app, callbacks) {
 		}
 	}
 
+
 	var Crud = function (callbacks) {
 		this.callbacks = callbacks;
+		this.middleware = new Middleware();
 	}
 
-	require('util').inherits(Crud, require('events').EventEmitter);
+	inherits(Crud, require('events').EventEmitter);
+
 
 	Crud.prototype.create = function (collectionName, data, user) {
 		var crud = this;
@@ -360,7 +366,7 @@ module.exports = function (app, callbacks) {
 				});
 			}
 		});
-	}
+	};
 
 	app.crud = new Crud(callbacks);
 };
