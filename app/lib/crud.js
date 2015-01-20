@@ -7,14 +7,7 @@ var inherits = require('util').inherits;
 var Middleware = require('../models/middleware');
 
 
-module.exports = function (app, callbacks) {
-
-	var callbacks = {};
-	['create', 'read', 'update', 'delete'].forEach(function (op) {
-		callbacks[op] = function (collectionName, data) {
-			this.emit(op + ':' + collectionName, data);
-		};
-	});
+module.exports = function (app) {
 
 	/**
 	 *
@@ -179,7 +172,13 @@ module.exports = function (app, callbacks) {
 	}
 
 
-	var Crud = function (callbacks) {
+	var Crud = function () {
+		var callbacks = {};
+		['create', 'read', 'update', 'delete'].forEach(function (op) {
+			callbacks[op] = function (collectionName, data) {
+				this.emit(op + ':' + collectionName, data);
+			};
+		});
 		this.callbacks = callbacks;
 		this.middleware = new Middleware();
 	}
@@ -368,5 +367,5 @@ module.exports = function (app, callbacks) {
 		});
 	};
 
-	app.crud = new Crud(callbacks);
+	app.crud = new Crud();
 };
