@@ -26,8 +26,12 @@ define(['backboneCore'], function (Backbone) {
 
 			var socket = window.socket;
 			socket.emit(method, toSend, function (data) {
-				if (options.success) {
-					options.success(data);
+				if (data.hasOwnProperty('error')) {
+					console.log(data.error);
+				} else {
+					if (options.success) {
+						options.success(data);
+					}
 				}
 				resolve();
 			});
