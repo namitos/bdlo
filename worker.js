@@ -4,7 +4,6 @@ module.exports = function (conf, modifyApp) {
 	var server = require('http').createServer(app);
 
 	require('./app/lib/util')(app);
-	require('./app/lib/crud')(app);
 
 	app.io = require('socket.io')(server);
 	app.io.adapter(require('socket.io-redis')({
@@ -172,9 +171,14 @@ module.exports = function (conf, modifyApp) {
 		}
 	];
 
+	require('./app/lib/crud')(app);
+
 	if (modifyApp) {
 		modifyApp(app, middlewares, middlewaresIo, middlewaresPassport);
 	}
+
+
+
 	middlewaresPassport.forEach(function (obj) {
 		app.passport.use(obj.fn);
 	});

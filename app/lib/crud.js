@@ -4,7 +4,14 @@ var vow = require('vow');
 var vowFs = require('vow-fs');
 
 
-module.exports = function (app) {
+module.exports = function (app, callbacks) {
+
+	var callbacks = {};
+	['create', 'read', 'update', 'delete'].forEach(function (op) {
+		callbacks[op] = function (collectionName, data) {
+			this.emit(op + ':' + collectionName, data);
+		};
+	});
 
 	/**
 	 *
@@ -168,7 +175,8 @@ module.exports = function (app) {
 		}
 	}
 
-	var Crud = function () {
+	var Crud = function (callbacks) {
+		this.callbacks = callbacks;
 	}
 
 	require('util').inherits(Crud, require('events').EventEmitter);
@@ -207,10 +215,7 @@ module.exports = function (app) {
 								error: err
 							});
 						} else {
-							crud.emit('create', {
-								collection: collectionName,
-								id: results[0]._id
-							})
+							crud.callbacks.create.call(crud, collectionName, results[0]);
 							resolve(results[0]);
 						}
 					});
@@ -265,9 +270,7 @@ module.exports = function (app) {
 							error: err
 						});
 					} else {
-						crud.emit('read', {
-							collection: collectionName
-						});
+						crud.callbacks.read.call(crud, collectionName, result);
 						resolve(result);
 					}
 				});
@@ -312,10 +315,7 @@ module.exports = function (app) {
 							});
 						} else {
 							data._id = _id;
-							crud.emit('update', {
-								collection: collectionName,
-								id: where._id.toString()
-							});
+							crud.callbacks.read.call(crud, collectionName, where._id.toString());
 							resolve(data);
 						}
 					});
@@ -350,10 +350,7 @@ module.exports = function (app) {
 							error: err
 						});
 					} else {
-						crud.emit('delete', {
-							collection: collectionName,
-							id: where._id.toString()
-						});
+						crud.callbacks.read.call(crud, collectionName, where._id.toString());
 						resolve(numRemoved);
 					}
 				});
@@ -365,5 +362,5 @@ module.exports = function (app) {
 		});
 	}
 
-	app.crud = new Crud();
+	app.crud = new Crud(callbacks);
 };
