@@ -43,8 +43,7 @@ module.exports = function (app) {
 				if (result.length) {
 					done(null, new User(result[0], conf));
 				} else {
-					console.log('user not exists');
-					done(null, null);
+					done(null, new User({roles: ['anon']}, conf));
 				}
 			}
 		});
@@ -56,7 +55,7 @@ module.exports = function (app) {
 		}
 		var url = req.url.split('/');
 		if (url[1] == 'admin') {
-			if (req.user.permission('full access')) {
+			if (req.user.permission('base admin access')) {
 				next();
 			} else {
 				res.send(403, 'access denied');
