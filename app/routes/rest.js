@@ -21,11 +21,16 @@ module.exports = function (app) {
 
 		socket.on('read', function (input, fn) {
 			if (input.collection) {
-				app.crud.read(input.collection, input.data || {}, socket.request.user).then(function (result) {
-					fn(result);
-				}, function (err) {
-					fn({
+				app.crud.middleware.run(input, function (err) {
+					if (err) return fn({
 						error: err
+					});
+					app.crud.read(input.collection, input.data || {}, socket.request.user).then(function (result) {
+						fn(result);
+					}, function (err) {
+						fn({
+							error: err
+						});
 					});
 				});
 			}
@@ -33,13 +38,18 @@ module.exports = function (app) {
 
 		socket.on('delete', function (input, fn) {
 			if (input.collection && input.id) {
-				app.crud.delete(input.collection, input.id, socket.request.user).then(function (result) {
-					fn({
-						_id: req.params.id
-					});
-				}, function (err) {
-					fn({
+				app.crud.middleware.run(input, function (err) {
+					if (err) return fn({
 						error: err
+					});
+					app.crud.delete(input.collection, input.id, socket.request.user).then(function (result) {
+						fn({
+							_id: req.params.id
+						});
+					}, function (err) {
+						fn({
+							error: err
+						});
 					});
 				});
 			}
@@ -47,11 +57,16 @@ module.exports = function (app) {
 
 		socket.on('update', function (input, fn) {
 			if (input.collection && input.id && input.data) {
-				app.crud.update(input.collection, input.id, input.data, socket.request.user).then(function (result) {
-					fn(result);
-				}, function (err) {
-					fn({
+				app.crud.middleware.run(input, function (err) {
+					if (err) return fn({
 						error: err
+					});
+					app.crud.update(input.collection, input.id, input.data, socket.request.user).then(function (result) {
+						fn(result);
+					}, function (err) {
+						fn({
+							error: err
+						});
 					});
 				});
 			}
@@ -59,11 +74,16 @@ module.exports = function (app) {
 
 		socket.on('create', function (input, fn) {
 			if (input.collection && input.data) {
-				app.crud.create(input.collection, input.data, socket.request.user).then(function (result) {
-					fn(result);
-				}, function (err) {
-					fn({
+				app.crud.middleware.run(input, function (err) {
+					if (err) return fn({
 						error: err
+					});
+					app.crud.create(input.collection, input.data, socket.request.user).then(function (result) {
+						fn(result);
+					}, function (err) {
+						fn({
+							error: err
+						});
 					});
 				});
 			}
