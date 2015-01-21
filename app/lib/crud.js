@@ -18,8 +18,8 @@ module.exports = function (app) {
 	function getSchemaOwnerField(name, successCb) {
 		var schema = app.util.getSchema(name);
 		if (schema) {
-			if (schema.hasOwnProperty('info') && schema.info.hasOwnProperty('ownerField')) {
-				successCb(schema.info.ownerField);
+			if (schema.hasOwnProperty('ownerField')) {
+				successCb(schema.ownerField);
 				return true;
 			}
 		}
@@ -61,16 +61,14 @@ module.exports = function (app) {
 					var matches = input[i].split(';base64,');
 					var data = matches[1];
 					var mime = matches[0].replace('data:', '');
-					if (_.contains(schemaPart.info.mimes, mime)) {
+					var storage = conf.fileUpload.storages[schemaPart.storage];
+
+					if (_.contains(storage.mimes, mime)) {
 						var buf = new Buffer(data, 'base64');
 						var fileName = require('crypto').createHash('sha512').update(data + (new Date()).valueOf()).digest("hex") + '.' + conf.fileUpload.mimes[mime];
-						var fileDir = [
-							conf.fileUpload.storages.filesystem[schemaPart.info.storage.access],
-							schemaPart.info.storage.path
-						].join('/');
-						var filePath = [fileDir, fileName].join('/');
-						var fileDirWrite = [conf.staticPath, fileDir].join('/');
-						var filePathWrite = [fileDirWrite, fileName].join('/');
+
+						var filePath = [storage.path, fileName].join('/');
+						var filePathWrite = [conf.staticPath, storage.path, fileName].join('/');
 						promises.push(vowFs.write(filePathWrite, buf));
 						input[i] = filePath;
 					} else {
@@ -106,9 +104,7 @@ module.exports = function (app) {
 			//console.log('fieldName', fieldName, 'type', schema.properties[fieldName].type);
 			if (obj.hasOwnProperty(fieldName)) {
 				if (//если просто файловое поле
-				schema.properties[fieldName].type == 'any' &&
-				schema.properties[fieldName].hasOwnProperty('info') &&
-				schema.properties[fieldName].info.type == 'file'
+				schema.properties[fieldName].widget == 'base64File'
 				) {
 
 					obj[fieldName] = _.compact(obj[fieldName]);
@@ -116,8 +112,7 @@ module.exports = function (app) {
 
 				} else if (//если массив из простых файловых полей
 				schema.properties[fieldName].type == 'array' &&
-				schema.properties[fieldName].items.hasOwnProperty('info') &&
-				schema.properties[fieldName].items.info.type == 'file'
+				schema.properties[fieldName].items.widget == 'base64File'
 				) {
 
 					obj[fieldName].forEach(function (item, i) {
