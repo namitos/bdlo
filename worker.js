@@ -3,7 +3,7 @@ module.exports = function (conf, modifyApp) {
 	var app = express();
 	var server = require('http').createServer(app);
 
-	require('./app/lib/util')(app);
+	app.util = require('./app/lib/util');
 
 	app.io = require('socket.io')(server);
 	app.io.adapter(require('socket.io-redis')({
@@ -31,7 +31,6 @@ module.exports = function (conf, modifyApp) {
 	var mongodb = require('mongodb');
 	var fs = require('fs');
 	var vow = require('vow');
-	var vowFs = require('vow-fs');
 
 	app.response.__proto__.renderPage = function (template, parameters) {
 		if (!parameters) {
@@ -171,28 +170,6 @@ module.exports = function (conf, modifyApp) {
 		}
 	];
 
-	require('./app/lib/crud')(app);
-
-	if (modifyApp) {
-		modifyApp(app, middlewares, middlewaresIo, middlewaresPassport);
-	}
-
-
-
-	middlewaresPassport.forEach(function (obj) {
-		app.passport.use(obj.fn);
-	});
-	middlewares.forEach(function (obj) {
-		if (obj.hasOwnProperty('url')) {
-			app.use(obj.url, obj.fn);
-		} else {
-			app.use(obj.fn);
-		}
-	});
-	middlewaresIo.forEach(function (obj) {
-		app.io.use(obj.fn);
-	});
-
 	function mongoConnectPromise(connectionString) {
 		return new vow.Promise(function (resolve, reject, notify) {
 			var MongoClient = mongodb.MongoClient;
@@ -211,13 +188,13 @@ module.exports = function (conf, modifyApp) {
 		return new vow.Promise(function (resolve, reject, notify) {
 			fs.readdir(path, function (err, files) {
 				if (err) {
-					console.log(err);
 					reject(err);
 				} else {
+					var paths = [];
 					files.forEach(function (file) {
-						require(path + '/' + file)(app);
+						paths.push(path + '/' + file);
 					});
-					resolve(files);
+					resolve(paths);
 				}
 			});
 		});
@@ -225,14 +202,45 @@ module.exports = function (conf, modifyApp) {
 
 	var promises = {
 		db: mongoConnectPromise(conf.mongoConnect),
-		routesCore: routesPromise(__dirname + '/app/routes'),
-		projectInfo: vowFs.read('./package.json', 'utf8')
+		routesCore: routesPromise(__dirname + '/app/routes')
 	};
 	if (conf.hasOwnProperty('routesPath')) {
 		promises.routes = routesPromise(conf.routesPath);
 	}
 
 	vow.all(promises).then(function (result) {
+		app.db = result.db;
+		app.set('db', app.db);//@TODO remove
+
+		var Crud = require('./app/lib/crud');
+		app.crud = new Crud(app.db, conf);
+
+		if (modifyApp) {
+			modifyApp(app, middlewares, middlewaresIo, middlewaresPassport);
+		}
+
+		middlewaresPassport.forEach(function (obj) {
+			app.passport.use(obj.fn);
+		});
+		middlewares.forEach(function (obj) {
+			if (obj.hasOwnProperty('url')) {
+				app.use(obj.url, obj.fn);
+			} else {
+				app.use(obj.fn);
+			}
+		});
+		middlewaresIo.forEach(function (obj) {
+			app.io.use(obj.fn);
+		});
+
+		result.routesCore.forEach(function (path) {
+			require(path)(app);
+		});
+		if (result.routes) {
+			result.routes.forEach(function (path) {
+				require(path)(app);
+			});
+		}
 		app.get('*', function (req, res) {
 			res.renderPage(app.get('coreViewsPath') + '/staticpage', {
 				title: '404',
@@ -242,12 +250,7 @@ module.exports = function (conf, modifyApp) {
 			});
 		});
 
-		app.db = result.db;
-		app.set('db', app.db);//@TODO remove
-
-		app.set('projectInfo', JSON.parse(result.projectInfo));
 		server.listen(process.env.port, function () {
 		});
 	});
 };
-
