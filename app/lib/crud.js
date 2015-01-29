@@ -162,7 +162,6 @@ Crud.prototype._prepareFilesPromises = function (schema, obj) {
 	var crud = this;
 	var promises = [];
 	for (var fieldName in schema.properties) {
-		//console.log('fieldName', fieldName, 'type', schema.properties[fieldName].type);
 		if (obj.hasOwnProperty(fieldName)) {
 			if (//если просто файловое поле
 			schema.properties[fieldName].widget == 'base64File'
@@ -306,9 +305,11 @@ Crud.prototype.update = function (collectionName, _id, data, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
 		var where = {
-			_id: new mongodb.ObjectID(_id)
+			_id: _id
 		};
 		crud.permissions[collectionName]('update', {where: where, data: data}, user).then(function () {
+			where._id = util.prepareId(where._id);
+
 			var schema = crud.schemas[collectionName];
 			if (schema) {
 				data = util.forceSchema(schema, data);
@@ -325,7 +326,7 @@ Crud.prototype.update = function (collectionName, _id, data, user) {
 							error: err
 						});
 					} else {
-						data._id = _id;
+						data._id = _id.toString();
 						crud.callbacks[collectionName].call(crud, 'update', data);
 						resolve(data);
 					}
