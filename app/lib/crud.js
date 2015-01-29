@@ -271,16 +271,7 @@ Crud.prototype.read = function (collectionName, where, user) {
 	return new vow.Promise(function (resolve, reject) {
 		crud.permissions[collectionName]('read', {where: where}, user).then(function () {
 			if (where.hasOwnProperty('_id')) {
-				if (where._id instanceof Object) {
-					if (where._id.hasOwnProperty('$in')) {
-						where._id.$in.forEach(function (item, i) {
-							where._id.$in[i] = new mongodb.ObjectID(item.toString());
-						});
-					}
-				} else {
-					where._id = new mongodb.ObjectID(where._id.toString());
-				}
-
+				where._id = util.prepareId(where._id);
 			}
 			var fields = [];
 			if (where.hasOwnProperty('fields')) {

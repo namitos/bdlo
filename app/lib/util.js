@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var mongodb = require('mongodb');
 
 var util = {};
 
@@ -45,5 +46,23 @@ function forceSchema(schema, obj) {
 }
 
 util.forceSchema = forceSchema;
+
+
+util.prepareId = function (id) {//todo сделать проверку на длину строк, чтоб она совпадала с той, которая нужна для ObjectID и поместить в util
+	var newId;
+	if (id instanceof Object) {
+		if (id.hasOwnProperty('$in')) {
+			newId = {
+				$in: []
+			};
+			id.$in.forEach(function (item, i) {
+				newId.$in.push(new mongodb.ObjectID(item.toString()));
+			});
+		}
+	} else {
+		newId = new mongodb.ObjectID(id.toString());
+	}
+	return newId;
+};
 
 module.exports = util;
