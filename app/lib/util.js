@@ -47,22 +47,29 @@ function forceSchema(schema, obj) {
 
 util.forceSchema = forceSchema;
 
-
-util.prepareId = function (id) {//todo сделать проверку на длину строк, чтоб она совпадала с той, которая нужна для ObjectID и поместить в util
+function prepareId(id) {
 	var newId;
-	if (id instanceof Object) {
-		if (id.hasOwnProperty('$in')) {
-			newId = {
-				$in: []
-			};
-			id.$in.forEach(function (item, i) {
-				newId.$in.push(new mongodb.ObjectID(item.toString()));
-			});
+	if (typeof id == 'string') {
+		if (id.length == 24) {
+			newId = new mongodb.ObjectID(id);
+		} else {
+			console.log('prepareId error: string length is not 24'.red, id);
 		}
+	} else if (id instanceof mongodb.ObjectID) {
+		return id;
+	} else if (id instanceof Object && id.hasOwnProperty('$in')) {
+		newId = {
+			$in: []
+		};
+		id.$in.forEach(function (item, i) {
+			newId.$in.push(prepareId(item));
+		});
 	} else {
-		newId = new mongodb.ObjectID(id.toString());
+		console.log('prepareId error'.red, id);
 	}
 	return newId;
 };
+
+util.prepareId = prepareId;
 
 module.exports = util;
