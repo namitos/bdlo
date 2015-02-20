@@ -26,33 +26,6 @@ a {
 	outline: none !important;
 }
 
-label {
-	font-weight: 600;
-}
-
-.form-control {
-	border-radius: 0;
-	box-shadow: none;
-}
-
-.form-control:focus {
-	box-shadow: none;
-}
-
-.form-control-code {
-	min-height: 304px;
-	border: 1px solid #ccc;
-}
-
-.form-control-code * {
-	font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
-}
-.cke_editor_content{
-	box-shadow: none!important;
-	border: 1px solid #ccc!important;
-}
-
-
 .navbar {
 	background: #fff;
 	box-shadow: 0 2px 2px rgba(0, 0, 0, .05), 0 1px 0 rgba(0, 0, 0, .05);
@@ -199,25 +172,26 @@ label {
 	height: 100%;
 }
 
-.list-collection .view-list{
+.list-collection .view-list {
 	height: 100%;
 }
 
-.list-collection .filter{
+.list-collection .filter {
 	background: rgb(198, 128, 70);
 	position: absolute;
-	top:46px;
+	top: 46px;
 	left: 0;
 	width: 100%;
 	z-index: 110;
 }
+
 .list-collection .filter .toggle,
-.list-collection .filter .alert{
-	color:#fff;
+.list-collection .filter .alert {
+	color: #fff;
 	padding: 10px 15px;
-	margin:0;
+	margin: 0;
 	font-size: 13px;
-	border:none;
+	border: none;
 	display: block;
 	transition: all .1s;
 	-webkit-touch-callout: none;
@@ -227,26 +201,26 @@ label {
 	-ms-user-select: none;
 	user-select: none;
 }
-.list-collection .filter .toggle:hover{
+
+.list-collection .filter .toggle:hover {
 	text-decoration: none;
-	background: rgba(0,0,0,0.1);
+	background: rgba(0, 0, 0, 0.1);
 }
 
-.list-collection .filter .content{
+.list-collection .filter .content {
 	padding: 10px 15px;
 	position: absolute;
-	top:0;
+	top: 0;
 	left: -240px;
 	width: 240px;
 	background: rgb(198, 128, 70);
 }
 
-.list-collection .filter .content .form-group{
+.list-collection .filter .content .form-group {
 	margin: 0 0 6px 0;
 }
 
-
-.list-collection .nav{
+.list-collection .nav {
 	overflow-y: auto;
 	height: 100%;
 }
@@ -265,6 +239,60 @@ label {
 	background: rgba(0, 0, 0, 0.1);
 }
 
+.form-schema .object-root {
+	margin-bottom: 10px;
+}
+
+.form-schema label {
+	font-weight: 600;
+	margin-bottom: 0px;
+}
+
+.form-schema .form-control {
+	box-shadow: none;
+	height: 29px;
+}
+
+.form-schema textarea.form-control {
+	height: 74px;
+}
+
+.form-schema .form-control:focus {
+	box-shadow: none;
+}
+
+.form-schema .form-control-code {
+	min-height: 304px;
+	border: 1px solid #ccc;
+}
+
+.form-schema .form-control-code * {
+	font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+
+.form-schema .cke_editor_content {
+	box-shadow: none !important;
+	border: 1px solid #ccc !important;
+}
+
+.form-schema .btn {
+	padding: 3px 10px;
+}
+
+.form-schema .object,
+.form-schema .array {
+	background: rgba(130, 130, 100, 0.07);
+	padding: 5px;
+	border-radius: 3px;
+	margin-bottom: 10px;
+}
+
+.form-schema .object > label,
+.form-schema .array > label {
+	font-size: 18px;
+	margin-bottom: 10px;
+}
+
 .form-schema {
 	padding-bottom: 20px;
 }
@@ -277,26 +305,25 @@ label {
 .form-schema .form-group,
 .form-schema .array {
 	display: inline-block;
-	width: 48%;
+	width: 49%;
 	vertical-align: top;
-	margin: 0 2% 6px 0;
+	margin: 0 1% 5px 0;
 }
 
-.form-schema .array {
+.form-schema .array .btn.add {
 	margin-bottom: 15px;
+	color: #fff;
+	background-color: #31b0d5;
+	border-color: #269abc;
 }
 
 .form-schema .array .btn .text {
 	display: none;
 }
 
-.form-schema .array .items {
-	margin-right: -2%;
-}
-
 .form-schema .array .items > div {
 	position: relative;
-	background:rgba(0,0,0,0.05);
+
 	padding: 5px 50px 5px 5px;
 }
 
@@ -305,19 +332,26 @@ label {
 	top: 5px;
 	right: 5px;
 	color: #fff;
-	background-color: #31b0d5;
-	border-color: #269abc;
+	background-color: #d9534f;
+	border-color: #d43f3a;
 }
 
-.form-schema .array .items > .object > .form-group{
+.form-schema .array .items > .object > .form-group {
 	vertical-align: bottom;
 }
 
-.form-schema .object > label{
+.form-schema .object > label {
 	display: block;
 }
 
-.form-schema .input-file-inner .btn{
+.form-schema .input-file-inner .btn {
 	background: none;
 	padding: 0;
+}
+
+@media (min-width: 1680px) {
+	.form-schema .form-group,
+	.form-schema .array {
+		width: 32%;
+	}
 }
