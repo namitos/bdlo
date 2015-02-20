@@ -16,7 +16,15 @@ define([
 				data = {};
 			}
 			var fields = {};
-			fields[this.schema.titleField] = true;
+
+			if (typeof this.schema.titleField == 'string') {
+				fields[this.schema.titleField] = true;
+			} else if (this.schema.titleField instanceof Object) {
+				this.schema.titleField.fields.forEach(function (field) {
+					fields[field] = true;
+				});
+			}
+
 			this.collection.fetch({
 				data: _.merge(data, {
 					fields: fields
@@ -64,16 +72,26 @@ define([
 
 			var $nav = view.$el.find('.nav');
 
+			items.forEach(function (row) {
+				var name;
+				if (typeof view.schema.titleField == 'string') {
+					name = row[view.schema.titleField];
+				} else if (view.schema.titleField instanceof Object) {
+					name = view.schema.titleField.fn.call(view.schema, row);
+				}
+				row._nameInList = name;
+			});
+
 			items.sort(function (a, b) {
-				if (a[view.schema.titleField] > b[view.schema.titleField]) return 1;
-				if (a[view.schema.titleField] < b[view.schema.titleField]) return -1;
+				if (a._nameInList > b._nameInList) return 1;
+				if (a._nameInList < b._nameInList) return -1;
 				return 0;
 			});
 
 			if (items.length) {
 				$nav.html('');
 				items.forEach(function (row) {
-					var $el = $("<li><a href='#" + view.schemaName + "/" + row._id + "'>" + row[view.schema.titleField] + "</a></li>");
+					var $el = $("<li><a href='#" + view.schemaName + "/" + row._id + "'>" + row._nameInList + "</a></li>");
 					if (view.activeId == row._id) {
 						$el.addClass('active');
 					}
