@@ -72,4 +72,8 @@ function prepareId(id) {
 
 util.prepareId = prepareId;
 
+util.passwordHash = function (password) {
+	return require('crypto').createHash('sha512').update(password).digest("hex");
+}
+
 module.exports = util;
