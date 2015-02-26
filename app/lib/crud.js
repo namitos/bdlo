@@ -18,6 +18,15 @@ var Crud = function (db, conf) {
 	crud.permissions = {};
 	crud.schemas = {};
 
+	function changeInput(op, input, ownerField, user) {
+		if (op == 'create' || op == 'update') {
+			input.data[ownerField] = user._id.toString();
+		}
+		if (op == 'read' || op == 'update' || op == 'delete') {
+			input.where[ownerField] = user._id.toString();
+		}
+	}
+
 	for (var schemaName in schemas) {
 		crud.callbacks[schemaName] = function (op, result) {
 			this.emit(schemaName + ':' + op, result);
@@ -29,12 +38,10 @@ var Crud = function (db, conf) {
 					if (user.permission(collectionName + ' all all') ||
 						user.permission(collectionName + ' ' + op + ' all') ||
 						user.permission(collectionName + ' all his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
-							input.data[ownerField] = user._id.toString();
-							input.where[ownerField] = user._id.toString();
+							changeInput(op, input, ownerField, user);
 						}) ||
 						user.permission(collectionName + ' ' + op + ' his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
-							input.data[ownerField] = user._id.toString();
-							input.where[ownerField] = user._id.toString();
+							changeInput(op, input, ownerField, user);
 						})) {
 						resolve();
 					} else {
