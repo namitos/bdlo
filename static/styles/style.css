@@ -246,11 +246,14 @@ a {
 .form-schema label {
 	font-weight: 600;
 	margin-bottom: 0px;
+	padding-left: 10px;
 }
 
 .form-schema .form-control {
 	box-shadow: none;
 	height: 29px;
+	border: none;
+	border-radius: 2px;
 }
 
 .form-schema textarea.form-control {
@@ -282,8 +285,8 @@ a {
 .form-schema .object,
 .form-schema .array {
 	background: rgba(130, 130, 100, 0.07);
-	padding: 5px;
 	border-radius: 3px;
+	padding: 5px;
 	margin-bottom: 10px;
 }
 
@@ -310,6 +313,24 @@ a {
 	margin: 0 1% 5px 0;
 }
 
+.form-schema .array {
+	margin-right: 0;
+	width: 100%;
+}
+
+.form-schema .form-group {
+	padding-left: 200px;
+	position: relative;
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	border-radius: 3px;
+}
+
+.form-schema .form-group label {
+	position: absolute;
+	top: 4px;
+	left: 0;
+}
+
 .form-schema .array .btn.add {
 	margin-bottom: 15px;
 	color: #fff;
@@ -322,8 +343,9 @@ a {
 }
 
 .form-schema .array .items > div {
+	background: rgba(130, 130, 100, 0.07);
+	border-radius: 3px;
 	position: relative;
-
 	padding: 5px 50px 5px 5px;
 }
 
@@ -347,11 +369,4 @@ a {
 .form-schema .input-file-inner .btn {
 	background: none;
 	padding: 0;
-}
-
-@media (min-width: 1680px) {
-	.form-schema .form-group,
-	.form-schema .array {
-		width: 32%;
-	}
 }
