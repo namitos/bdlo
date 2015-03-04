@@ -1,4 +1,3 @@
-var mongodb = require('mongodb');
 var cookieParser = require('cookie-parser');
 var LocalStrategy = require('passport-local').Strategy;
 
@@ -36,7 +35,7 @@ module.exports = function (app) {
 
 	auth.deserialize = function (id, done) {
 		var conf = app.get('conf');
-		app.db.collection('users').find({_id: new mongodb.ObjectID(id)}).toArray(function (err, result) {
+		app.db.collection('users').find({_id: app.util.prepareId(id)}).toArray(function (err, result) {
 			if (err) {
 				done(err, null);
 			} else {
@@ -48,6 +47,7 @@ module.exports = function (app) {
 			}
 		});
 	};
+
 	auth.permissionsMiddleware = function (req, res, next) {
 		var conf = app.get('conf');
 		if (!req.hasOwnProperty('user')) {
@@ -64,6 +64,7 @@ module.exports = function (app) {
 			next();
 		}
 	};
+
 	auth.ioUserMiddleware = function (socket, next) {
 		var conf = app.get('conf');
 		var req = {
@@ -73,15 +74,26 @@ module.exports = function (app) {
 		};
 		var cookies;
 		cookieParser(conf.session.secret)(req, {}, function (err) {
-			if (err) throw err;
+			if (err) {
+				console.log(err);
+			}
 			cookies = req.signedCookies || req.cookies;
 		});
 		app.sessionStore.get(cookies.session, function (err, session) {
-			auth.deserialize(session.passport.user, function (msg, user) {
-				socket.request.user = user;
+			if (err) {
+				console.log(err);
+			}
+			if (session) {
+				auth.deserialize(session.passport.user, function (msg, user) {
+					socket.request.user = user;
+					next();
+				});
+			} else {
+				socket.request.user = new User({roles: ['anon']}, conf);
 				next();
-			});
+			}
 		});
 	};
+
 	return auth;
 };
