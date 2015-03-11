@@ -9,19 +9,17 @@ module.exports = function (app) {
 	auth.strategy = function () {
 		return new LocalStrategy(function (username, password, done) {
 			var conf = app.get('conf');
-			password = require('crypto').createHash('sha512').update(password).digest("hex");
 			app.db.collection('users').find({
 				username: username,
-				password: password
+				password: app.util.passwordHash(password)
 			}).toArray(function (err, result) {
 				if (err) {
+					console.error(err);
 					done(err, null);
 				} else {
 					if (result.length) {
-						console.log('user exists');
 						done(null, new User(result[0], conf));
 					} else {
-						console.log('user not exists');
 						done(null, null);
 					}
 				}
@@ -75,15 +73,15 @@ module.exports = function (app) {
 		var cookies;
 		cookieParser(conf.session.secret)(req, {}, function (err) {
 			if (err) {
-				console.log(err);
+				console.error(err);
 			}
 			cookies = req.signedCookies || req.cookies;
 		});
 		app.sessionStore.get(cookies.session, function (err, session) {
 			if (err) {
-				console.log(err);
+				console.error(err);
 			}
-			if (session) {
+			if (session && session.passport && session.passport.user) {
 				auth.deserialize(session.passport.user, function (msg, user) {
 					socket.request.user = user;
 					next();
