@@ -64,7 +64,7 @@ module.exports = function (conf, modifyApp) {
 			}
 			res.render(url[1] == 'admin' ? app.get('coreViewsPath') + '/admin/page' : 'page', toRender);
 		});
-	}
+	};
 
 	app.set('conf', conf);
 	app.set('corePath', __dirname);
@@ -175,7 +175,6 @@ module.exports = function (conf, modifyApp) {
 			var MongoClient = mongodb.MongoClient;
 			MongoClient.connect(connectionString, function (err, db) {
 				if (err) {
-					console.log(err);
 					reject(err);
 				} else {
 					resolve(db);
@@ -252,5 +251,7 @@ module.exports = function (conf, modifyApp) {
 
 		server.listen(process.env.port, function () {
 		});
+	}, function (err) {
+		console.error(err);
 	});
 };
