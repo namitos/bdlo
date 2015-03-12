@@ -30,23 +30,28 @@ var Crud = function (db, conf) {
 	for (var schemaName in schemas) {
 		crud.callbacks[schemaName] = function (op, result) {
 			this.emit(schemaName + ':' + op, result);
-		}
+		};
 
 		crud.permissions[schemaName] = (function (collectionName) {
 			return function (op, input, user) {
 				return new vow.Promise(function (resolve, reject) {
-					if (user.permission(collectionName + ' all all') ||
-						user.permission(collectionName + ' ' + op + ' all') ||
-						user.permission(collectionName + ' all his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
-							changeInput(op, input, ownerField, user);
-						}) ||
-						user.permission(collectionName + ' ' + op + ' his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
-							changeInput(op, input, ownerField, user);
-						})) {
-						resolve();
+					if (crud.schemas[collectionName]) {
+						if (user.permission(collectionName + ' all all') ||
+							user.permission(collectionName + ' ' + op + ' all') ||
+							user.permission(collectionName + ' all his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
+								changeInput(op, input, ownerField, user);
+							}) ||
+							user.permission(collectionName + ' ' + op + ' his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
+								changeInput(op, input, ownerField, user);
+							})) {
+							resolve();
+						} else {
+							reject();
+						}
 					} else {
 						reject();
 					}
+
 				});
 			}
 		})(schemaName);
@@ -64,14 +69,14 @@ var Crud = function (db, conf) {
 
 				}
 			} catch (e) {
-				console.log(e);
+				console.error(('error in requiring schema' + schemaName + ':').red, e);
 			}
 			return schema;
 		})(schemaName);
 	}
 
 	crud.middleware = new Middleware();
-}
+};
 
 inherits(Crud, require('events').EventEmitter);
 
@@ -79,16 +84,14 @@ inherits(Crud, require('events').EventEmitter);
 /**
  *
  * @param name {string}
- * @param successCb {Function}
+ * @param successFn {Function}
  * @returns {boolean}
  */
-Crud.prototype._getSchemaOwnerField = function (name, successCb) {
+Crud.prototype._getSchemaOwnerField = function (name, successFn) {
 	var schema = this.schemas[name];
-	if (schema) {
-		if (schema.hasOwnProperty('ownerField')) {
-			successCb(schema.ownerField);
-			return true;
-		}
+	if (schema.hasOwnProperty('ownerField')) {
+		successFn(schema.ownerField);
+		return true;
 	}
 	return false;
 };
@@ -104,11 +107,7 @@ Crud.prototype._isFile = function (str) {
 		return false;
 	}
 	var a = str.substr(0, 5);
-	if (a.indexOf('data:') != -1) {
-		return true;
-	} else {
-		return false;
-	}
+	return a.indexOf('data:') != -1;
 };
 
 /**
@@ -131,7 +130,7 @@ Crud.prototype._saveFilePromise = function (schemaPart, input) {
 
 				if (_.contains(storage.mimes, mime)) {
 					var buf = new Buffer(data, 'base64');
-					var fileName = require('crypto').createHash('sha512').update(data + (new Date()).valueOf()).digest("hex") + '.' + crud.conf.fileUpload.mimes[mime];
+					var fileName = util.passwordHash(data) + '.' + crud.conf.fileUpload.mimes[mime];
 
 					var filePath = [storage.path, fileName].join('/');
 					var filePathWrite = [crud.conf.staticPath, storage.path, fileName].join('/');
@@ -220,17 +219,9 @@ Crud.prototype._prepareFilesPromises = function (schema, obj) {
  * сохраняет файлы из obj в соответствии с его schema и выполняет callback
  * @param schema полная схема объекта
  * @param obj весь объект
- * @param callback
  */
-Crud.prototype._prepareFiles = function (schema, obj, callback) {
-	var crud = this;
-	if (schema) {
-		vow.allResolved(crud._prepareFilesPromises(schema, obj)).then(function (result) {
-			callback(result);
-		});
-	} else {
-		callback([]);
-	}
+Crud.prototype._prepareFiles = function (schema, obj) {
+	return vow.allResolved(this._prepareFilesPromises(schema, obj));
 };
 
 
@@ -249,7 +240,7 @@ Crud.prototype.create = function (collectionName, data, user) {
 					data = util.forceSchema(schema, data);
 				}
 			}
-			crud._prepareFiles(schema, data, function (result) {
+			crud._prepareFiles(schema, data).then(function (result) {
 				if (data.hasOwnProperty('_id')) {
 					delete data._id;
 				}
@@ -321,13 +312,11 @@ Crud.prototype.update = function (collectionName, _id, data, user) {
 			if (schema) {
 				data = util.forceSchema(schema, data);
 			}
-			crud._prepareFiles(schema, data, function (result) {
+			crud._prepareFiles(schema, data).then(function (result) {
 				if (data.hasOwnProperty('_id')) {
 					delete data._id;
 				}
-				crud.db.collection(collectionName).update(where, {
-					"$set": data
-				}, function (err, results) {
+				crud.db.collection(collectionName).update(where, data, function (err, results) {
 					if (err) {
 						reject({
 							error: err
