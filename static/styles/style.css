@@ -249,9 +249,13 @@ a {
 	padding-left: 10px;
 }
 
+.form-schema .btn {
+	border-radius: 2px;
+}
+
 .form-schema .form-control {
 	box-shadow: none;
-	height: 29px;
+	height: 28px;
 	border: none;
 	border-radius: 2px;
 }
@@ -293,7 +297,8 @@ a {
 .form-schema .object > label,
 .form-schema .array > label {
 	font-size: 18px;
-	margin-bottom: 10px;
+	margin: 0 0 10px 0;
+	padding: 0;
 }
 
 .form-schema {
@@ -332,7 +337,6 @@ a {
 }
 
 .form-schema .array .btn.add {
-	margin-bottom: 15px;
 	color: #fff;
 	background-color: #31b0d5;
 	border-color: #269abc;
@@ -343,19 +347,24 @@ a {
 }
 
 .form-schema .array .items > div {
-	background: rgba(130, 130, 100, 0.07);
-	border-radius: 3px;
 	position: relative;
-	padding: 5px 50px 5px 5px;
+	padding: 0 36px 0 0;
 }
 
 .form-schema .array .items > div > .btn {
 	position: absolute;
-	top: 5px;
-	right: 5px;
+	top: 0;
+	right: 0;
 	color: #fff;
 	background-color: #d9534f;
 	border-color: #d43f3a;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.form-schema .array .items > div > .form-control {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
 }
 
 .form-schema .array .items > .object > .form-group {
