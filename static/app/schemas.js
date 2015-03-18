@@ -1,10 +1,8 @@
 'use strict';
 
 define([
-	'backbone',
-	'util',
-	'models/primitives'
-], function (Backbone, util, primitives) {
+	'backbone'
+], function (Backbone) {
 	return {
 		ListView: Backbone.View.extend({
 			tagName: 'ul',

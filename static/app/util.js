@@ -1,9 +1,9 @@
 'use strict';
 
 define([
-	'backbone'
-], function (Backbone) {
-
+	'backbone',
+	'models/primitives'
+], function (Backbone, primitives) {
 
 	function forEachPrimitives(schema, fn) {
 		if (schema.type == 'object') {
