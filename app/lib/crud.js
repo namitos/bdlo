@@ -1,4 +1,3 @@
-var mongodb = require('mongodb');
 var _ = require('lodash');
 var vow = require('vow');
 var vowFs = require('vow-fs');
@@ -12,11 +11,9 @@ var Crud = function (db, conf) {
 	var crud = this;
 	crud.db = db;
 	crud.conf = conf;
-	var schemas = conf.editableSchemas;
 
 	crud.callbacks = {};
 	crud.permissions = {};
-	crud.schemas = {};
 
 	function changeInput(op, input, ownerField, user) {
 		if (op == 'create' || op == 'update') {
@@ -27,7 +24,7 @@ var Crud = function (db, conf) {
 		}
 	}
 
-	for (var schemaName in schemas) {
+	for (var schemaName in crud.conf.schemas) {
 		crud.callbacks[schemaName] = function (op, result) {
 			this.emit(schemaName + ':' + op, result);
 		};
@@ -35,7 +32,7 @@ var Crud = function (db, conf) {
 		crud.permissions[schemaName] = (function (collectionName) {
 			return function (op, input, user) {
 				return new vow.Promise(function (resolve, reject) {
-					if (crud.schemas[collectionName]) {
+					if (crud.conf.schemas[collectionName]) {
 						if (user.permission(collectionName + ' all all') ||
 							user.permission(collectionName + ' ' + op + ' all') ||
 							user.permission(collectionName + ' all his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
@@ -55,24 +52,6 @@ var Crud = function (db, conf) {
 				});
 			}
 		})(schemaName);
-
-		crud.schemas[schemaName] = (function (schemaName) {
-			var schema = false;
-			try {
-				if (schemas.hasOwnProperty(schemaName)) {
-					if (schemas[schemaName].hasOwnProperty('path')) {
-						schema = require(conf.projectPath + schemas[schemaName].path);
-					} else {
-						schema = require('../../static/schemas/' + schemaName);
-					}
-				} else {
-
-				}
-			} catch (e) {
-				console.error(('error in requiring schema' + schemaName + ':').red, e);
-			}
-			return schema;
-		})(schemaName);
 	}
 
 	crud.middleware = new Middleware();
@@ -88,7 +67,7 @@ inherits(Crud, require('events').EventEmitter);
  * @returns {boolean}
  */
 Crud.prototype._getSchemaOwnerField = function (name, successFn) {
-	var schema = this.schemas[name];
+	var schema = this.conf.schemas[name];
 	if (schema.hasOwnProperty('ownerField')) {
 		successFn(schema.ownerField);
 		return true;
@@ -229,16 +208,14 @@ Crud.prototype.create = function (collectionName, data, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
 		crud.permissions[collectionName]('create', {data: data}, user).then(function () {
-			var schema = crud.schemas[collectionName];
-			if (schema) {
-				if (data instanceof Array) {
-					data.forEach(function (row, i) {
-						data[i] = util.forceSchema(schema, data[i]);
-					});
-					data = _.compact(data);
-				} else {
-					data = util.forceSchema(schema, data);
-				}
+			var schema = crud.conf.schemas[collectionName];
+			if (data instanceof Array) {
+				data.forEach(function (row, i) {
+					data[i] = util.forceSchema(schema, data[i]);
+				});
+				data = _.compact(data);
+			} else {
+				data = util.forceSchema(schema, data);
 			}
 			crud._prepareFiles(schema, data).then(function (result) {
 				if (data.hasOwnProperty('_id')) {
@@ -308,10 +285,8 @@ Crud.prototype.update = function (collectionName, _id, data, user) {
 		crud.permissions[collectionName]('update', {where: where, data: data}, user).then(function () {
 			where._id = util.prepareId(where._id);
 
-			var schema = crud.schemas[collectionName];
-			if (schema) {
-				data = util.forceSchema(schema, data);
-			}
+			var schema = crud.conf.schemas[collectionName];
+			data = util.forceSchema(schema, data);
 			crud._prepareFiles(schema, data).then(function (result) {
 				if (data.hasOwnProperty('_id')) {
 					delete data._id;
@@ -340,7 +315,7 @@ Crud.prototype.delete = function (collectionName, _id, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
 		var where = {
-			_id: new mongodb.ObjectID(_id)
+			_id: util.prepareId(_id)
 		};
 		crud.permissions[collectionName]('delete', {where: where}, user).then(function () {
 			crud.db.collection(collectionName).remove(where, function (err, numRemoved) {

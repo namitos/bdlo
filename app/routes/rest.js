@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var util = require('util');
 
 function autoType(obj) {
 	var digitValue;
@@ -89,6 +90,22 @@ module.exports = function (app) {
 			}
 		});
 
+		socket.on('schemas', function (input, fn) {
+			var schemasAvailable = {};
+			var schemas = app.get('conf').schemas;
+			var user = socket.request.user;
+			for (var collectionName in schemas) {
+				if (
+					user.permission(collectionName + ' all all') ||
+					user.permission(collectionName + ' read all') ||
+					user.permission(collectionName + ' all his') ||
+					user.permission(collectionName + ' read his')
+				) {
+					schemasAvailable[collectionName] = schemas[collectionName];
+				}
+			}
+			fn(util.inspect(schemasAvailable, {depth: null}));
+		});
 	});
 
 
@@ -129,22 +146,5 @@ module.exports = function (app) {
 		}, function (err) {
 			res.status(403).send(err);
 		});
-	});
-
-	app.get('/schemas/available', function (req, res) {
-		var schemas = {};
-		var schemasAll = app.get('conf').editableSchemas;
-		var user = req.user;
-		for (var collectionName in schemasAll) {
-			if (
-				user.permission(collectionName + ' all all') ||
-				user.permission(collectionName + ' read all') ||
-				user.permission(collectionName + ' all his') ||
-				user.permission(collectionName + ' read his')
-			) {
-				schemas[collectionName] = schemasAll[collectionName];
-			}
-		}
-		res.send(schemas);
 	});
 };

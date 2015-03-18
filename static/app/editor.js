@@ -24,7 +24,6 @@ define([
 					fields[field] = true;
 				});
 			}
-
 			this.collection.fetch({
 				data: _.merge(data, {
 					fields: fields
@@ -38,13 +37,12 @@ define([
 				schemaName: view.schemaName
 			});
 			view.listenTo(view.collection, 'sync', this.render);
-			schemas.load(function (loadedSchemas) {
-				schemas.loadVocabularies(loadedSchemas, view.schemaName, function () {
+			util.loadSchemas().then(function (loadedSchemas) {
+				util.loadVocabularies(loadedSchemas, view.schemaName).then(function () {
 					view.schemas = loadedSchemas;
 					view.schema = loadedSchemas[view.schemaName];
 					view.fetch();
 				});
-
 			});
 		},
 		render: function () {
@@ -148,9 +146,9 @@ define([
 		initialize: function (args) {
 			_.merge(this, args);
 			var view = this;
-			schemas.load(function (loadedSchemas) {
+			util.loadSchemas().then(function (loadedSchemas) {
 				view.schemas = loadedSchemas;
-				schemas.loadVocabularies(view.schemas, view.schemaName, function () {
+				util.loadVocabularies(view.schemas, view.schemaName).then(function () {
 					view.getObj(view.activeId, function (obj) {
 						view.model = obj;
 						if (view.model) {

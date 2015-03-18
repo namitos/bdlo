@@ -28,14 +28,15 @@ require.config({
 });
 
 require([
+	'util',
 	'backbone',
 	'editor',
 	'schemas',
 	'io'
-], function (Backbone, editor, schemas, io) {
+], function (util, Backbone, editor, schemas, io) {
 	window.socket = io();
 
-	schemas.load(function (loadedSchemas) {
+	util.loadSchemas().then(function (loadedSchemas) {
 		var app = new Router({
 			schemasView: new schemas.ListView({
 				schemas: loadedSchemas,

@@ -1,4 +1,8 @@
 module.exports = function (conf, modifyApp) {
+	Function.prototype.inspect = function () {
+		return this.toString();
+	};
+
 	var express = require('express');
 	var app = express();
 	var server = require('http').createServer(app);
