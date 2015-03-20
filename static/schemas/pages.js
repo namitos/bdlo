@@ -1,5 +1,7 @@
 var schema = {
 	type: 'object',
+	titleField: 'route',
+	name: 'Pages',
 	properties: {
 		route: {
 			type: 'string',
@@ -11,22 +13,19 @@ var schema = {
 			required: true,
 			label: 'Title'
 		},
-		/*parent: {
-		 type: 'string',
-		 info: {
-		 type: 'select',
-		 schema: 'pages'
-		 }
-		 },*/
+		parent: {
+			type: 'string',
+			widget: 'select',
+			label: 'Parent page',
+			schema: 'pages'
+		},
 		content: {
 			type: 'string',
 			required: true,
 			label: 'Content',
 			widget: 'wysiwyg'
 		}
-	},
-	titleField: 'title',
-	name: 'Pages'
+	}
 };
 
 if (typeof exports === 'object') {
