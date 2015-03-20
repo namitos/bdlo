@@ -32,23 +32,18 @@ var Crud = function (db, conf) {
 		crud.permissions[schemaName] = (function (collectionName) {
 			return function (op, input, user) {
 				return new vow.Promise(function (resolve, reject) {
-					if (crud.conf.schemas[collectionName]) {
-						if (user.permission(collectionName + ' all all') ||
-							user.permission(collectionName + ' ' + op + ' all') ||
-							user.permission(collectionName + ' all his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
-								changeInput(op, input, ownerField, user);
-							}) ||
-							user.permission(collectionName + ' ' + op + ' his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
-								changeInput(op, input, ownerField, user);
-							})) {
-							resolve();
-						} else {
-							reject();
-						}
+					if (user.permission(collectionName + ' all all') ||
+						user.permission(collectionName + ' ' + op + ' all') ||
+						user.permission(collectionName + ' all his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
+							changeInput(op, input, ownerField, user);
+						}) ||
+						user.permission(collectionName + ' ' + op + ' his') && crud._getSchemaOwnerField(collectionName, function (ownerField) {
+							changeInput(op, input, ownerField, user);
+						})) {
+						resolve();
 					} else {
 						reject();
 					}
-
 				});
 			}
 		})(schemaName);
@@ -207,132 +202,134 @@ Crud.prototype._prepareFiles = function (schema, obj) {
 Crud.prototype.create = function (collectionName, data, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
-		crud.permissions[collectionName]('create', {data: data}, user).then(function () {
-			var schema = crud.conf.schemas[collectionName];
-			if (data instanceof Array) {
-				data.forEach(function (row, i) {
-					data[i] = util.forceSchema(schema, data[i]);
-				});
-				data = _.compact(data);
-			} else {
-				data = util.forceSchema(schema, data);
-			}
-			crud._prepareFiles(schema, data).then(function (result) {
-				if (data.hasOwnProperty('_id')) {
-					delete data._id;
+		if (crud.conf.schemas[collectionName]) {
+			crud.permissions[collectionName]('create', {data: data}, user).then(function () {
+				var schema = crud.conf.schemas[collectionName];
+				if (data instanceof Array) {
+					data.forEach(function (row, i) {
+						data[i] = util.forceSchema(schema, data[i]);
+					});
+					data = _.compact(data);
+				} else {
+					data = util.forceSchema(schema, data);
 				}
-				crud.db.collection(collectionName).insert(data, function (err, result) {
-					if (err) {
-						reject({
-							error: err
-						});
-					} else {
-						crud.callbacks[collectionName].call(crud, 'create', result[0]);
-						resolve(result[0]);
+				crud._prepareFiles(schema, data).then(function (result) {
+					if (data.hasOwnProperty('_id')) {
+						delete data._id;
 					}
+					crud.db.collection(collectionName).insert(data, function (err, result) {
+						if (err) {
+							reject(err);
+						} else {
+							crud.callbacks[collectionName].call(crud, 'create', result[0]);
+							resolve(result[0]);
+						}
+					});
 				});
+			}, function () {
+				reject('not allowed');
 			});
-		}, function () {
-			reject({
-				error: 'not allowed'
-			});
-		});
+		} else {
+			reject('schema not exists');
+		}
+
 	});
 };
 
 Crud.prototype.read = function (collectionName, where, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
-		crud.permissions[collectionName]('read', {where: where}, user).then(function () {
-			if (where.hasOwnProperty('_id')) {
-				where._id = util.prepareId(where._id);
-			}
-			var fields = [];
-			if (where.hasOwnProperty('fields')) {
-				fields = where.fields;
-				delete where.fields;
-			}
-			var optionKeys = ['skip', 'limit', 'sort'];
-			var options = {};
-			optionKeys.forEach(function (key) {
-				options[key] = where[key];
-				delete where[key];
-			});
-			crud.db.collection(collectionName).find(where, fields, options).toArray(function (err, result) {
-				if (err) {
-					reject({
-						error: err
-					});
-				} else {
-					crud.callbacks[collectionName].call(crud, 'read', result);
-					resolve(result);
+		if (crud.conf.schemas[collectionName]) {
+			crud.permissions[collectionName]('read', {where: where}, user).then(function () {
+				if (where.hasOwnProperty('_id')) {
+					where._id = util.prepareId(where._id);
 				}
+				var fields = [];
+				if (where.hasOwnProperty('fields')) {
+					fields = where.fields;
+					delete where.fields;
+				}
+				var optionKeys = ['skip', 'limit', 'sort'];
+				var options = {};
+				optionKeys.forEach(function (key) {
+					options[key] = where[key];
+					delete where[key];
+				});
+				crud.db.collection(collectionName).find(where, fields, options).toArray(function (err, result) {
+					if (err) {
+						reject(err);
+					} else {
+						crud.callbacks[collectionName].call(crud, 'read', result);
+						resolve(result);
+					}
+				});
+			}, function () {
+				reject('not allowed');
 			});
-		}, function () {
-			reject({
-				error: 'not allowed'
-			});
-		});
+		} else {
+			reject('schema not exists');
+		}
 	});
 };
 
 Crud.prototype.update = function (collectionName, _id, data, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
-		var where = {
-			_id: _id
-		};
-		crud.permissions[collectionName]('update', {where: where, data: data}, user).then(function () {
-			where._id = util.prepareId(where._id);
+		if (crud.conf.schemas[collectionName]) {
+			var where = {
+				_id: _id
+			};
+			crud.permissions[collectionName]('update', {where: where, data: data}, user).then(function () {
+				where._id = util.prepareId(where._id);
 
-			var schema = crud.conf.schemas[collectionName];
-			data = util.forceSchema(schema, data);
-			crud._prepareFiles(schema, data).then(function (result) {
-				if (data.hasOwnProperty('_id')) {
-					delete data._id;
-				}
-				crud.db.collection(collectionName).update(where, data, function (err, results) {
-					if (err) {
-						reject({
-							error: err
-						});
-					} else {
-						data._id = _id.toString();
-						crud.callbacks[collectionName].call(crud, 'update', data);
-						resolve(data);
+				var schema = crud.conf.schemas[collectionName];
+				data = util.forceSchema(schema, data);
+				crud._prepareFiles(schema, data).then(function (result) {
+					if (data.hasOwnProperty('_id')) {
+						delete data._id;
 					}
+					crud.db.collection(collectionName).update(where, data, function (err, results) {
+						if (err) {
+							reject(err);
+						} else {
+							data._id = _id.toString();
+							crud.callbacks[collectionName].call(crud, 'update', data);
+							resolve(data);
+						}
+					});
 				});
+			}, function () {
+				reject('not allowed');
 			});
-		}, function () {
-			reject({
-				error: 'not allowed'
-			});
-		});
+		} else {
+			reject('schema not exists');
+		}
 	});
 };
 
 Crud.prototype.delete = function (collectionName, _id, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
-		var where = {
-			_id: util.prepareId(_id)
-		};
-		crud.permissions[collectionName]('delete', {where: where}, user).then(function () {
-			crud.db.collection(collectionName).remove(where, function (err, numRemoved) {
-				if (err) {
-					reject({
-						error: err
-					});
-				} else {
-					crud.callbacks[collectionName].call(crud, 'delete', where._id.toString());
-					resolve(numRemoved);
-				}
+		if (crud.conf.schemas[collectionName]) {
+			var where = {
+				_id: util.prepareId(_id)
+			};
+			crud.permissions[collectionName]('delete', {where: where}, user).then(function () {
+				crud.db.collection(collectionName).remove(where, function (err, numRemoved) {
+					if (err) {
+						reject(err);
+					} else {
+						crud.callbacks[collectionName].call(crud, 'delete', where._id.toString());
+						resolve(numRemoved);
+					}
+				});
+			}, function () {
+				reject('not allowed');
 			});
-		}, function () {
-			reject({
-				error: 'not allowed'
-			});
-		});
+		} else {
+			reject('schema not exists');
+		}
+
 	});
 };
 
