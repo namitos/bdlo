@@ -2,16 +2,16 @@ var _ = require('lodash');
 var util = require('util');
 
 function autoType(obj) {
-	var digitValue;
 	for (var key in obj) {
-		if (key != '_id') {
-			if (typeof obj[key] == 'string') {
-				digitValue = parseInt(obj[key]);
+		if (key != '_id' && obj.hasOwnProperty(key)) {
+			if(obj[key] instanceof Function){
+			} else if(obj[key] instanceof Object){
+				autoType(obj[key]);
+			} else if (typeof obj[key] == 'string') {
+				var digitValue = parseInt(obj[key]);
 				if (obj[key] == digitValue.toString()) {
 					obj[key] = digitValue;
 				}
-			} else {
-				autoType(obj[key]);
 			}
 		}
 	}
