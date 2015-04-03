@@ -4,7 +4,7 @@ var cluster = require('cluster');
 var exec = require('child_process').exec;
 var vow = require('vow');
 var colors = require('colors');
-if(!process.env.NODE_ENV){
+if (!process.env.NODE_ENV) {
 	process.env.NODE_ENV = 'production';
 }
 
@@ -13,21 +13,19 @@ if(!process.env.NODE_ENV){
  *
  * @param callback {Function}
  */
-function clearPids(callback) {
+function clearPids(pidsDir, callback) {
 	var killPromise = function (pid) {
 		return new vow.Promise(function (resolve, reject, notify) {
 			exec('kill ' + pid, function (error, stdout, stderr) {
-				//console.log('kill ' + pid, error, stdout, stderr);
-				fs.unlink('./pids/' + pid, function (err) {
-					//console.log('delete ' + pid);
+				fs.unlink(pidsDir + '/' + pid, function (err) {
 					resolve();
 				});
 			});
 		});
 	};
-	fs.readdir('./pids', function (err, files) {
+	fs.readdir(pidsDir, function (err, files) {
 		if (err) {
-			fs.mkdir('pids', function () {
+			fs.mkdir(pidsDir, function () {
 				callback();
 			});
 		} else {
@@ -40,7 +38,6 @@ function clearPids(callback) {
 			});
 		}
 	});
-
 }
 /**
  *
@@ -48,12 +45,14 @@ function clearPids(callback) {
  * @param middlewares {Function}
  */
 module.exports = function (conf, middlewares) {
+	conf.pidsDir = conf.pidsDir || './pids';
+
 	if (cluster.isMaster) {
 		var ports = {};
 		var maxPort = conf.port;
 
-		clearPids(function () {
-			fs.writeFile('./pids/' + process.pid, 'master', function (err) {
+		clearPids(conf.pidsDir, function () {
+			fs.writeFile(conf.pidsDir + '/' + process.pid, 'master', function (err) {
 			});
 			var CPUsCount = os.cpus().length;
 			for (var i = 0; i < CPUsCount; ++i) {
@@ -65,7 +64,7 @@ module.exports = function (conf, middlewares) {
 			}
 			console.log('pids:ports', ports);
 			cluster.on('exit', function (worker, address) {
-				fs.unlink('./pids/' + worker.process.pid, function (err) {
+				fs.unlink(conf.pidsDir + '/' + worker.process.pid, function (err) {
 				});
 				var port = ports[worker.process.pid];
 				delete ports[worker.process.pid];
@@ -78,7 +77,7 @@ module.exports = function (conf, middlewares) {
 			});
 
 			cluster.on('listening', function (worker, address) {
-				fs.writeFile('./pids/' + worker.process.pid, '', function (err) {
+				fs.writeFile(conf.pidsDir + '/' + worker.process.pid, '', function (err) {
 				});
 				console.log(('Worker ' + worker.process.pid + ' is now listening on port ' + address.port + ' in ' + process.env.NODE_ENV + ' mode.').green);
 				worker.on('message', function (msg) {
