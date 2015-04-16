@@ -249,6 +249,11 @@ Crud.prototype.read = function (collectionName, where, user) {
 					fields = where.fields;
 					delete where.fields;
 				}
+				var connections;
+				if (where.hasOwnProperty('connections') && where.connections instanceof Object) {
+					connections = where.connections;
+					delete where.connections;
+				}
 				var optionKeys = ['skip', 'limit', 'sort'];
 				var options = {};
 				optionKeys.forEach(function (key) {
@@ -259,8 +264,43 @@ Crud.prototype.read = function (collectionName, where, user) {
 					if (err) {
 						reject(err);
 					} else {
-						crud.callbacks[collectionName].call(crud, 'read', result);
-						resolve(result);
+						if (connections) {
+							var promises = {};
+							_.forOwn(connections, function (connection, connectionName) {
+								var where = {};
+								where[connection[1]] = {
+									$in: _.pluck(result, connection[0])
+								};
+								if (connection[1] == '_id') {
+									util.prepareId(where[connection[1]]);
+								} else {
+									where[connection[1]].$in.forEach(function (id, i) {
+										where[connection[1]].$in[i] = id.toString();
+									});
+								}
+								promises[connectionName] = crud.read(connectionName, where, user);
+							});
+							vow.all(promises).then(function (connectionsResult) {
+								var groups = {};
+								_.forOwn(connections, function (connection, connectionName) {
+									groups[connectionName] = _.groupBy(connectionsResult[connectionName], connection[1]);
+								});
+								result.forEach(function (item) {
+									item.connections = {};
+									_.forOwn(connections, function (connection, connectionName) {
+										var group = groups[connectionName];
+										item.connections[connectionName] = group.hasOwnProperty(item[connection[0]]) ? group[item[connection[0]]] : [];
+									});
+								});
+								crud.callbacks[collectionName].call(crud, 'read', result);
+								resolve(result);
+							}, function (err) {
+								reject(err);
+							});
+						} else {
+							crud.callbacks[collectionName].call(crud, 'read', result);
+							resolve(result);
+						}
 					}
 				});
 			}, function () {
