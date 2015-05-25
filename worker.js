@@ -244,14 +244,6 @@ module.exports = function (conf, modifyApp) {
 				require(path)(app);
 			});
 		}
-		app.get('*', function (req, res) {
-			res.renderPage(app.get('coreViewsPath') + '/staticpage', {
-				title: '404',
-				page: {
-					content: 'Not found'
-				}
-			});
-		});
 
 		server.listen(process.env.port, function () {
 		});
