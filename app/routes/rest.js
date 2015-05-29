@@ -4,8 +4,8 @@ var util = require('util');
 function autoType(obj) {
 	for (var key in obj) {
 		if (key != '_id' && obj.hasOwnProperty(key)) {
-			if(obj[key] instanceof Function){
-			} else if(obj[key] instanceof Object){
+			if (obj[key] instanceof Function) {
+			} else if (obj[key] instanceof Object) {
 				autoType(obj[key]);
 			} else if (typeof obj[key] == 'string') {
 				var digitValue = parseInt(obj[key]);
@@ -106,6 +106,27 @@ module.exports = function (app) {
 			}
 			fn(util.inspect(schemasAvailable, {depth: null}));
 		});
+	});
+
+
+	//optimized load by http
+	app.get('/loadCollections', function (req, res) {
+		try {
+			var input = JSON.parse(req.query.data);
+			var promises = [];
+			input.forEach(function (row) {
+				promises.push(app.crud.read(row.collection, row.where || {}, req.user));
+			});
+			Promise.all(promises).then(function (result) {
+				res.send(result);
+			}, function (err) {
+				res.send({
+					error: err
+				});
+			});
+		} catch (e) {
+			console.error(e);
+		}
 	});
 
 

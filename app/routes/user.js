@@ -1,4 +1,5 @@
 var passport = require('passport');
+var _ = require('lodash');
 
 module.exports = function (app) {
 	app.get('/logout', function (req, res) {
@@ -20,7 +21,16 @@ module.exports = function (app) {
 
 	app.get('/user/current', function (req, res) {
 		delete req.user.password;
+		console.error("don't use /user/current ajax route. it's deprecated. use currentUser socket");
 		res.send(req.user);
+	});
+
+	app.io.on('connect', function (socket) {
+		socket.on('currentUser', function (input, fn) {
+			var user = _.clone(socket.request.user);
+			delete user.password;
+			fn(user);
+		});
 	});
 
 };

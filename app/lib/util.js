@@ -1,8 +1,6 @@
 var _ = require('lodash');
 var mongodb = require('mongodb');
 
-var util = {};
-
 function forceSchema(schema, obj) {
 	var objNew;
 	if (schema.type == 'array') {
@@ -45,35 +43,37 @@ function forceSchema(schema, obj) {
 	return objNew;
 }
 
-util.forceSchema = forceSchema;
-
 function prepareId(id) {
 	var newId;
 	if (typeof id == 'string') {
 		if (id.length == 24) {
 			newId = new mongodb.ObjectID(id);
 		} else {
-			console.log('prepareId error: string length is not 24'.red, id);
+			console.error('prepareId error: string length is not 24', id);
 		}
 	} else if (id instanceof mongodb.ObjectID) {
-		return id;
+		newId = id;
+	} else if (id instanceof Array) {
+		newId = [];
+		id.forEach(function (item, i) {
+			newId.push(prepareId(item));
+		});
 	} else if (id instanceof Object && id.hasOwnProperty('$in')) {
 		newId = {
-			$in: []
+			$in: prepareId(id)
 		};
-		id.$in.forEach(function (item, i) {
-			newId.$in.push(prepareId(item));
-		});
 	} else {
-		console.log('prepareId error'.red, id);
+		console.error('prepareId error', id);
 	}
 	return newId;
-};
+}
 
-util.prepareId = prepareId;
-
-util.passwordHash = function (password) {
+function passwordHash(password) {
 	return require('crypto').createHash('sha512').update(password).digest("hex");
 }
 
-module.exports = util;
+module.exports = {
+	forceSchema: forceSchema,
+	prepareId: prepareId,
+	passwordHash: passwordHash
+};
