@@ -70,6 +70,7 @@ module.exports = function (conf, modifyApp) {
 		});
 	};
 
+	app.conf = conf;
 	app.set('conf', conf);
 	app.set('corePath', __dirname);
 	app.set('env', process.env.NODE_ENV);
