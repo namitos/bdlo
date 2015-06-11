@@ -26,7 +26,7 @@ var Crud = function (db, conf) {
 
 	for (var schemaName in crud.conf.schemas) {
 		crud.callbacks[schemaName] = function (op, result) {
-			this.emit(schemaName + ':' + op, result);
+			//this.emit(schemaName + ':' + op, result);
 		};
 
 		crud.permissions[schemaName] = (function (collectionName) {
@@ -52,7 +52,7 @@ var Crud = function (db, conf) {
 	crud.middleware = new Middleware();
 };
 
-inherits(Crud, require('events').EventEmitter);
+//inherits(Crud, require('events').EventEmitter);
 
 
 /**
@@ -199,19 +199,20 @@ Crud.prototype._prepareFiles = function (schema, obj) {
 };
 
 
-Crud.prototype.create = function (collectionName, data, user) {
+Crud.prototype.create = function (collectionName, rawData, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
 		if (crud.conf.schemas[collectionName]) {
-			crud.permissions[collectionName]('create', {data: data}, user).then(function () {
+			crud.permissions[collectionName]('create', {data: rawData}, user).then(function () {
 				var schema = crud.conf.schemas[collectionName];
-				if (data instanceof Array) {
-					data.forEach(function (row, i) {
-						data[i] = util.forceSchema(schema, data[i]);
+				if (rawData instanceof Array) {//@TODO: refactor
+					var data = [];
+					rawData.forEach(function (row) {
+						data.push(util.forceSchema(schema, row));
 					});
 					data = _.compact(data);
 				} else {
-					data = util.forceSchema(schema, data);
+					var data = util.forceSchema(schema, rawData);
 				}
 				crud._prepareFiles(schema, data).then(function (result) {
 					if (data.hasOwnProperty('_id')) {
@@ -221,7 +222,7 @@ Crud.prototype.create = function (collectionName, data, user) {
 						if (err) {
 							reject(err);
 						} else {
-							crud.callbacks[collectionName].call(crud, 'create', result[0]);
+							crud.callbacks[collectionName].call(crud, 'create', result[0], rawData);
 							resolve(result[0]);
 						}
 					});
@@ -232,7 +233,6 @@ Crud.prototype.create = function (collectionName, data, user) {
 		} else {
 			reject('schema not exists');
 		}
-
 	});
 };
 
@@ -312,18 +312,18 @@ Crud.prototype.read = function (collectionName, where, user) {
 	});
 };
 
-Crud.prototype.update = function (collectionName, _id, data, user) {
+Crud.prototype.update = function (collectionName, _id, rawData, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
 		if (crud.conf.schemas[collectionName]) {
 			var where = {
 				_id: _id
 			};
-			crud.permissions[collectionName]('update', {where: where, data: data}, user).then(function () {
+			crud.permissions[collectionName]('update', {where: where, data: rawData}, user).then(function () {
 				where._id = util.prepareId(where._id);
 
 				var schema = crud.conf.schemas[collectionName];
-				data = util.forceSchema(schema, data);
+				var data = util.forceSchema(schema, rawData);
 				crud._prepareFiles(schema, data).then(function (result) {
 					if (data.hasOwnProperty('_id')) {
 						delete data._id;
@@ -333,7 +333,7 @@ Crud.prototype.update = function (collectionName, _id, data, user) {
 							reject(err);
 						} else {
 							data._id = _id.toString();
-							crud.callbacks[collectionName].call(crud, 'update', data);
+							crud.callbacks[collectionName].call(crud, 'update', data, rawData);
 							resolve(data);
 						}
 					});
