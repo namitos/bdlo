@@ -1,19 +1,25 @@
 var _ = require('lodash');
 var vow = require('vow');
 var vowFs = require('vow-fs');
+var revalidator = require('revalidator');
+
 var inherits = require('util').inherits;
 
-var Middleware = require('../models/middleware');
 var util = require('./util');
 
-
+/**
+ *
+ * @param db
+ * @param conf
+ * @constructor
+ */
 var Crud = function (db, conf) {
 	var crud = this;
 	crud.db = db;
 	crud.conf = conf;
 
 	crud.callbacks = {};
-	crud.permissions = {};
+	crud.middleware = {};
 
 	function changeInput(op, input, ownerField, user) {
 		if (op == 'create' || op == 'update') {
@@ -29,7 +35,7 @@ var Crud = function (db, conf) {
 			//this.emit(schemaName + ':' + op, result);
 		};
 
-		crud.permissions[schemaName] = (function (collectionName) {
+		crud.middleware[schemaName] = (function (collectionName) {
 			return function (op, input, user) {
 				return new vow.Promise(function (resolve, reject) {
 					if (user.permission(collectionName + ' all all') ||
@@ -49,14 +55,12 @@ var Crud = function (db, conf) {
 		})(schemaName);
 	}
 
-	crud.middleware = new Middleware();
+	crud.permissions = crud.middleware;
 };
-
-//inherits(Crud, require('events').EventEmitter);
-
 
 /**
  *
+ * @private
  * @param name {string}
  * @param successFn {Function}
  * @returns {boolean}
@@ -72,7 +76,7 @@ Crud.prototype._getSchemaOwnerField = function (name, successFn) {
 
 /**
  * проверка на то, файл ли к нам пришёл в строке (она должна быть base64 файла, а если нет, то это не файл)
- *
+ * @private
  * @param str
  * @returns {boolean}
  */
@@ -86,7 +90,7 @@ Crud.prototype._isFile = function (str) {
 
 /**
  * возвращает промис на сохранение файлового поля (оно приходит как массив, ведь можно несколько файлов залить через один инпут)
- *
+ * @private
  * @param schemaPart часть схемы (схема конкретного поля)
  * @param input само поле
  * @returns {vow.Promise}
@@ -132,7 +136,7 @@ Crud.prototype._saveFilePromise = function (schemaPart, input) {
 
 /**
  * функция, которая готовит из объекта и его схемы массив из промисов на сохранение файлов, которые к нам пришли в base64 в соответствущих схеме полях
- *
+ * @private
  * @param schema полная схема объекта
  * @param obj весь объект
  * @returns {Array} массив промисов
@@ -191,6 +195,7 @@ Crud.prototype._prepareFilesPromises = function (schema, obj) {
 
 /**
  * сохраняет файлы из obj в соответствии с его schema и выполняет callback
+ * @private
  * @param schema полная схема объекта
  * @param obj весь объект
  */
@@ -203,7 +208,7 @@ Crud.prototype.create = function (collectionName, rawData, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
 		if (crud.conf.schemas[collectionName]) {
-			crud.permissions[collectionName]('create', {data: rawData}, user).then(function () {
+			crud.middleware[collectionName]('create', {data: rawData}, user).then(function () {
 				var schema = crud.conf.schemas[collectionName];
 				if (rawData instanceof Array) {//@TODO: refactor
 					var data = [];
@@ -214,19 +219,24 @@ Crud.prototype.create = function (collectionName, rawData, user) {
 				} else {
 					var data = util.forceSchema(schema, rawData);
 				}
-				crud._prepareFiles(schema, data).then(function (result) {
-					if (data.hasOwnProperty('_id')) {
-						delete data._id;
-					}
-					crud.db.collection(collectionName).insert(data, function (err, result) {
-						if (err) {
-							reject(err);
-						} else {
-							crud.callbacks[collectionName].call(crud, 'create', result[0], rawData);
-							resolve(result[0]);
+				var validation = revalidator.validate(data, schema);
+				if (validation.valid) {
+					crud._prepareFiles(schema, data).then(function (result) {
+						if (data.hasOwnProperty('_id')) {
+							delete data._id;
 						}
+						crud.db.collection(collectionName).insert(data, function (err, result) {
+							if (err) {
+								reject(err);
+							} else {
+								crud.callbacks[collectionName].call(crud, 'create', result[0], rawData);
+								resolve(result[0]);
+							}
+						});
 					});
-				});
+				} else {
+					reject(validation.errors);
+				}
 			}, function () {
 				reject('not allowed');
 			});
@@ -240,7 +250,7 @@ Crud.prototype.read = function (collectionName, where, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
 		if (crud.conf.schemas[collectionName]) {
-			crud.permissions[collectionName]('read', {where: where}, user).then(function () {
+			crud.middleware[collectionName]('read', {where: where}, user).then(function () {
 				if (where.hasOwnProperty('_id')) {
 					where._id = util.prepareId(where._id);
 				}
@@ -319,25 +329,40 @@ Crud.prototype.update = function (collectionName, _id, rawData, user) {
 			var where = {
 				_id: _id
 			};
-			crud.permissions[collectionName]('update', {where: where, data: rawData}, user).then(function () {
+			crud.middleware[collectionName]('update', {where: where, data: rawData}, user).then(function () {
 				where._id = util.prepareId(where._id);
 
 				var schema = crud.conf.schemas[collectionName];
-				var data = util.forceSchema(schema, rawData);
-				crud._prepareFiles(schema, data).then(function (result) {
-					if (data.hasOwnProperty('_id')) {
-						delete data._id;
-					}
-					crud.db.collection(collectionName).update(where, data, function (err, results) {
-						if (err) {
-							reject(err);
-						} else {
-							data._id = _id.toString();
-							crud.callbacks[collectionName].call(crud, 'update', data, rawData);
-							resolve(data);
+				if (rawData.$set) {
+					var data = {
+						$set: util.forceSchema(schema, rawData.$set)
+					};
+					var validation = {//так делаем потому что только патчим документ, а forceSchema и так не пропустит поля неверных типов. будет преобразовывать их насильно в нужные или обнулять
+						valid: true
+					};
+					console.log('pathciing');
+				} else {
+					var data = util.forceSchema(schema, rawData);
+					var validation = revalidator.validate(data, schema);
+				}
+				if (validation.valid) {
+					crud._prepareFiles(schema, data).then(function (result) {
+						if (data.hasOwnProperty('_id')) {
+							delete data._id;
 						}
+						crud.db.collection(collectionName).update(where, data, function (err, results) {
+							if (err) {
+								reject(err);
+							} else {
+								data._id = _id.toString();
+								crud.callbacks[collectionName].call(crud, 'update', data, rawData);
+								resolve(data);
+							}
+						});
 					});
-				});
+				} else {
+					reject(validation.errors);
+				}
 			}, function () {
 				reject('not allowed');
 			});
@@ -354,7 +379,7 @@ Crud.prototype.delete = function (collectionName, _id, user) {
 			var where = {
 				_id: util.prepareId(_id)
 			};
-			crud.permissions[collectionName]('delete', {where: where}, user).then(function () {
+			crud.middleware[collectionName]('delete', {where: where}, user).then(function () {
 				crud.db.collection(collectionName).remove(where, function (err, numRemoved) {
 					if (err) {
 						reject(err);
