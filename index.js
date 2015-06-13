@@ -2,7 +2,6 @@ var os = require('os');
 var fs = require('fs');
 var cluster = require('cluster');
 var exec = require('child_process').exec;
-var vow = require('vow');
 var colors = require('colors');
 if (!process.env.NODE_ENV) {
 	process.env.NODE_ENV = 'production';
@@ -14,15 +13,6 @@ if (!process.env.NODE_ENV) {
  * @param callback {Function}
  */
 function clearPids(pidsDir, callback) {
-	var killPromise = function (pid) {
-		return new vow.Promise(function (resolve, reject, notify) {
-			exec('kill ' + pid, function (error, stdout, stderr) {
-				fs.unlink(pidsDir + '/' + pid, function (err) {
-					resolve();
-				});
-			});
-		});
-	};
 	fs.readdir(pidsDir, function (err, files) {
 		if (err) {
 			fs.mkdir(pidsDir, function () {
@@ -31,9 +21,15 @@ function clearPids(pidsDir, callback) {
 		} else {
 			var promises = [];
 			files.forEach(function (file) {
-				promises.push(killPromise(file));
+				promises.push(new Promise(function (resolve, reject, notify) {
+					exec('kill ' + file, function (error, stdout, stderr) {
+						fs.unlink(pidsDir + '/' + file, function (err) {
+							resolve();
+						});
+					});
+				}));
 			});
-			vow.all(promises).then(function () {
+			Promise.all(promises).then(function () {
 				callback();
 			});
 		}
@@ -49,18 +45,19 @@ module.exports = function (conf, middlewares) {
 
 	if (cluster.isMaster) {
 		var ports = {};
-		var maxPort = conf.port;
+		var startPort = conf.port;
 
 		clearPids(conf.pidsDir, function () {
 			fs.writeFile(conf.pidsDir + '/' + process.pid, 'master', function (err) {
 			});
-			var CPUsCount = os.cpus().length;
-			for (var i = 0; i < CPUsCount; ++i) {
+			var maxWorkers = conf.maxWorkers && conf.maxWorkers <= os.cpus().length ? conf.maxWorkers : os.cpus().length;
+			console.log(('maxWorkers: ' + maxWorkers).yellow);
+			for (var i = 0; i < maxWorkers; ++i) {
 				var newWorker = cluster.fork({
-					port: maxPort
+					port: startPort
 				});
-				ports[newWorker.process.pid] = maxPort;
-				++maxPort;
+				ports[newWorker.process.pid] = startPort;
+				++startPort;
 			}
 			console.log('pids:ports', ports);
 			cluster.on('exit', function (worker, address) {
