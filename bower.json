@@ -1,6 +1,6 @@
 {
 	"name": "bdlo",
-	"version": "0.5.3",
+	"version": "0.6.0",
 	"private": false,
 	"dependencies": {
 		"jquery": "2.x",

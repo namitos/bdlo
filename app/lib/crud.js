@@ -229,8 +229,8 @@ Crud.prototype.create = function (collectionName, rawData, user) {
 							if (err) {
 								reject(err);
 							} else {
-								crud.callbacks[collectionName].call(crud, 'create', result[0], rawData);
-								resolve(result[0]);
+								crud.callbacks[collectionName].call(crud, 'create', result.ops[0], rawData);
+								resolve(result.ops[0]);
 							}
 						});
 					});
