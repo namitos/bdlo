@@ -60,7 +60,7 @@ function prepareId(id) {
 		});
 	} else if (id instanceof Object && id.hasOwnProperty('$in')) {
 		newId = {
-			$in: prepareId(id)
+			$in: prepareId(id.$in)
 		};
 	} else {
 		console.error('prepareId error', id);
