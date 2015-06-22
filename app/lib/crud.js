@@ -282,7 +282,7 @@ Crud.prototype.read = function (collectionName, where, user) {
 									$in: _.pluck(result, connection[0])
 								};
 								if (connection[1] == '_id') {
-									util.prepareId(where[connection[1]]);
+									where[connection[1]] = util.prepareId(where[connection[1]]);
 								} else {
 									where[connection[1]].$in.forEach(function (id, i) {
 										where[connection[1]].$in[i] = id.toString();
