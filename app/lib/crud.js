@@ -326,36 +326,37 @@ Crud.prototype.update = function (collectionName, _id, rawData, user) {
 	var crud = this;
 	return new vow.Promise(function (resolve, reject) {
 		if (crud.conf.schemas[collectionName]) {
-			var where = {
-				_id: _id
+			var input = {
+				where: {
+					_id: _id
+				},
+				data: rawData
 			};
-			crud.middleware[collectionName]('update', {where: where, data: rawData}, user).then(function () {
-				where._id = util.prepareId(where._id);
+			crud.middleware[collectionName]('update', input, user).then(function () {
+				input.where._id = util.prepareId(input.where._id);
 
 				var schema = crud.conf.schemas[collectionName];
-				if (rawData.$set) {
+				if (input.data.$set) {
 					var data = {
-						$set: util.forceSchema(schema, rawData.$set)
+						$set: util.forceSchema(schema, input.data.$set)
 					};
 					var validation = {//так делаем потому что только патчим документ, а forceSchema и так не пропустит поля неверных типов. будет преобразовывать их насильно в нужные или обнулять
 						valid: true
 					};
-					console.log('pathciing');
+					console.log('pathching', data);
 				} else {
-					var data = util.forceSchema(schema, rawData);
+					var data = util.forceSchema(schema, input.data);
 					var validation = revalidator.validate(data, schema);
 				}
+				delete data._id;
 				if (validation.valid) {
 					crud._prepareFiles(schema, data).then(function (result) {
-						if (data.hasOwnProperty('_id')) {
-							delete data._id;
-						}
-						crud.db.collection(collectionName).update(where, data, function (err, results) {
+						crud.db.collection(collectionName).update(input.where, data, function (err, results) {
 							if (err) {
 								reject(err);
 							} else {
 								data._id = _id.toString();
-								crud.callbacks[collectionName].call(crud, 'update', data, rawData);
+								crud.callbacks[collectionName].call(crud, 'update', data, input.data);
 								resolve(data);
 							}
 						});
