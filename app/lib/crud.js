@@ -288,6 +288,9 @@ Crud.prototype.read = function (collectionName, where, user) {
 										where[connection[1]].$in[i] = id.toString();
 									});
 								}
+								if (connection[2] instanceof Object) {
+									where = _.merge(connection[2], where);
+								}
 								promises[connectionName] = crud.read(connectionName, where, user);
 							});
 							vow.all(promises).then(function (connectionsResult) {
