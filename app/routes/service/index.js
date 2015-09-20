@@ -1,5 +1,4 @@
 var exec = require("child_process").exec;
-var crypto = require('crypto');
 
 module.exports = function (app) {
 	if (app.get('env') != 'production') {
@@ -8,20 +7,30 @@ module.exports = function (app) {
 				exec('npm install', function () {
 					console.log('process send restart');
 					res.send({result: 'ok'});
-					process.send({ cmd: 'restart' });
+					process.send({cmd: 'restart'});
 				});
 			});
 		});
 		app.get('/init', function (req, res) {
 			var db = app.get('db');
-			db.collection('users').remove(function () {
-				db.collection('users').insert({
-					username: 'admin',
-					password: crypto.createHash('sha512').update('123').digest("hex"),
-					roles: ['admin']
-				}, function (err, docs) {
-					res.send(docs);
-				});
+			db.collection('users').find().toArray().then(function (result) {
+				if (result.length == 0) {
+					db.collection('users').insertOne({
+						username: 'admin',
+						password: app.util.passwordHash('123'),
+						roles: ['admin']
+					}).then(function (docs) {
+						res.send(docs);
+					}).catch(function (err) {
+						console.error(err);
+					});
+				} else {
+					console.log('пользователи уже есть')
+				}
+
+
+			}).catch(function (err) {
+				console.error(err);
 			});
 
 		});
