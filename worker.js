@@ -3,6 +3,10 @@ module.exports = function (conf, modifyApp) {
 		return this.toString();
 	};
 
+	if (!process.env.NODE_ENV) {
+		process.env.NODE_ENV = 'production';
+	}
+
 	var express = require('express');
 	var app = express();
 	var server = require('http').createServer(app);
