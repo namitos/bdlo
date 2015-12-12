@@ -15,12 +15,5 @@
 		"queue": "namitos/Queue",
 		"mongodb": "2.x",
 		"socket.io": "1.x"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/namitos/bdlo"
-	},
-	"scripts": {
-		"install": "node_modules/bower/bin/bower install"
 	}
 }
