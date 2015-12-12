@@ -1,93 +1,65 @@
-var os = require('os');
-var fs = require('fs');
-var cluster = require('cluster');
-var exec = require('child_process').exec;
-var colors = require('colors');
-if (!process.env.NODE_ENV) {
-	process.env.NODE_ENV = 'production';
-}
+Function.prototype.inspect = function () {
+	return this.toString();
+};
 
+module.exports = function (input) {
+	require('mongodb').MongoClient.connect(input.conf.mongoConnect).then(function (db) {
 
-/**
- *
- * @param callback {Function}
- */
-function clearPids(pidsDir, callback) {
-	fs.readdir(pidsDir, function (err, files) {
-		if (err) {
-			fs.mkdir(pidsDir, function () {
-				callback();
-			});
-		} else {
-			var promises = [];
-			files.forEach(function (file) {
-				promises.push(new Promise(function (resolve, reject, notify) {
-					exec('kill ' + file, function (error, stdout, stderr) {
-						fs.unlink(pidsDir + '/' + file, function (err) {
-							resolve();
-						});
-					});
-				}));
-			});
-			Promise.all(promises).then(function () {
-				callback();
-			});
-		}
-	});
-}
-/**
- *
- * @param conf {Object}
- * @param middlewares {Function}
- */
-module.exports = function (conf, middlewares) {
-	conf.pidsDir = conf.pidsDir || './pids';
+		var express = require('express');
+		var app = express();
+		app.db = db;
+		app.conf = input.conf;
 
-	if (cluster.isMaster) {
-		var ports = {};
-		var startPort = conf.port;
+		var server = require('http').createServer(app);
 
-		clearPids(conf.pidsDir, function () {
-			fs.writeFile(conf.pidsDir + '/' + process.pid, 'master', function (err) {
-			});
-			var maxWorkers = conf.maxWorkers && conf.maxWorkers <= os.cpus().length ? conf.maxWorkers : os.cpus().length;
-			console.log(('maxWorkers: ' + maxWorkers).yellow);
-			for (var i = 0; i < maxWorkers; ++i) {
-				var newWorker = cluster.fork({
-					port: startPort
-				});
-				ports[newWorker.process.pid] = startPort;
-				++startPort;
-			}
-			console.log('pids:ports', ports);
-			cluster.on('exit', function (worker, address) {
-				fs.unlink(conf.pidsDir + '/' + worker.process.pid, function (err) {
-				});
-				var port = ports[worker.process.pid];
-				delete ports[worker.process.pid];
-				console.log(('Worker ' + worker.process.pid + ' died.').red, address);
-				var newWorker = cluster.fork({
-					port: port
-				});
-				ports[newWorker.process.pid] = port;
-				console.log('pids:ports', ports);
-			});
+		app.util = require('./lib/util');
 
-			cluster.on('listening', function (worker, address) {
-				fs.writeFile(conf.pidsDir + '/' + worker.process.pid, '', function (err) {
-				});
-				console.log(('Worker ' + worker.process.pid + ' is now listening on port ' + address.port + ' in ' + process.env.NODE_ENV + ' mode.').green);
-				worker.on('message', function (msg) {
-					if (msg.cmd == 'restart') {
-						console.log('restart all children instances');
-						Object.keys(cluster.workers).forEach(function (id) {
-							cluster.workers[id].kill();
-						});
-					}
-				});
-			});
+		app.io = require('socket.io')(server);
+
+		var session = require('express-session');
+		var SessionStore = require('connect-mongo')(session);
+		app.sessionStore = new SessionStore({
+			db: app.db
 		});
-	} else {
-		require('./worker')(conf, middlewares);
-	}
+
+		var auth = require('./lib/auth')(app);
+
+		app.passport = require('passport');
+		app.passport.serializeUser(auth.serialize);
+		app.passport.deserializeUser(auth.deserialize);
+
+		app.use(require('body-parser').urlencoded({extended: true, limit: '50mb'}));
+		app.use(require('cookie-parser')());
+		app.use(session({
+			store: app.sessionStore,
+			secret: app.conf.session.secret,
+			key: 'session',
+			cookie: {maxAge: 604800000},
+			resave: true,
+			saveUninitialized: true
+		}));
+		app.use(app.passport.initialize());
+		app.use(express.static(process.env.NODE_ENV == 'development' ? 'static/app' : 'static/app-build'));
+		app.use('/files', express.static('static/files'));
+
+		app.passport.use(auth.strategy());
+		app.io.use(auth.ioUserMiddleware);
+
+		app.models = {};
+		app.models.Model = require('model-server-mongo')(app);//for extending, not for use
+		app.models.User = require('./models/User')(app);
+
+		input.dataModels(app);
+		require('./crud')(app);
+		input.dataMiddlewares(app);
+		require('./routes')(app);
+		input.routes(app);
+
+		server.listen(process.env.port, function () {
+			console.log('Worker ' + process.pid + ' is now listening on port ' + process.env.port + ' in ' + process.env.NODE_ENV + ' mode.');
+			input.afterStart(app);
+		});
+	}).catch(function (err) {
+		console.error(err);
+	});
 };

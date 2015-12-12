@@ -4,3 +4,4 @@ static/vendor
 conf.js
 node_modules
 .idea
+npm-debug.log
