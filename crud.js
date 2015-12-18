@@ -103,7 +103,7 @@ module.exports = function (app) {
 
 
 	app.io.on('connect', function (socket) {
-		socket.on('create', function (input, fn) {
+		socket.on('data:create', function (input, fn) {
 			if (app.models[input.collection] && socket.request.user.crudPermission('create', input)) {
 				app.crud[input.collection].c.run({
 					user: socket.request.user,
@@ -120,7 +120,7 @@ module.exports = function (app) {
 			}
 		});
 
-		socket.on('read', function (input, fn) {
+		socket.on('data:read', function (input, fn) {
 			input.where = input.where || {};
 			if (app.models[input.collection] && socket.request.user.crudPermission('read', input)) {
 				if (input.where._id) {
@@ -141,7 +141,7 @@ module.exports = function (app) {
 			}
 		});
 
-		socket.on('update', function (input, fn) {
+		socket.on('data:update', function (input, fn) {
 			if (app.models[input.collection] && socket.request.user.crudPermission('update', input)) {
 				app.crud[input.collection].u.run({
 					user: socket.request.user,
@@ -158,7 +158,7 @@ module.exports = function (app) {
 			}
 		});
 
-		socket.on('delete', function (input, fn) {
+		socket.on('data:delete', function (input, fn) {
 			if (app.models[input.collection] && socket.request.user.crudPermission('delete', input)) {
 				app.crud[input.collection].d.run({
 					user: socket.request.user,
