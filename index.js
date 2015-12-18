@@ -16,6 +16,8 @@ module.exports = function (input) {
 
 		app.io = require('socket.io')(server);
 
+		input.beforeStart ? input.beforeStart(app) : '';
+
 		var session = require('express-session');
 		var SessionStore = require('connect-mongo')(session);
 		app.sessionStore = new SessionStore({
