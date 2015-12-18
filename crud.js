@@ -176,7 +176,7 @@ module.exports = function (app) {
 		});
 
 
-		socket.on('schemas', function (input, fn) {
+		socket.on('data:schemas', function (input, fn) {
 			var schemasAvailable = {};
 			Object.keys(app.models).forEach(function (modelName) {
 				if (
@@ -189,7 +189,7 @@ module.exports = function (app) {
 			fn(util.inspect(schemasAvailable, {depth: null}));
 		});
 
-		socket.on('breadcrumb', function (input, fn) {
+		socket.on('data:breadcrumb', function (input, fn) {
 			input.where = input.where || {};
 			if (
 				app.models[input.collection] &&
