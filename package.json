@@ -1,6 +1,6 @@
 {
 	"name": "bdlo",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"private": false,
 	"dependencies": {
 		"express": "4.x",
