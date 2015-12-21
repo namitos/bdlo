@@ -41,6 +41,7 @@ module.exports = function (input) {
 			saveUninitialized: true
 		}));
 		app.use(app.passport.initialize());
+		app.use(app.passport.session());
 		app.use(express.static(process.env.NODE_ENV == 'development' ? 'static/app' : 'static/app-build'));
 		app.use('/files', express.static('static/files'));
 
