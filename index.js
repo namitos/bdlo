@@ -48,7 +48,7 @@ module.exports = function (input) {
 		app.passport.use(auth.strategy());
 		app.io.use(auth.ioUserMiddleware);
 
-		app.models = {};
+		app.models = app.models || {};
 		app.models.Model = require('model-server-mongo')(app);//for extending, not for use
 		app.models.User = require('./models/User')(app);
 
