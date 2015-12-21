@@ -50,7 +50,7 @@ module.exports = function (input) {
 
 		app.models = app.models || {};
 		app.models.Model = require('model-server-mongo')(app);//for extending, not for use
-		app.models.User = require('./models/User')(app);
+		app.models.User = app.models.User || require('./models/User')(app);
 
 		input.dataModels(app);
 		require('./crud')(app);
