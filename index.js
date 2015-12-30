@@ -10,7 +10,16 @@ module.exports = function (input) {
 		app.db = db;
 		app.conf = input.conf;
 
-		var server = require('http').createServer(app);
+		var server;
+		if (app.conf.ssl) {
+			var fs = require('fs');
+			server = require('https').createServer({
+				key: fs.readFileSync(app.conf.ssl.key),
+				cert: fs.readFileSync(app.conf.ssl.cert)
+			}, app);
+		} else {
+			server = require('http').createServer(app);
+		}
 
 		app.util = require('./lib/util');
 
