@@ -67,8 +67,9 @@ module.exports = function (input) {
 		require('./routes')(app);
 		input.routes(app);
 
-		server.listen(process.env.port, function () {
-			console.log('Worker ' + process.pid + ' is now listening on port ' + process.env.port + ' in ' + process.env.NODE_ENV + ' mode.');
+		var port = process.env.port || app.conf.port;
+		server.listen(port, function () {
+			console.log('Worker ' + process.pid + ' is now listening on port ' + port + ' in ' + process.env.NODE_ENV + ' mode.');
 			input.afterStart(app);
 		});
 	}).catch(function (err) {
