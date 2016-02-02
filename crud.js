@@ -22,7 +22,7 @@ module.exports = function (app) {
 				var connection = input.connections[modelName];
 				var where = {};
 				where[connection.r] = {
-					$in: _.uniq(_.compact(_.pluck(items, connection.l)))
+					$in: _.uniq(_.compact(_.map(items, connection.l)))
 				};
 
 				if (connection.r == '_id') {

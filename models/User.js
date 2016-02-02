@@ -62,7 +62,7 @@ module.exports = function (app) {
 				});
 			}
 			Object.defineProperty(this, 'permissions', {
-				value: _.unique(permissions)
+				value: _.uniq(permissions)
 			});
 		}
 
@@ -71,7 +71,7 @@ module.exports = function (app) {
 		}
 
 		permission(permissionString) {
-			return _.contains(this.permissions, permissionString) || _.contains(this.permissions, 'full access');
+			return _.includes(this.permissions, permissionString) || _.includes(this.permissions, 'full access');
 		}
 
 		crudPermission(op, input) {
