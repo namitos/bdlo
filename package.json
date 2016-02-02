@@ -1,8 +1,9 @@
 {
 	"name": "bdlo",
-	"version": "1.0.6",
+	"version": "1.0.7",
 	"private": false,
 	"dependencies": {
+		"lodash": "3.x",
 		"express": "4.x",
 		"express-session": "1.x",
 		"body-parser": "1.x",
