@@ -58,57 +58,63 @@ module.exports = function (app) {
 	};
 
 
-	class Crud {
-		constructor(app) {
-			function c(data) {
-				return data.item.create().then(function (item) {
-					return data;
-				});
-			}
-
-			function r(data) {
-				return data.model.read(data.input.where, data.input.options).then(function (items) {
-					data.items = items;
-					return data;
-				});
-			}
-
-			function u(data) {
-				return data.item.update().then(function (item) {
-					return data;
-				});
-			}
-
-			function d(data) {
-				return data.item.delete().then(function (deleted) {
-					data.deleted = deleted;
-					return data;
-				})
-			}
-
-			var crud = this;
-			Object.keys(app.models).forEach(function (modelName) {
-				crud[modelName] = {
-					c: new Queue(prepareFilesMiddleware, c),
-					r: new Queue(r, connectionsMiddleware),
-					u: new Queue(prepareFilesMiddleware, u),
-					d: new Queue(d)
-				};
-			});
-
-		}
+	function c(data) {
+		return data.item.create().then(function (item) {
+			return data;
+		});
 	}
 
-	app.crud = new Crud(app);
+	function r(data) {
+		return data.model.read(data.input.where, data.input.options).then(function (items) {
+			data.items = items;
+			return data;
+		});
+	}
+
+	function u(data) {
+		return data.item.update().then(function (item) {
+			return data;
+		});
+	}
+
+	function d(data) {
+		return data.item.delete().then(function (deleted) {
+			data.deleted = deleted;
+			return data;
+		})
+	}
+
+	var crud = {};
+	var c2m = {};//collections to models mapping
+	Object.keys(app.models).forEach(function (modelName) {
+		if (modelName != 'Model') {
+			crud[modelName] = {
+				model: app.models[modelName],
+				c: new Queue(prepareFilesMiddleware, c),
+				r: new Queue(r, connectionsMiddleware),
+				u: new Queue(prepareFilesMiddleware, u),
+				d: new Queue(d)
+			};
+			if (app.models[modelName].schema) {
+				if (!app.models[modelName].schema.name) {
+					throw new Error(`schema.name of ${modelName} is required!`);
+				}
+				c2m[app.models[modelName].schema.name] = modelName;
+			}
+		}
+	});
+
+	app.crud = crud;
 
 
 	app.io.on('connect', function (socket) {
 		socket.on('data:create', function (input, fn) {
-			if (app.models[input.collection] && socket.request.user.crudPermission('create', input)) {
+			input.collection = c2m[input.collection];
+			if (app.crud[input.collection] && socket.request.user.crudPermission('create', input)) {
 				app.crud[input.collection].c.run({
 					user: socket.request.user,
 					input: input,
-					item: new app.models[input.collection](input.data)
+					item: new app.crud[input.collection].model(input.data)
 				}).then(function (data) {
 					fn(data.item);
 				}).catch(function (err) {
@@ -121,15 +127,16 @@ module.exports = function (app) {
 		});
 
 		socket.on('data:read', function (input, fn) {
+			input.collection = c2m[input.collection];
 			input.where = input.where || {};
-			if (app.models[input.collection] && socket.request.user.crudPermission('read', input)) {
+			if (app.crud[input.collection] && socket.request.user.crudPermission('read', input)) {
 				if (input.where._id) {
 					input.where._id = app.util.prepareId(input.where._id);
 				}
 				app.crud[input.collection].r.run({
 					user: socket.request.user,
 					input: input,
-					model: app.models[input.collection]
+					model: app.crud[input.collection].model
 				}).then(function (data) {
 					fn(data.items);
 				}).catch(function (err) {
@@ -142,11 +149,12 @@ module.exports = function (app) {
 		});
 
 		socket.on('data:update', function (input, fn) {
-			if (app.models[input.collection] && socket.request.user.crudPermission('update', input)) {
+			input.collection = c2m[input.collection];
+			if (app.crud[input.collection] && socket.request.user.crudPermission('update', input)) {
 				app.crud[input.collection].u.run({
 					user: socket.request.user,
 					input: input,
-					item: new app.models[input.collection](input.data)
+					item: new app.crud[input.collection].model(input.data)
 				}).then(function (data) {
 					fn(data.item);
 				}).catch(function (err) {
@@ -159,11 +167,12 @@ module.exports = function (app) {
 		});
 
 		socket.on('data:delete', function (input, fn) {
-			if (app.models[input.collection] && socket.request.user.crudPermission('delete', input)) {
+			input.collection = c2m[input.collection];
+			if (app.crud[input.collection] && socket.request.user.crudPermission('delete', input)) {
 				app.crud[input.collection].d.run({
 					user: socket.request.user,
 					input: input,
-					item: new app.models[input.collection](input.data)
+					item: new app.crud[input.collection].model(input.data)
 				}).then(function (data) {
 					fn(data.deleted);
 				}).catch(function (err) {
@@ -190,6 +199,7 @@ module.exports = function (app) {
 		});
 
 		socket.on('data:breadcrumb', function (input, fn) {
+			input.collection = c2m[input.collection];
 			input.where = input.where || {};
 			if (
 				app.models[input.collection] &&
