@@ -1,6 +1,6 @@
 {
 	"name": "bdlo",
-	"version": "1.0.10",
+	"version": "1.0.11",
 	"private": false,
 	"dependencies": {
 		"lodash": "4.x",
@@ -9,7 +9,7 @@
 		"body-parser": "1.x",
 		"cookie-parser": "1.x",
 		"connect-mongo": "1.x",
-		"passport": "0.2.x",
+		"passport": "0.3.x",
 		"passport-local": "1.x",
 		"model-server-mongo": "namitos/Model-server-mongo",
 		"model-files": "namitos/model-files",
