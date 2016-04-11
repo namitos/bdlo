@@ -3,8 +3,13 @@ Function.prototype.inspect = function () {
 };
 
 module.exports = function (input) {
-	require('mongodb').MongoClient.connect(input.conf.mongoConnect).then(function (db) {
-
+	var connect = '';
+	if (input.conf.mongo) {
+		connect = "mongodb://" + input.conf.mongo.host + ":" + input.conf.mongo.port + "/" + input.conf.mongo.db;
+	} else {
+		connect = input.conf.mongoConnect;
+	}
+	require('mongodb').MongoClient.connect(connect).then(function (db) {
 		var express = require('express');
 		var app = express();
 		app.db = db;
