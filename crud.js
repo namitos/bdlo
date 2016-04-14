@@ -5,20 +5,18 @@ var util = require('util');
 var _ = require('lodash');
 var Queue = require('queue');
 
-module.exports = function (app) {
+module.exports = (app) => {
 	var prepareFilesMiddleware = require('model-files')(app.conf.fileUpload);
 
-	var connectionsMiddleware = function (data) {
+	function connectionsMiddleware(data) {
 		var input = data.input;
 		var items = data.items;
 		if (!input.connections) {
-			return new Promise(function (resolve) {
-				resolve(data);
-			})
+			return Promise.resolve(data);
 		} else {
 			var promises = [];
 			var modelKeys = Object.keys(input.connections);
-			modelKeys.forEach(function (modelName) {
+			modelKeys.forEach((modelName) => {
 				var connection = input.connections[modelName];
 				var where = {};
 				where[connection.r] = {
@@ -28,57 +26,60 @@ module.exports = function (app) {
 				if (connection.r == '_id') {
 					where[connection.r] = app.util.prepareId(where[connection.r]);
 				} else {
-					where[connection.r].$in = where[connection.r].$in.map(function (id) {
+					where[connection.r].$in = where[connection.r].$in.map((id) => {
 						return id.toString();
 					});
 				}
-				//todo: crudPermission
-				//console.log(modelName, where);
-				promises.push(app.models[modelName].read(where));
+				if (app.crud[modelName] && data.user.crudPermission('read', {
+						collection: modelName,
+						where: where
+					})) {
+					promises.push(app.models[modelName].read(where));
+				} else {
+					promises.push(Promise.reject('access denied'));
+				}
 			});
-			return Promise.all(promises).then(function (result) {
-				return new Promise(function (resolve) {
-					var groups = {};
-					result.forEach(function (items, i) {
-						var modelName = modelKeys[i];
-						groups[modelName] = _.groupBy(items, input.connections[modelName].r);
-					});
-					items.forEach(function (item) {
-						item.connections = {};
-						Object.keys(groups).forEach(function (modelName) {
-							var connection = input.connections[modelName];
-							var key = _.get(item, connection.l);
-							item.connections[modelName] = groups[modelName][key] ? groups[modelName][key] : [];
-						});
-					});
-					resolve(data);
+			return Promise.all(promises).then((result) => {
+				var groups = {};
+				result.forEach((items, i) => {
+					var modelName = modelKeys[i];
+					groups[modelName] = _.groupBy(items, input.connections[modelName].r);
 				});
+				items.forEach(function (item) {
+					item.connections = {};
+					Object.keys(groups).forEach((modelName) => {
+						var connection = input.connections[modelName];
+						var key = _.get(item, connection.l);
+						item.connections[modelName] = groups[modelName][key] ? groups[modelName][key] : [];
+					});
+				});
+				return data;
 			});
 		}
 	};
 
 
 	function c(data) {
-		return data.item.create().then(function (item) {
+		return data.item.create().then((item) => {
 			return data;
 		});
 	}
 
 	function r(data) {
-		return data.model.read(data.input.where, data.input.options).then(function (items) {
+		return data.model.read(data.input.where, data.input.options).then((items) => {
 			data.items = items;
 			return data;
 		});
 	}
 
 	function u(data) {
-		return data.item.update().then(function (item) {
+		return data.item.update(data.input.where).then((item) => {
 			return data;
 		});
 	}
 
 	function d(data) {
-		return data.item.delete().then(function (deleted) {
+		return data.item.delete(data.input.where).then((deleted) => {
 			data.deleted = deleted;
 			return data;
 		})
@@ -86,7 +87,7 @@ module.exports = function (app) {
 
 	var crud = {};
 	var c2m = {};//collections to models mapping
-	Object.keys(app.models).forEach(function (modelName) {
+	Object.keys(app.models).forEach((modelName) => {
 		if (modelName != 'Model') {
 			crud[modelName] = {
 				model: app.models[modelName],
@@ -107,26 +108,30 @@ module.exports = function (app) {
 	app.crud = crud;
 
 
-	app.io.on('connect', function (socket) {
-		socket.on('data:create', function (input, fn) {
+	app.io.on('connect', (socket) => {
+		socket.on('data:create', (input, fn) => {
 			input.collection = c2m[input.collection];
 			if (app.crud[input.collection] && socket.request.user.crudPermission('create', input)) {
 				app.crud[input.collection].c.run({
 					user: socket.request.user,
 					input: input,
 					item: new app.crud[input.collection].model(input.data)
-				}).then(function (data) {
+				}).then((data) => {
 					fn(data.item);
-				}).catch(function (err) {
+				}).catch((err) => {
 					console.error(err);
 					fn({
 						error: err
 					});
 				});
+			} else {
+				fn({
+					error: 'access denied'
+				});
 			}
 		});
 
-		socket.on('data:read', function (input, fn) {
+		socket.on('data:read', (input, fn) => {
 			input.collection = c2m[input.collection];
 			input.where = input.where || {};
 			if (app.crud[input.collection] && socket.request.user.crudPermission('read', input)) {
@@ -137,19 +142,24 @@ module.exports = function (app) {
 					user: socket.request.user,
 					input: input,
 					model: app.crud[input.collection].model
-				}).then(function (data) {
+				}).then((data) => {
 					fn(data.items);
-				}).catch(function (err) {
+				}).catch((err) => {
 					console.error(err);
 					fn({
 						error: err
 					});
 				});
+			} else {
+				fn({
+					error: 'access denied'
+				});
 			}
 		});
 
-		socket.on('data:update', function (input, fn) {
+		socket.on('data:update', (input, fn) => {
 			input.collection = c2m[input.collection];
+			input.where = input.where || {};
 			if (app.crud[input.collection] && socket.request.user.crudPermission('update', input)) {
 				app.crud[input.collection].u.run({
 					user: socket.request.user,
@@ -163,11 +173,16 @@ module.exports = function (app) {
 						error: err
 					});
 				});
+			} else {
+				fn({
+					error: 'access denied'
+				});
 			}
 		});
 
-		socket.on('data:delete', function (input, fn) {
+		socket.on('data:delete', (input, fn) => {
 			input.collection = c2m[input.collection];
+			input.where = input.where || {};
 			if (app.crud[input.collection] && socket.request.user.crudPermission('delete', input)) {
 				app.crud[input.collection].d.run({
 					user: socket.request.user,
@@ -181,13 +196,17 @@ module.exports = function (app) {
 						error: err
 					});
 				});
+			} else {
+				fn({
+					error: 'access denied'
+				});
 			}
 		});
 
 
-		socket.on('data:schemas', function (input, fn) {
+		socket.on('data:schemas', (input, fn) => {
 			var schemasAvailable = {};
-			Object.keys(app.models).forEach(function (modelName) {
+			Object.keys(app.models).forEach((modelName) => {
 				if (
 					app.models[modelName].schema/* &&
 				 socket.request.user.crudPermission('read', {collection: modelName})*/
@@ -198,7 +217,7 @@ module.exports = function (app) {
 			fn(util.inspect(schemasAvailable, {depth: null}));
 		});
 
-		socket.on('data:breadcrumb', function (input, fn) {
+		socket.on('data:breadcrumb', (input, fn) => {
 			input.collection = c2m[input.collection];
 			input.where = input.where || {};
 			if (
@@ -206,9 +225,9 @@ module.exports = function (app) {
 				app.models[input.collection].breadcrumb &&
 				socket.request.user.crudPermission('read', input)
 			) {
-				app.models[input.collection].breadcrumb(input.where._id).then(function (items) {
+				app.models[input.collection].breadcrumb(input.where._id).then((items) => {
 					fn(items);
-				}).catch(function (err) {
+				}).catch((err) => {
 					console.error(err);
 					fn({
 						error: err
