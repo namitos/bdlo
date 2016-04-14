@@ -159,7 +159,6 @@ module.exports = (app) => {
 
 		socket.on('data:update', (input, fn) => {
 			input.collection = c2m[input.collection];
-			input.where = input.where || {};
 			if (app.crud[input.collection] && socket.request.user.crudPermission('update', input)) {
 				app.crud[input.collection].u.run({
 					user: socket.request.user,
@@ -182,7 +181,6 @@ module.exports = (app) => {
 
 		socket.on('data:delete', (input, fn) => {
 			input.collection = c2m[input.collection];
-			input.where = input.where || {};
 			if (app.crud[input.collection] && socket.request.user.crudPermission('delete', input)) {
 				app.crud[input.collection].d.run({
 					user: socket.request.user,
