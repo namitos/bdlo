@@ -14,6 +14,12 @@ module.exports = function (input) {
 		var app = express();
 		app.db = db;
 		app.conf = input.conf;
+		if (!app.conf.hasOwnProperty('staticApp')) {
+			app.conf.staticApp = true;
+		}
+		if (!app.conf.hasOwnProperty('canAuth')) {
+			app.conf.canAuth = true;
+		}
 
 		var server;
 		if (app.conf.ssl) {
@@ -38,29 +44,35 @@ module.exports = function (input) {
 			db: app.db
 		});
 
-		var auth = require('./lib/auth')(app);
-
-		app.passport = require('passport');
-		app.passport.serializeUser(auth.serialize);
-		app.passport.deserializeUser(auth.deserialize);
-
 		app.use(require('body-parser').urlencoded({extended: true, limit: '50mb'}));
-		app.use(require('cookie-parser')());
-		app.use(session({
-			store: app.sessionStore,
-			secret: app.conf.session.secret,
-			key: 'session',
-			cookie: {maxAge: 604800000},
-			resave: true,
-			saveUninitialized: true
-		}));
-		app.use(app.passport.initialize());
-		app.use(app.passport.session());
-		app.use(express.static(process.env.NODE_ENV == 'development' ? 'static/app' : 'static/app-build'));
-		app.use('/files', express.static('static/files'));
 
-		app.passport.use(auth.strategy());
-		app.io.use(auth.ioUserMiddleware);
+		if (app.conf.canAuth) {
+			var auth = require('./lib/auth')(app);
+
+			app.passport = require('passport');
+			app.passport.serializeUser(auth.serialize);
+			app.passport.deserializeUser(auth.deserialize);
+
+			app.use(require('cookie-parser')());
+			app.use(session({
+				store: app.sessionStore,
+				secret: app.conf.session.secret,
+				key: 'session',
+				cookie: {maxAge: 604800000},
+				resave: true,
+				saveUninitialized: true
+			}));
+			app.use(app.passport.initialize());
+			app.use(app.passport.session());
+
+			app.passport.use(auth.strategy());
+			app.io.use(auth.ioUserMiddleware);
+		}
+
+		if (app.conf.staticApp) {
+			app.use(express.static(process.env.NODE_ENV == 'development' ? 'static/app' : 'static/app-build'));
+		}
+		app.use('/files', express.static('static/files'));
 
 		app.models = app.models || {};
 		app.models.Model = require('model-server-mongo')(app);//for extending, not for use
@@ -75,7 +87,9 @@ module.exports = function (input) {
 		var port = process.env.port || app.conf.port;
 		server.listen(port, function () {
 			console.log('Worker ' + process.pid + ' is now listening on port ' + port + ' in ' + process.env.NODE_ENV + ' mode.');
-			input.afterStart(app);
+			if (input.afterStart) {
+				input.afterStart(app);
+			}
 		});
 	}).catch(function (err) {
 		console.error(err);
