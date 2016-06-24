@@ -17,6 +17,9 @@ module.exports = function (input) {
 		if (!app.conf.hasOwnProperty('staticApp')) {
 			app.conf.staticApp = true;
 		}
+		if (!app.conf.staticAppPath) {
+			app.conf.staticAppPath = process.env.NODE_ENV == 'development' ? 'static/app' : 'static/app-build';
+		}
 		if (!app.conf.hasOwnProperty('canAuth')) {
 			app.conf.canAuth = true;
 		}
@@ -70,7 +73,7 @@ module.exports = function (input) {
 		}
 
 		if (app.conf.staticApp) {
-			app.use(express.static(process.env.NODE_ENV == 'development' ? 'static/app' : 'static/app-build'));
+			app.use(express.static(app.conf.staticAppPath));
 		}
 		app.use('/files', express.static('static/files'));
 
