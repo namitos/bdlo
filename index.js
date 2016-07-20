@@ -41,15 +41,15 @@ module.exports = function (input) {
 
 		input.beforeStart ? input.beforeStart(app) : '';
 
-		var session = require('express-session');
-		var SessionStore = require('connect-mongo')(session);
-		app.sessionStore = new SessionStore({
-			db: app.db
-		});
-
-		app.use(require('body-parser').urlencoded({extended: true, limit: '50mb'}));
-
 		if (app.conf.canAuth) {
+			var session = require('express-session');
+			var SessionStore = require('connect-mongo')(session);
+			app.sessionStore = new SessionStore({
+				db: app.db
+			});
+
+			app.use(require('body-parser').urlencoded({extended: true, limit: '50mb'}));
+
 			var auth = require('./lib/auth')(app);
 
 			app.passport = require('passport');
@@ -61,9 +61,10 @@ module.exports = function (input) {
 				store: app.sessionStore,
 				secret: app.conf.session.secret,
 				key: 'session',
-				cookie: {maxAge: 604800000},
+				cookie: {maxAge: app.conf.session.maxAge || 604800000},
 				resave: true,
-				saveUninitialized: true
+				saveUninitialized: true,
+				rolling: true
 			}));
 			app.use(app.passport.initialize());
 			app.use(app.passport.session());
