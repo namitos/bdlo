@@ -62,8 +62,8 @@ module.exports = function (input) {
 				secret: app.conf.session.secret,
 				key: 'session',
 				cookie: {maxAge: app.conf.session.maxAge || 604800000},
-				resave: true,
-				saveUninitialized: true,
+				resave: false,
+				saveUninitialized: false,
 				rolling: true
 			}));
 			app.use(app.passport.initialize());
