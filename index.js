@@ -68,7 +68,10 @@ module.exports = function (input) {
 			}));
 			app.use(app.passport.initialize());
 			app.use(app.passport.session());
-
+			app.use((req, res, next) => {
+				req.user = req.user || new app.models.User({roles: ['anon']});
+				next();
+			});
 			app.passport.use(auth.strategy());
 			app.io.use(auth.ioUserMiddleware);
 		}
