@@ -1,6 +1,6 @@
 {
 	"name": "bdlo",
-	"version": "1.0.21",
+	"version": "1.0.22",
 	"private": false,
 	"dependencies": {
 		"lodash": "4.x",
