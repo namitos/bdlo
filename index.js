@@ -14,15 +14,6 @@ module.exports = function (input) {
 		var app = express();
 		app.db = db;
 		app.conf = input.conf;
-		if (!app.conf.hasOwnProperty('staticApp')) {
-			app.conf.staticApp = true;
-		}
-		if (!app.conf.staticAppPath) {
-			app.conf.staticAppPath = process.env.NODE_ENV == 'development' ? 'static/app' : 'static/app-build';
-		}
-		if (!app.conf.hasOwnProperty('canAuth')) {
-			app.conf.canAuth = true;
-		}
 
 		var server;
 		if (app.conf.ssl) {
@@ -39,8 +30,13 @@ module.exports = function (input) {
 
 		app.io = require('socket.io')(server);
 
-		input.beforeStart ? input.beforeStart(app) : '';
+		if(input.beforeStart) {
+			input.beforeStart(app);
+		}
 
+		if (!app.conf.hasOwnProperty('canAuth')) {
+			app.conf.canAuth = true;
+		}
 		if (app.conf.canAuth) {
 			var session = require('express-session');
 			var SessionStore = require('connect-mongo')(session);
@@ -76,10 +72,12 @@ module.exports = function (input) {
 			app.io.use(auth.ioUserMiddleware);
 		}
 
-		if (app.conf.staticApp) {
+		if (app.conf.staticAppPath) {
 			app.use(express.static(app.conf.staticAppPath));
 		}
-		app.use('/files', express.static('static/files'));
+		if (app.conf.staticFilesPath) {
+			app.use('/files', express.static(app.conf.staticFilesPath));
+		}
 
 		app.models = app.models || {};
 		app.models.Model = require('model-server-mongo')(app);//for extending, not for use
