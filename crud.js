@@ -113,6 +113,7 @@ module.exports = (app) => {
 			input.collection = c2m[input.collection];
 			if (app.crud[input.collection] && socket.request.user.crudPermission('create', input)) {
 				app.crud[input.collection].c.run({
+					socket: socket,
 					user: socket.request.user,
 					input: input,
 					item: new app.crud[input.collection].model(input.data)
@@ -139,6 +140,7 @@ module.exports = (app) => {
 					input.where._id = app.util.prepareId(input.where._id);
 				}
 				app.crud[input.collection].r.run({
+					socket: socket,
 					user: socket.request.user,
 					input: input,
 					model: app.crud[input.collection].model
@@ -161,6 +163,7 @@ module.exports = (app) => {
 			input.collection = c2m[input.collection];
 			if (app.crud[input.collection] && socket.request.user.crudPermission('update', input)) {
 				app.crud[input.collection].u.run({
+					socket: socket,
 					user: socket.request.user,
 					input: input,
 					item: new app.crud[input.collection].model(input.data)
@@ -183,6 +186,7 @@ module.exports = (app) => {
 			input.collection = c2m[input.collection];
 			if (app.crud[input.collection] && socket.request.user.crudPermission('delete', input)) {
 				app.crud[input.collection].d.run({
+					socket: socket,
 					user: socket.request.user,
 					input: input,
 					item: new app.crud[input.collection].model(input.data)
