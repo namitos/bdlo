@@ -24,7 +24,7 @@ module.exports = (app) => {
 				};
 
 				if (connection.r == '_id') {
-					where[connection.r] = app.util.prepareId(where[connection.r]);
+					where[connection.r] = app.models.Model.prepareId(where[connection.r]);
 				} else {
 					where[connection.r].$in = where[connection.r].$in.map((id) => {
 						return id.toString();
@@ -56,7 +56,7 @@ module.exports = (app) => {
 				return data;
 			});
 		}
-	};
+	}
 
 
 	function c(data) {
@@ -88,20 +88,19 @@ module.exports = (app) => {
 	var crud = {};
 	var c2m = {};//collections to models mapping
 	Object.keys(app.models).forEach((modelName) => {
-		if (modelName != 'Model') {
+		let Model = app.models[modelName];
+		if (Model.schema) {
 			crud[modelName] = {
-				model: app.models[modelName],
+				model: Model,
 				c: new Queue(prepareFilesMiddleware, c),
 				r: new Queue(r, connectionsMiddleware),
 				u: new Queue(prepareFilesMiddleware, u),
 				d: new Queue(d)
 			};
-			if (app.models[modelName].schema) {
-				if (!app.models[modelName].schema.name) {
-					throw new Error(`schema.name of ${modelName} is required!`);
-				}
-				c2m[app.models[modelName].schema.name] = modelName;
+			if (!Model.schema.name) {
+				throw new Error(`schema.name of ${modelName} is required!`);
 			}
+			c2m[Model.schema.name] = modelName;
 		}
 	});
 
@@ -137,7 +136,7 @@ module.exports = (app) => {
 			input.where = input.where || {};
 			if (app.crud[input.collection] && socket.request.user.crudPermission('read', input)) {
 				if (input.where._id) {
-					input.where._id = app.util.prepareId(input.where._id);
+					input.where._id = app.models.Model.prepareId(input.where._id);
 				}
 				app.crud[input.collection].r.run({
 					socket: socket,
@@ -205,18 +204,26 @@ module.exports = (app) => {
 			}
 		});
 
-
-		socket.on('data:schemas', (input, fn) => {
-			var schemasAvailable = {};
-			Object.keys(app.models).forEach((modelName) => {
-				if (
-					app.models[modelName].schema/* &&
-				 socket.request.user.crudPermission('read', {collection: modelName})*/
-				) {
-					schemasAvailable[modelName] = app.models[modelName].schema;
-				}
-			});
-			fn(util.inspect(schemasAvailable, {depth: null}));
+		socket.on('data:count', (input, fn) => {
+			input.where = input.where || {};
+			if (app.crud[input.collection] && socket.request.user.crudPermission('read', input)) {
+				app.models[input.collection].readMiddleware({
+					user: socket.request.user,
+					input: input,
+					model: app.models[input.collection]
+				}).then((data) => {
+					return data.model.count(data.input.where)
+				}).then(fn).catch((err) => {
+					console.error('err', err);
+					fn({
+						error: err
+					});
+				});
+			} else {
+				fn({
+					error: 'access denied'
+				});
+			}
 		});
 
 		socket.on('data:breadcrumb', (input, fn) => {
@@ -235,7 +242,24 @@ module.exports = (app) => {
 						error: err
 					});
 				});
+			} else {
+				fn({
+					error: 'access denied'
+				});
 			}
+		});
+
+		socket.on('data:schemas', (input, fn) => {
+			var schemasAvailable = {};
+			Object.keys(app.models).forEach((modelName) => {
+				if (
+					app.models[modelName].schema/* &&
+				 socket.request.user.crudPermission('read', {collection: modelName})*/
+				) {
+					schemasAvailable[modelName] = app.models[modelName].schema;
+				}
+			});
+			fn(util.inspect(schemasAvailable, {depth: null}));
 		});
 	});
 };
