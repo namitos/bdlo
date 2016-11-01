@@ -3,7 +3,7 @@
 var _ = require('lodash');
 
 module.exports = (app) => {
-	app.models.Tree = class Tree extends app.models.Model {
+	return class Tree extends app.models.Model {
 
 		/**
 		 * @param parent
