@@ -44,7 +44,9 @@ module.exports = function (input) {
 				db: app.db
 			});
 
-			app.use(require('body-parser').urlencoded({extended: true, limit: '50mb'}));
+			var bodyParser = require('body-parser');
+			app.use(bodyParser.urlencoded({extended: true, limit: '50mb'}));
+			app.use(bodyParser.json());
 
 			var auth = require('./lib/auth')(app);
 
