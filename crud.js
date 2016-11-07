@@ -66,10 +66,18 @@ module.exports = (app) => {
 	}
 
 	function r(data) {
-		return data.model.read(data.input.where, data.input.options).then((items) => {
-			data.items = items;
-			return data;
-		});
+		if (data.input.count) {
+			return data.model.count(data.input.where).then((itemsCount) => {
+				data.items = [];//for backward compatibility
+				data.itemsCount = itemsCount;
+				return data;
+			});
+		} else {
+			return data.model.read(data.input.where, data.input.options).then((items) => {
+				data.items = items;
+				return data;
+			});
+		}
 	}
 
 	function u(data) {
@@ -204,17 +212,23 @@ module.exports = (app) => {
 			}
 		});
 
+		//todo remove copypaste
 		socket.on('data:count', (input, fn) => {
+			input.collection = c2m[input.collection];
 			input.where = input.where || {};
 			if (app.crud[input.collection] && socket.request.user.crudPermission('read', input)) {
-				app.models[input.collection].readMiddleware({
+				if (input.where._id) {
+					input.where._id = app.models.Model.prepareId(input.where._id);
+				}
+				input.count = true;
+				app.crud[input.collection].r.run({
+					socket: socket,
 					user: socket.request.user,
 					input: input,
-					model: app.models[input.collection]
+					model: app.crud[input.collection].model
 				}).then((data) => {
-					return data.model.count(data.input.where)
-				}).then(fn).catch((err) => {
-					console.error('err', err);
+					fn(data.itemsCount);
+				}).catch((err) => {
 					fn({
 						error: err
 					});
