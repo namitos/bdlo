@@ -59,7 +59,10 @@ module.exports = function (input) {
 				store: app.sessionStore,
 				secret: app.conf.session.secret,
 				key: 'session',
-				cookie: {maxAge: app.conf.session.maxAge || 604800000},
+				cookie: {
+					maxAge: app.conf.session.maxAge || 604800000,
+					domain: app.conf.domain ? `.${app.conf.domain}` : null
+				},
 				resave: false,
 				saveUninitialized: false,
 				rolling: true
