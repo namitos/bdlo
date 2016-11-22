@@ -61,7 +61,7 @@ module.exports = function (input) {
 				key: 'session',
 				cookie: {
 					maxAge: app.conf.session.maxAge || 604800000,
-					domain: app.conf.domain ? `.${app.conf.domain}` : null
+					domain: app.conf.authSubdomains && app.conf.domain ? `.${app.conf.domain}` : null
 				},
 				resave: false,
 				saveUninitialized: false,
