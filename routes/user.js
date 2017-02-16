@@ -1,36 +1,35 @@
-var passport = require('passport');
-var _ = require('lodash');
+const passport = require('passport');
+const _ = require('lodash');
 
-module.exports = function (app) {
-	app.get('/auth/logout', function (req, res) {
-		req.logout();
-		res.redirect('/');
-	});
+module.exports = (app) => {
+  app.get('/auth/logout', (req, res) => {
+    req.logout();
+    res.redirect('/');
+  });
 
-	app.get('/auth/success', function (req, res) {
-		res.send({
-			result: 'success'
-		});
-	});
+  app.get('/auth/success', (req, res) => {
+    res.send({
+      result: 'success'
+    });
+  });
 
-	app.get('/auth/failure', function (req, res) {
-		res.send({
-			result: 'failure'
-		});
-	});
+  app.get('/auth/failure', (req, res) => {
+    res.send({
+      result: 'failure'
+    });
+  });
 
-	app.post('/auth/login', passport.authenticate('local', {
-		successRedirect: '/auth/success',
-		failureRedirect: '/auth/failure'
-	}));
+  app.post('/auth/login', passport.authenticate('local', {
+    successRedirect: '/auth/success',
+    failureRedirect: '/auth/failure'
+  }));
 
-	app.io.on('connect', function (socket) {
-		socket.on('currentUser', function (input, fn) {
-			var user = _.clone(socket.request.user);
-			delete user.password;
-			user.permissions = socket.request.user.permissions;
-			fn(user);
-		});
-	});
-
+  app.io.on('connect', (socket) => {
+    socket.on('currentUser', (input, fn) => {
+      let user = _.clone(socket.request.user);
+      delete user.password;
+      user.permissions = socket.request.user.permissions;
+      fn(user);
+    });
+  });
 };
