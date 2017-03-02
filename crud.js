@@ -226,7 +226,7 @@ module.exports = (app) => {
         app.models[input.collection] &&
         socket.request.user.permission('full access')
       ) {
-        app.models[input.collection].c.aggregate(input.where).then((result) => {
+        app.models[input.collection].c.aggregate(input.where).toArray().then((result) => {
           fn(result);
         }).catch((err) => {
           console.error(err);
