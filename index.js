@@ -58,7 +58,7 @@ module.exports = function (input) {
       app.use(session({
         store: app.sessionStore,
         secret: app.conf.session.secret,
-        key: 'session',
+        key: app.conf.session.key || 'session',
         cookie: {
           maxAge: app.conf.session.maxAge || 604800000,
           domain: app.conf.authSubdomains && app.conf.domain ? `.${app.conf.domain}` : null
