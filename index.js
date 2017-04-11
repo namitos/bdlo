@@ -73,7 +73,8 @@ module.exports = function (input) {
         req.user = req.user || new app.models.User({roles: ['anon']});
         next();
       });
-      app.passport.use(auth.strategy());
+      app.passport.use(auth.localStrategy());
+      app.passport.use(auth.bearerStrategy());
       app.io.use(auth.ioUserMiddleware);
     }
 
@@ -89,6 +90,7 @@ module.exports = function (input) {
     app.models.Tree = require('./models/Tree')(app);
 
     app.models.User = app.models.User || require('./models/User')(app);
+    app.models.UserToken = require('./models/UserToken')(app);
 
     input.dataModels(app);
     require('./crud')(app);

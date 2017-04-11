@@ -2,6 +2,8 @@
 
 const crypto = require('crypto');
 const _ = require('lodash');
+const nodemailer = require('nodemailer');
+const nodemailerDirectTransport = require('nodemailer-direct-transport');
 
 module.exports = function (app) {
   return class User extends app.models.Model {
@@ -12,6 +14,9 @@ module.exports = function (app) {
         updatePatch: true,
         type: 'object',
         properties: {
+          created: {
+            type: 'integer'
+          },
           username: {
             label: 'Логин',
             type: 'string',
@@ -67,6 +72,11 @@ module.exports = function (app) {
       });
     }
 
+    create() {
+      this.created = new Date().valueOf();
+      return super.create(...arguments);
+    }
+
     static passwordHash(password) {
       return crypto.createHash('sha512').update(password).digest("hex");
     }
@@ -75,8 +85,12 @@ module.exports = function (app) {
       return this.passwordHash(Math.random().toString()).substr(0, 10);
     }
 
+    static genToken() {
+      return this.passwordHash(Math.random().toString()) + this.passwordHash(Math.random().toString()) + this.passwordHash(Math.random().toString()) + this.passwordHash(Math.random().toString());
+    }
+
     permission(permissionString) {
-      return _.includes(this.permissions, permissionString) || _.includes(this.permissions, 'full access');
+      return this.permissions.includes(permissionString) || this.permissions.includes('full access');
     }
 
     crudPermission(op, input) {
@@ -90,11 +104,11 @@ module.exports = function (app) {
           let ModelSchema = app.models[input.collection].schema;
           if (ModelSchema.ownerField) {
             let ownerField = ModelSchema.ownerField;
-            if (op == 'create' || op == 'update') {
+            if (op === 'create' || op === 'update') {
               input.data = input.data || {};
               input.data[ownerField] = this._id.toString();
             }
-            if (op == 'read' || op == 'update' || op == 'delete') {
+            if (op === 'read' || op === 'update' || op === 'delete') {
               input.where = input.where || {};
               input.where[ownerField] = this._id.toString();
             }
@@ -105,5 +119,54 @@ module.exports = function (app) {
           }
         })();
     }
+
+    notifyEmail(subject, message) {
+      let transport;
+      if (app.conf.mail.direct) {
+        transport = nodemailerDirectTransport({
+          name: app.conf.domain,
+          from: app.conf.mail.fromName
+        });
+      } else {
+        transport = app.conf.mail;
+      }
+      nodemailer.createTransport(transport).sendMail({
+        from: app.conf.mail.fromName,
+        to: this.username,
+        subject: subject,
+        html: message,
+        dkim: app.conf.mail.dkim
+      }, (err, info) => {
+        if (err) {
+          console.error('notify err', err);
+        } else {
+          console.log('notify', info);
+        }
+      });
+    }
+
+    notifyPush(subject, message) {
+      app.models.UserToken.read({
+        user: this._id.toString(),
+        subscription: {$ne: null}
+      })
+        .then((items) => {
+          let subscriptions = [...new Set(items.map((item) => item.subscription))];
+          return Promise.all(subscriptions.map((subscription) => fetchData("https://fcm.googleapis.com/fcm/send", {
+            "Content-Type": "application/json",
+            "Authorization": `key=${app.conf.firebase.apiServerKey}`
+          }, JSON.stringify({
+            notification: {
+              title: subject,
+              body: message
+              //click_action: "https://blabla.com"
+            },
+            //data: {foo: 'bar'},
+            to: subscription
+          }), 'POST')))//todo remove bad subscriptions
+        })
+        .catch((err) => console.error(err));
+    }
+
   }
 };

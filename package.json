@@ -1,19 +1,23 @@
 {
   "name": "bdlo",
-  "version": "1.0.28",
+  "version": "1.1.0",
   "private": false,
   "dependencies": {
-    "lodash": "4.x",
+    "body-parser": "1.x",
+    "connect-mongo": "1.x",
+    "cookie-parser": "1.x",
     "express": "4.x",
     "express-session": "1.x",
-    "body-parser": "1.x",
-    "cookie-parser": "1.x",
-    "connect-mongo": "1.x",
-    "passport": "0.3.x",
-    "passport-local": "1.x",
+    "lodash": "4.x",
     "model-server-mongo": "namitos/Model-server-mongo",
-    "queue": "namitos/Queue",
     "mongodb": "2.x",
-    "socket.io": "1.x"
+    "nodemailer": "3.x",
+    "nodemailer-direct-transport": "3.x",
+    "passport": "0.3.x",
+    "passport-http-bearer": "1.x",
+    "passport-local": "1.x",
+    "queue": "namitos/Queue",
+    "socket.io": "1.x",
+    "xml2json": "^0.11.0"
   }
 }
