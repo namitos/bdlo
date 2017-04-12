@@ -6,11 +6,10 @@ const express = require("express");
 module.exports = (app) => {
   const auth = require('../lib/auth')(app);
 
-  app.get('/auth/logout', (req, res) => {
-    req.logout();
-    //todo unregister pushes by sessionId
-    res.redirect('/');
-  });
+  app.post('/auth/login', passport.authenticate('local', {
+    successRedirect: '/auth/success',
+    failureRedirect: '/auth/failure'
+  }));
 
   app.get('/auth/success', (req, res) => {
     res.send({
@@ -24,14 +23,43 @@ module.exports = (app) => {
     });
   });
 
-  app.post('/auth/login', passport.authenticate('local', {
-    successRedirect: '/auth/success',
-    failureRedirect: '/auth/failure'
-  }));
+  app.get('/auth/logout', (req, res) => {
+    app.models.UserToken.c.deleteMany({
+      user: req.user._id.toString(),
+      value: req.session.id.toString(),
+      type: 'session'
+    }).catch((err) => console.error(err));
+
+    req.logout();
+    res.redirect('/');
+  });
 
   app.post('/auth/register-push', (req, res) => {
-    //todo implement: create UserToken with sessionId value
-    res.send();
+    if (req.user._id && req.session.id) {
+      let where = {
+        user: req.user._id.toString(),
+        value: req.session.id.toString(),
+        type: 'session'
+      };
+      app.models.UserToken.read(where)
+        .then((items) => {
+          if (items.length) {
+            return items[0];
+          } else {
+            new app.models.UserToken(where).create();
+          }
+        })
+        .then((item) => app.models.UserToken.c.updateOne(where, {
+          $set: {subscription: req.body.subscription}
+        }))
+        .then(() => res.send({}))
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send({});
+        })
+    } else {
+      res.status(401).send({});
+    }
   });
 
 
@@ -71,10 +99,14 @@ module.exports = (app) => {
   });
 
   app.post('/api/logout', auth.expressBearerMiddleware, (req, res) => {
-    app.models.UserToken.read({value: req.bearerToken})
+    app.models.UserToken.read({
+      value: req.bearerToken,
+      type: 'api'
+    })
       .then(([userToken]) => app.models.UserToken.c.deleteMany({
         user: userToken.user,//deleteing clones of subscriptions with same values if exists
-        subscription: userToken.subscription
+        subscription: userToken.subscription,
+        type: 'api'
       }))
       .then(() => res.send({}))
       .catch((err) => {
@@ -85,7 +117,8 @@ module.exports = (app) => {
 
   app.post('/api/register-push', auth.expressBearerMiddleware, (req, res) => {
     app.models.UserToken.c.updateOne({
-      value: req.bearerToken
+      value: req.bearerToken,
+      type: 'api'
     }, {
       $set: {subscription: req.body.subscription}
     })
