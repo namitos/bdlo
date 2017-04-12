@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const _ = require('lodash');
 const nodemailer = require('nodemailer');
 const nodemailerDirectTransport = require('nodemailer-direct-transport');
+const fetchData = require('../lib/fetchData');
 
 module.exports = function (app) {
   return class User extends app.models.Model {
