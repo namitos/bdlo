@@ -113,7 +113,7 @@ module.exports = function (app) {
               input.where = input.where || {};
               input.where[ownerField] = this._id.toString();
             }
-            console.log('user.crudPermission patched', op, input);
+            //console.log('user.crudPermission patched', op, input);
             return true;
           } else {
             return false;
