@@ -9,7 +9,7 @@
     "express": "4.x",
     "express-session": "1.x",
     "lodash": "4.x",
-    "model-server-mongo": "namitos/Model-server-mongo",
+    "model-server-mongo": "namitos/model-server-mongo",
     "mongodb": "2.x",
     "nodemailer": "3.x",
     "nodemailer-direct-transport": "3.x",
