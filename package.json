@@ -9,14 +9,14 @@
     "express": "4.x",
     "express-session": "1.x",
     "lodash": "4.x",
-    "model-server-mongo": "namitos/model-server-mongo",
+    "model-server-mongo": "github:namitos/model-server-mongo",
     "mongodb": "2.x",
     "nodemailer": "3.x",
     "nodemailer-direct-transport": "3.x",
     "passport": "0.3.x",
     "passport-http-bearer": "1.x",
     "passport-local": "1.x",
-    "queue": "namitos/Queue",
+    "queue": "github:namitos/Queue",
     "socket.io": "1.x",
     "xml2json": "^0.11.0"
   }
