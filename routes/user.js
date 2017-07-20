@@ -24,12 +24,13 @@ module.exports = (app) => {
   });
 
   app.get('/auth/logout', (req, res) => {
-    app.models.UserToken.c.deleteMany({
-      user: req.user._id.toString(),
-      value: req.session.id.toString(),
-      type: 'session'
-    }).catch((err) => console.error(err));
-
+    if (req.user._id) {
+      app.models.UserToken.c.deleteMany({
+        user: req.user._id.toString(),
+        value: req.session.id.toString(),
+        type: 'session'
+      }).catch((err) => console.error(err));
+    }
     req.logout();
     res.redirect('/');
   });
@@ -50,7 +51,7 @@ module.exports = (app) => {
           }
         })
         .then((item) => app.models.UserToken.c.updateOne(where, {
-          $set: {subscription: req.body.subscription}
+          $set: { subscription: req.body.subscription }
         }))
         .then(() => res.send({}))
         .catch((err) => {
@@ -77,7 +78,7 @@ module.exports = (app) => {
       .then(() => app.models.User.read({
         username: req.body.username,
         password: app.models.User.passwordHash(req.body.password),
-        deleted: {$nin: [true]}
+        deleted: { $nin: [true] }
       }))
       .then((users) => {
         if (users.length) {
@@ -91,7 +92,7 @@ module.exports = (app) => {
           return Promise.reject('not found');
         }
       })
-      .then((token) => res.send({token: token.value}))
+      .then((token) => res.send({ token: token.value }))
       .catch((err) => {
         console.error(err);
         res.status(401).send({})
@@ -100,11 +101,11 @@ module.exports = (app) => {
 
   app.post('/api/logout', auth.expressBearerMiddleware, (req, res) => {
     app.models.UserToken.read({
-      value: req.bearerToken,
-      type: 'api'
-    })
+        value: req.bearerToken,
+        type: 'api'
+      })
       .then(([userToken]) => app.models.UserToken.c.deleteMany({
-        user: userToken.user,//deleteing clones of subscriptions with same values if exists
+        user: userToken.user, //deleteing clones of subscriptions with same values if exists
         subscription: userToken.subscription,
         type: 'api'
       }))
@@ -117,11 +118,11 @@ module.exports = (app) => {
 
   app.post('/api/register-push', auth.expressBearerMiddleware, (req, res) => {
     app.models.UserToken.c.updateOne({
-      value: req.bearerToken,
-      type: 'api'
-    }, {
-      $set: {subscription: req.body.subscription}
-    })
+        value: req.bearerToken,
+        type: 'api'
+      }, {
+        $set: { subscription: req.body.subscription }
+      })
       .then(() => res.send({}))
       .catch((err) => {
         console.error(err);
