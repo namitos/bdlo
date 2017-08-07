@@ -44,21 +44,25 @@ module.exports = (settings) => {
     return Promise.all(promises);
   }
 
+  function _properSchema(schema) {
+    return schema.storage && ['base64File', 'ui-input-image', 'ui-input-file'].includes(schema.widget);
+  }
+
   function _prepareFilesPromises(schema, obj) {
     let promises = [];
     if (schema.properties) {
       Object.keys(schema.properties).forEach((fieldName) => {
         if (obj[fieldName]) {
-          if (//simple file field
-          schema.properties[fieldName].widget == 'base64File'
+          if ( //simple file field
+            _properSchema(schema.properties[fieldName])
           ) {
 
             obj[fieldName] = _.compact(obj[fieldName]);
             promises.push(_saveFilePromise(schema.properties[fieldName], obj[fieldName]));
 
-          } else if (//array of simple file fields
-          schema.properties[fieldName].type == 'array' &&
-          schema.properties[fieldName].items.widget == 'base64File'
+          } else if ( //array of simple file fields
+            schema.properties[fieldName].type == 'array' &&
+            _properSchema(schema.properties[fieldName].items)
           ) {
 
             obj[fieldName].forEach((item, i) => {
@@ -70,21 +74,21 @@ module.exports = (settings) => {
               promises.push(_saveFilePromise(schema.properties[fieldName].items, item));
             });
 
-          } else if (//file field is a part of object
-          schema.properties[fieldName].type == 'object'
+          } else if ( //file field is a part of object
+            schema.properties[fieldName].type == 'object'
           ) {
 
-            _prepareFilesPromises(schema.properties[fieldName], obj[fieldName]).forEach((promise) => {//recursion for simplify
+            _prepareFilesPromises(schema.properties[fieldName], obj[fieldName]).forEach((promise) => { //recursion for simplify
               promises.push(promise);
             });
 
-          } else if (//array of object with file fields
-          schema.properties[fieldName].type == 'array'
+          } else if ( //array of object with file fields
+            schema.properties[fieldName].type == 'array'
           ) {
 
             obj[fieldName] = _.compact(obj[fieldName]);
             obj[fieldName].forEach((item, i) => {
-              _prepareFilesPromises(schema.properties[fieldName].items, item).forEach((promise) => {//recursion for simplify
+              _prepareFilesPromises(schema.properties[fieldName].items, item).forEach((promise) => { //recursion for simplify
                 promises.push(promise);
               });
             });
