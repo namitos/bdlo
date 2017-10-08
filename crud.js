@@ -14,7 +14,7 @@ module.exports = (app) => {
   function r(data) {
     if (data.input.count) {
       return data.model.count(data.input.where).then((itemsCount) => {
-        data.items = [];//for backward compatibility
+        data.items = []; //for backward compatibility
         data.itemsCount = itemsCount;
         return data;
       });
@@ -38,7 +38,7 @@ module.exports = (app) => {
   }
 
   let crud = {};
-  let c2m = {};//collections to models mapping
+  let c2m = {}; //collections to models mapping
   Object.keys(app.models).forEach((modelName) => {
     let Model = app.models[modelName];
     if (Model.schema) {
@@ -72,14 +72,14 @@ module.exports = (app) => {
           fn(data.item);
         }).catch((err) => {
           console.error(err);
-          fn({
-            error: err
-          });
+          if (err && err.code === 11000) {
+            fn({ error: 'duplicate key' });
+          } else {
+            fn({ error: err });
+          }
         });
       } else {
-        fn({
-          error: 'access denied'
-        });
+        fn({ error: 'access denied' });
       }
     });
 
@@ -99,14 +99,10 @@ module.exports = (app) => {
           fn(data.items);
         }).catch((err) => {
           console.error(err);
-          fn({
-            error: err
-          });
+          fn({ error: err });
         });
       } else {
-        fn({
-          error: 'access denied'
-        });
+        fn({ error: 'access denied' });
       }
     });
 
@@ -121,15 +117,14 @@ module.exports = (app) => {
         }).then((data) => {
           fn(data.item);
         }).catch((err) => {
-          console.error(err);
-          fn({
-            error: err
-          });
+          if (err && err.code === 11000) {
+            fn({ error: 'duplicate key' });
+          } else {
+            fn({ error: err });
+          }
         });
       } else {
-        fn({
-          error: 'access denied'
-        });
+        fn({ error: 'access denied' });
       }
     });
 
@@ -145,14 +140,10 @@ module.exports = (app) => {
           fn(data.deleted);
         }).catch((err) => {
           console.error(err);
-          fn({
-            error: err
-          });
+          fn({ error: err });
         });
       } else {
-        fn({
-          error: 'access denied'
-        });
+        fn({ error: 'access denied' });
       }
     });
 
@@ -173,14 +164,10 @@ module.exports = (app) => {
         }).then((data) => {
           fn(data.itemsCount);
         }).catch((err) => {
-          fn({
-            error: err
-          });
+          fn({ error: err });
         });
       } else {
-        fn({
-          error: 'access denied'
-        });
+        fn({ error: 'access denied' });
       }
     });
 
@@ -196,14 +183,10 @@ module.exports = (app) => {
           fn(items);
         }).catch((err) => {
           console.error(err);
-          fn({
-            error: err
-          });
+          fn({ error: err });
         });
       } else {
-        fn({
-          error: 'access denied'
-        });
+        fn({ error: 'access denied' });
       }
     });
 
@@ -211,13 +194,14 @@ module.exports = (app) => {
       let schemasAvailable = {};
       Object.keys(app.models).forEach((modelName) => {
         if (
-          app.models[modelName].schema/* &&
-         socket.request.user.crudPermission('read', {collection: modelName})*/
+          app.models[modelName].schema
+          /* &&
+                   socket.request.user.crudPermission('read', {collection: modelName})*/
         ) {
           schemasAvailable[modelName] = app.models[modelName].schema;
         }
       });
-      fn(util.inspect(schemasAvailable, {depth: null}));
+      fn(util.inspect(schemasAvailable, { depth: null }));
     });
 
     //experimental functionality
@@ -230,14 +214,10 @@ module.exports = (app) => {
           fn(result);
         }).catch((err) => {
           console.error(err);
-          fn({
-            error: err
-          });
+          fn({ error: err });
         })
       } else {
-        fn({
-          error: 'access denied'
-        });
+        fn({ error: 'access denied' });
       }
     });
   });
