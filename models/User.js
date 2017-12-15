@@ -159,7 +159,8 @@ module.exports = function (app) {
           }, JSON.stringify({
             notification: {
               title: subject,
-              body: message
+              body: message,
+              soundname: 'default'
               //click_action: "https://blabla.com"
             },
             //data: {foo: 'bar'},
