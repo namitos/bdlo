@@ -160,7 +160,7 @@ module.exports = function (app) {
             notification: {
               title: subject,
               body: message,
-              soundname: 'default'
+              sound: 'default'
               //click_action: "https://blabla.com"
             },
             //data: {foo: 'bar'},
