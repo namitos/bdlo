@@ -5,6 +5,76 @@ const express = require("express");
 
 module.exports = (app) => {
   const auth = require('../lib/auth')(app);
+  const router = express.Router();
+
+  router.post('/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        return res.status(500).send({ name: 'AuthError', err });
+      } else if (user && user._id) {
+        req.logIn(user, (err) => {
+          if (err) {
+            return res.status(500).send({ name: 'AuthError', err });
+          } else {
+            console.log('user', user);
+            return res.status(200).send({});
+          }
+        });
+      } else {
+        return res.status(401).send({ name: 'AuthError', text: 'unauthorized' });
+      }
+    })(req, res, next);
+  });
+
+
+  router.post('/logout', (req, res, next) => {
+    if (req.user._id) {
+      app.models.UserToken.c.deleteMany({
+        user: req.user._id.toString(),
+        value: req.session.id.toString(),
+        type: 'session'
+      }).catch((err) => console.error(err));
+    }
+    req.logout();
+    res.send({});
+  });
+
+  app.post('/register-push', (req, res) => {
+    if (req.user._id && req.session.id) {
+      let where = {
+        user: req.user._id.toString(),
+        value: req.session.id.toString(),
+        type: 'session'
+      };
+      app.models.UserToken.read(where)
+        .then((items) => {
+          if (items.length) {
+            return items[0];
+          } else {
+            new app.models.UserToken(where).create();
+          }
+        })
+        .then((item) => app.models.UserToken.c.updateOne(where, {
+          $set: { subscription: req.body.subscription }
+        }))
+        .then(() => res.send({}))
+        .catch((err) => {
+          console.error(err);
+          res.status(500).send({});
+        })
+    } else {
+      res.status(401).send({});
+    }
+  });
+
+  app.use('/api/auth', router);
+
+
+
+  //@deprecated всё, что ниже
+
+
+
 
   app.post('/auth/login', passport.authenticate('local', {
     successRedirect: '/auth/success',
@@ -34,35 +104,6 @@ module.exports = (app) => {
     req.logout();
     res.redirect('/');
   });
-
-  app.post('/auth/register-push', (req, res) => {
-    if (req.user._id && req.session.id) {
-      let where = {
-        user: req.user._id.toString(),
-        value: req.session.id.toString(),
-        type: 'session'
-      };
-      app.models.UserToken.read(where)
-        .then((items) => {
-          if (items.length) {
-            return items[0];
-          } else {
-            new app.models.UserToken(where).create();
-          }
-        })
-        .then((item) => app.models.UserToken.c.updateOne(where, {
-          $set: { subscription: req.body.subscription }
-        }))
-        .then(() => res.send({}))
-        .catch((err) => {
-          console.error(err);
-          res.status(500).send({});
-        })
-    } else {
-      res.status(401).send({});
-    }
-  });
-
 
   app.options('/api/login', (req, res) => {
     res.set("Access-Control-Allow-Origin", "*");
@@ -128,31 +169,6 @@ module.exports = (app) => {
         console.error(err);
         res.status(500).send({})
       });
-  });
-
-  app.get('/firebase-messaging-sw.js', (req, res) => {
-    if (app.conf.firebase && app.conf.firebase.public) {
-      res.set('Content-Type', 'application/javascript');
-      res.send(`
-importScripts('https://www.gstatic.com/firebasejs/3.5.2/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/3.5.2/firebase-messaging.js');
-firebase.initializeApp({
-  messagingSenderId: "${app.conf.firebase.public.messagingSenderId}"
-});
-const messaging = firebase.messaging();
-console.log('messaging azaza', messaging);
-messaging.setBackgroundMessageHandler((payload) => {
-  console.log('Received background message', payload);
-  const notificationOptions = {
-    body: '123',
-    icon: '/theme/logo-big.png'
-  };
-  return self.registration.showNotification('title', notificationOptions);
-});`);
-    } else {
-      res.status(404).send();
-    }
-
   });
 
   app.io.on('connect', (socket) => {
