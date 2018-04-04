@@ -1,8 +1,8 @@
-Function.prototype.inspect = function () {
+Function.prototype.inspect = function() {
   return this.toString();
 };
 
-module.exports = function (input) {
+module.exports = (input) => {
   let connect = '';
   if (input.conf.mongo) {
     connect = "mongodb://" + input.conf.mongo.host + ":" + input.conf.mongo.port + "/" + input.conf.mongo.db;
@@ -45,8 +45,8 @@ module.exports = function (input) {
       });
 
       let bodyParser = require('body-parser');
-      app.use(bodyParser.urlencoded({extended: true, limit: '50mb'}));
-      app.use(bodyParser.json());
+      app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+      app.use(bodyParser.json({ limit: '50mb' }));
 
       let auth = require('./lib/auth')(app);
 
@@ -70,7 +70,7 @@ module.exports = function (input) {
       app.use(app.passport.initialize());
       app.use(app.passport.session());
       app.use((req, res, next) => {
-        req.user = req.user || new app.models.User({roles: ['anon']});
+        req.user = req.user || new app.models.User({ roles: ['anon'] });
         next();
       });
       app.passport.use(auth.localStrategy());
@@ -86,7 +86,7 @@ module.exports = function (input) {
     }
 
     app.models = app.models || {};
-    app.models.Model = require('model-server-mongo')(app);//for extending, not for use
+    app.models.Model = require('model-server-mongo')(app); //for extending, not for use
     app.models.Tree = require('./models/Tree')(app);
 
     app.models.User = app.models.User || require('./models/User')(app);
