@@ -64,8 +64,7 @@ module.exports = (app) => {
       if (err && err.code === 11000) {
         throw { name: 'CrudError', text: 'duplicate key' };
       } else {
-        console.error(err);
-        throw {};
+        throw { name: 'CrudError', error: err };
       }
     }
   }));
@@ -92,8 +91,7 @@ module.exports = (app) => {
       if (err && err.code === 11000) {
         throw { name: 'CrudError', text: 'duplicate key' };
       } else {
-        console.error(err);
-        throw {};
+        throw { name: 'CrudError', error: err };
       }
     }
   }));
