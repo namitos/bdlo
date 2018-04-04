@@ -102,7 +102,7 @@ module.exports = (app) => {
   //delete
   router.delete('/:collection/:id', apiAw(async (req, res) => {
     let user = req.user;
-    let input = JSON.parse(req.query.q);
+    let input = {};
     input.collection = req.params.collection;
     let id = req.params.id;
 
