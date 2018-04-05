@@ -18,6 +18,7 @@ module.exports = (app) => {
       input.where._id = app.models.Model.prepareId(input.where._id);
     }
     let data = await app.crud[input.collection].r.run({
+      req,
       user,
       input,
       model: app.crud[input.collection].model
@@ -55,6 +56,7 @@ module.exports = (app) => {
 
     try {
       let data = await app.crud[input.collection].c.run({
+        req,
         user,
         input,
         item: new app.crud[input.collection].model(input.data)
@@ -82,6 +84,7 @@ module.exports = (app) => {
 
     try {
       let data = await app.crud[input.collection].u.run({
+        req,
         user,
         input,
         item: new app.crud[input.collection].model(input.data)
@@ -109,6 +112,7 @@ module.exports = (app) => {
     }
 
     let data = await app.crud[input.collection].d.run({
+      req,
       user,
       input,
       item: new app.crud[input.collection].model({ _id: id })
