@@ -103,9 +103,9 @@ module.exports = (app) => {
   //delete
   router.delete('/:collection/:id', apiAw(async (req, res) => {
     let user = req.user;
-    let input = {};
-    input.collection = req.params.collection;
     let id = req.params.id;
+    let input = { where: { _id: id } };
+    input.collection = req.params.collection;
 
     if (!app.crud[input.collection] || !user.crudPermission('update', input)) {
       throw { name: 'CrudError', text: 'access denied' };
