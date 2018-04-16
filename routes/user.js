@@ -39,7 +39,7 @@ module.exports = (app) => {
     res.send({});
   });
 
-  app.post('/register-push', (req, res) => {
+  router.post('/register-push', (req, res) => {
     if (req.user._id && req.session.id) {
       let where = {
         user: req.user._id.toString(),
