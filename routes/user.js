@@ -16,7 +16,6 @@ module.exports = (app) => {
           if (err) {
             return res.status(500).send({ name: 'AuthError', err });
           } else {
-            console.log('user', user);
             return res.status(200).send({});
           }
         });
@@ -39,31 +38,29 @@ module.exports = (app) => {
     res.send({});
   });
 
-  router.post('/register-push', (req, res) => {
-    if (req.user._id && req.session.id) {
-      let where = {
-        user: req.user._id.toString(),
-        value: req.session.id.toString(),
-        type: 'session'
-      };
-      app.models.UserToken.read(where)
-        .then((items) => {
-          if (items.length) {
-            return items[0];
-          } else {
-            new app.models.UserToken(where).create();
-          }
-        })
-        .then((item) => app.models.UserToken.c.updateOne(where, {
-          $set: { subscription: req.body.subscription }
-        }))
-        .then(() => res.send({}))
-        .catch((err) => {
-          console.error(err);
-          res.status(500).send({});
-        })
-    } else {
-      res.status(401).send({});
+  router.post('/register-push', async (req, res) => {
+    try {
+      if (req.user._id && req.session.id) {
+        let { subscription } = req.body;
+        let where = {
+          user: req.user._id.toString(),
+          value: req.session.id.toString(),
+          type: 'session'
+        };
+        let [ut] = await app.models.UserToken.read(where);
+        if (ut) {
+          await app.models.UserToken.c.updateOne(where, { $set: { subscription } });
+        } else {
+          let ut = await new app.models.UserToken(Object.assign(where, { subscription })).create();
+        }
+
+        res.send({});
+      } else {
+        res.status(403).send({});
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({});
     }
   });
 
