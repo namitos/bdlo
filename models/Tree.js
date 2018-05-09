@@ -40,16 +40,16 @@ module.exports = (app) => {
      * @param branches
      * @returns {*} array of breadcrumb branches
      */
-    static breadcrumb(id, branches = []) {
+    static breadcrumb(id, params, branches = []) {
       if (id) {
         return this.read({
           _id: this.prepareIdSingle(id)
-        }).then((items) => {
+        }, params).then((items) => {
           if (items.length) {
             let item = items[0];
             branches.push(item);
             if (item.parent) {
-              return this.breadcrumb(item.parent, branches);
+              return this.breadcrumb(item.parent, params, branches);
             } else {
               return branches.reverse();
             }
