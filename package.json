@@ -11,7 +11,7 @@
     "lodash": "4.x",
     "model-server-mongo": "github:namitos/model-server-mongo",
     "mongodb": "2.x",
-    "nodemailer": "3.x",
+    "nodemailer": "4.x",
     "nodemailer-direct-transport": "3.x",
     "passport": "0.3.x",
     "passport-http-bearer": "1.x",
