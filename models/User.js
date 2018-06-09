@@ -1,12 +1,10 @@
-'use strict';
-
 const crypto = require('crypto');
 const _ = require('lodash');
 const nodemailer = require('nodemailer');
 const nodemailerDirectTransport = require('nodemailer-direct-transport');
 const fetchData = require('../lib/fetchData');
 
-module.exports = function (app) {
+module.exports = function(app) {
   return class User extends app.models.Model {
     static get schema() {
       return {
@@ -56,15 +54,15 @@ module.exports = function (app) {
         this.roles = [];
       }
       let permissions = [];
-      this.roles.forEach(function (roleName) {
+      this.roles.forEach(function(roleName) {
         if (app.conf.roles.hasOwnProperty(roleName)) {
-          app.conf.roles[roleName].forEach(function (permissionString) {
+          app.conf.roles[roleName].forEach(function(permissionString) {
             permissions.push(permissionString);
           });
         }
       });
       if (this.hasOwnProperty('_id') && app.conf.roles.registered) {
-        app.conf.roles.registered.forEach(function (permissionString) {
+        app.conf.roles.registered.forEach(function(permissionString) {
           permissions.push(permissionString);
         });
       }
@@ -102,55 +100,61 @@ module.exports = function (app) {
         'delete': 'write'
       };
       return this.permission(input.collection + ' ' + op2perm[op]) || this.permission(input.collection + ' ' + op2perm[op] + ' his') && (() => {
-          let ModelSchema = app.models[input.collection].schema;
-          if (ModelSchema.ownerField) {
-            let ownerField = ModelSchema.ownerField;
-            if (op === 'create' || op === 'update') {
-              input.data = input.data || {};
-              input.data[ownerField] = this._id.toString();
-            }
-            if (op === 'read' || op === 'update' || op === 'delete') {
-              input.where = input.where || {};
-              input.where[ownerField] = this._id.toString();
-            }
-            //console.log('user.crudPermission patched', op, input);
-            return true;
-          } else {
-            return false;
+        let ModelSchema = app.models[input.collection].schema;
+        if (ModelSchema.ownerField) {
+          let ownerField = ModelSchema.ownerField;
+          if (op === 'create' || op === 'update') {
+            input.data = input.data || {};
+            input.data[ownerField] = this._id.toString();
           }
-        })();
+          if (op === 'read' || op === 'update' || op === 'delete') {
+            input.where = input.where || {};
+            input.where[ownerField] = this._id.toString();
+          }
+          //console.log('user.crudPermission patched', op, input);
+          return true;
+        } else {
+          return false;
+        }
+      })();
     }
 
     notifyEmail(subject, message) {
-      let transport;
-      if (app.conf.mail.direct) {
-        transport = nodemailerDirectTransport({
-          name: app.conf.domain,
-          from: app.conf.mail.fromName
-        });
-      } else {
-        transport = app.conf.mail;
-      }
-      nodemailer.createTransport(transport).sendMail({
-        from: app.conf.mail.fromName,
-        to: this.username,
-        subject: subject,
-        html: message,
-        dkim: app.conf.mail.dkim
-      }, (err, info) => {
-        if (err) {
-          console.error('notify err', err);
-        } else {
-          console.log('notify', info);
+      return new Promise((resolve, reject) => {
+        try {
+          let transport;
+          if (app.conf.mail.direct) {
+            transport = nodemailerDirectTransport({
+              name: app.conf.domain,
+              from: app.conf.mail.fromName
+            });
+          } else {
+            transport = app.conf.mail;
+          }
+          nodemailer.createTransport(transport).sendMail({
+            from: app.conf.mail.fromName,
+            to: this.username,
+            subject: subject,
+            html: message,
+            dkim: app.conf.mail.dkim
+          }, (err, info) => {
+            if (err) {
+              resolve({ type: 'NotifyEmailErr', err });
+            } else {
+              resolve(info);
+            }
+          });
+        } catch (err) {
+          resolve({ type: 'NotifyEmailErr', err });
         }
       });
     }
 
     notifyPush(subject, message) {
       app.models.UserToken.read({
-        user: this._id.toString(),
-        subscription: {$ne: null}
-      })
+          user: this._id.toString(),
+          subscription: { $ne: null }
+        })
         .then((items) => {
           let subscriptions = [...new Set(items.map((item) => item.subscription))];
           return Promise.all(subscriptions.map((subscription) => fetchData("https://fcm.googleapis.com/fcm/send", {
@@ -165,10 +169,9 @@ module.exports = function (app) {
             },
             //data: {foo: 'bar'},
             to: subscription
-          }), 'POST')))//todo remove bad subscriptions
+          }), 'POST'))) //todo remove bad subscriptions
         })
         .catch((err) => console.error(err));
     }
-
   }
 };
