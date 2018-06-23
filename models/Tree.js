@@ -1,7 +1,3 @@
-'use strict';
-
-const _ = require('lodash');
-
 module.exports = (app) => {
   return class Tree extends app.models.Model {
 
@@ -11,28 +7,26 @@ module.exports = (app) => {
      * @param maxDeep
      * @returns {*} all children branches in flat array
      */
-    static branches(parent = '', branches = [], maxDeep = Infinity) {
+    static async branches(parent = '', branches = [], maxDeep = Infinity) {
       --maxDeep;
-      return this.read({
-        parent: parent
-      }).then((result) => {
-        if (result.length) {
-          branches = branches.concat(result);
-          let parents = {
-            $in: []
-          };
-          result.forEach((item) => {
-            parents.$in.push(item._id.toString());
-          });
-          if (maxDeep) {
-            return this.branches(parents, branches, maxDeep);
-          } else {
-            return branches;
-          }
+
+      let result = await this.read({ parent });
+      if (result.length) {
+        branches = branches.concat(result);
+        let parents = {
+          $in: []
+        };
+        result.forEach((item) => {
+          parents.$in.push(item._id.toString());
+        });
+        if (maxDeep) {
+          return this.branches(parents, branches, maxDeep);
         } else {
           return branches;
         }
-      });
+      } else {
+        return branches;
+      }
     }
 
     /**
@@ -40,46 +34,50 @@ module.exports = (app) => {
      * @param branches
      * @returns {*} array of breadcrumb branches
      */
-    static breadcrumb(id, params, branches = []) {
+    static async breadcrumb(id, params, branches = []) {
       if (id) {
-        return this.read({
-          _id: this.prepareIdSingle(id)
-        }, params).then((items) => {
-          if (items.length) {
-            let item = items[0];
-            branches.push(item);
-            if (item.parent) {
-              return this.breadcrumb(item.parent, params, branches);
-            } else {
-              return branches.reverse();
-            }
+        let items = await this.read({ _id: this.prepareIdSingle(id) }, params);
+        if (items.length) {
+          let item = items[0];
+          branches.push(item);
+          if (item.parent) {
+            return this.breadcrumb(item.parent, params, branches);
           } else {
             return branches.reverse();
           }
-        });
+        } else {
+          return branches.reverse();
+        }
       } else {
-        return Promise.resolve(branches);
+        return branches;
       }
     }
 
-    static childrenIn(val) {
+    /**
+     * adds to $in other children ids
+     * @param {Object} val 
+     * @param {Object} val.$in @required
+     */
+    static async childrenIn(val) {
       if (val && val.$in) {
-        val.$in = _(val.$in).uniq().compact().value();
+        val.$in = [...new Set(val.$in.filter((v) => v))];
 
         let promises = [];
         val.$in.forEach((id) => {
           promises.push(this.branches(id));
         });
-        return Promise.all(promises).then((values) => {
-          let ids = [];
-          values.forEach((value) => {
-            ids = ids.concat(value);
-          });
-          ids = ids.map((branch) => branch._id.toString());
-          val.$in = _(ids.concat(val.$in)).uniq().compact().value();
-        })
+
+        let values = await Promise.all(promises);
+
+        let ids = [];
+        values.forEach((value) => {
+          ids = ids.concat(value);
+        });
+        ids = ids.map((branch) => branch._id.toString());
+        val.$in = ids.concat(val.$in);
+
       } else {
-        return Promise.reject();
+        return Promise.reject({ type: 'TreeError', text: 'val.$in argument required' });
       }
     }
   }

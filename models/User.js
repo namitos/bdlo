@@ -1,5 +1,4 @@
 const crypto = require('crypto');
-const _ = require('lodash');
 const nodemailer = require('nodemailer');
 const nodemailerDirectTransport = require('nodemailer-direct-transport');
 const fetchdata = require('fetchdata');

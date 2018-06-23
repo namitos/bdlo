@@ -23,8 +23,6 @@ module.exports = (input) => {
       server = require('http').createServer(app);
     }
 
-    app.util = require('./lib/util');
-
     app.io = require('socket.io')(server);
 
     if (input.beforeStart) {

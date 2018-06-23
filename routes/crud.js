@@ -15,6 +15,7 @@ module.exports = (app) => {
     }
 
     if (input.where._id) {
+      console.log(input.where);
       input.where._id = app.models.Model.prepareId(input.where._id);
     }
     let data = await app.crud[input.collection].r.run({
