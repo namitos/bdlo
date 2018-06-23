@@ -1,7 +1,3 @@
-Function.prototype.inspect = function() {
-  return this.toString();
-};
-
 module.exports = (input) => {
   let connect = '';
   if (input.conf.mongo) {
@@ -12,6 +8,7 @@ module.exports = (input) => {
   require('mongodb').MongoClient.connect(connect).then((db) => {
     let express = require('express');
     let app = express();
+
     app.db = db;
     app.conf = input.conf;
 
@@ -40,9 +37,7 @@ module.exports = (input) => {
     if (app.conf.canAuth) {
       let session = require('express-session');
       let SessionStore = require('connect-mongo')(session);
-      app.sessionStore = new SessionStore({
-        db: app.db
-      });
+      app.sessionStore = new SessionStore({ db: app.db });
 
       let bodyParser = require('body-parser');
       app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
@@ -74,7 +69,6 @@ module.exports = (input) => {
         next();
       });
       app.passport.use(auth.localStrategy());
-      app.passport.use(auth.bearerStrategy());
       app.io.use(auth.ioUserMiddleware);
     }
 
@@ -85,15 +79,10 @@ module.exports = (input) => {
       app.use('/files', express.static(app.conf.staticFilesPath));
     }
 
-    app.models = app.models || {};
-    app.models.Model = require('model-server-mongo')(app); //for extending, not for use
-    app.models.Tree = require('./models/Tree')(app);
 
-    app.models.User = app.models.User || require('./models/User')(app);
-    app.models.UserToken = require('./models/UserToken')(app);
-
+    require('./dataModels')(app);
     input.dataModels(app);
-    require('./crud')(app);
+    require('./lib/crud')(app);
     input.dataMiddlewares(app);
     require('./routes')(app);
     input.routes(app);

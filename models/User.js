@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const _ = require('lodash');
 const nodemailer = require('nodemailer');
 const nodemailerDirectTransport = require('nodemailer-direct-transport');
-const fetchData = require('../lib/fetchData');
+const fetchdata = require('fetchdata');
 
 module.exports = function(app) {
   return class User extends app.models.Model {
@@ -67,7 +67,7 @@ module.exports = function(app) {
         });
       }
       Object.defineProperty(this, 'permissions', {
-        value: _.uniq(permissions)
+        value: [...new Set(permissions)]
       });
     }
 
@@ -139,39 +139,53 @@ module.exports = function(app) {
             dkim: app.conf.mail.dkim
           }, (err, info) => {
             if (err) {
-              resolve({ type: 'NotifyEmailErr', err });
+              resolve({ type: 'NotifyEmailError', err });
             } else {
               resolve(info);
             }
           });
         } catch (err) {
-          resolve({ type: 'NotifyEmailErr', err });
+          resolve({ type: 'NotifyEmailError', err });
         }
       });
     }
 
-    notifyPush(subject, message) {
-      app.models.UserToken.read({
-          user: this._id.toString(),
-          subscription: { $ne: null }
-        })
-        .then((items) => {
-          let subscriptions = [...new Set(items.map((item) => item.subscription))];
-          return Promise.all(subscriptions.map((subscription) => fetchData("https://fcm.googleapis.com/fcm/send", {
-            "Content-Type": "application/json",
-            "Authorization": `key=${app.conf.firebase.apiServerKey}`
-          }, JSON.stringify({
-            notification: {
-              title: subject,
-              body: message,
-              sound: 'default'
-              //click_action: "https://blabla.com"
+    async notifyPush(subject, message) {
+      let items = await app.models.UserToken.read({
+        user: this._id.toString()
+      });
+
+      let promises = [];
+
+
+      items.forEach((item) => {
+        if (item.subscription) {
+          promises.push(fetchdata({
+            urlFull: "https://fcm.googleapis.com/fcm/send",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `key=${app.conf.firebase.apiServerKey}`
             },
-            //data: {foo: 'bar'},
-            to: subscription
-          }), 'POST'))) //todo remove bad subscriptions
-        })
-        .catch((err) => console.error(err));
+            body: JSON.stringify({
+              notification: {
+                title: subject,
+                body: message,
+                sound: 'default'
+                //click_action: "https://blabla.com"
+              },
+              //data: {foo: 'bar'},
+              to: item.subscription
+            }),
+            method: 'POST'
+          }).catch((err) => {
+            return err;
+            //todo remove bad subscriptions
+          }));
+        }
+      })
+
+      let r = await Promise.all(promises);
+      return r;
     }
   }
 };

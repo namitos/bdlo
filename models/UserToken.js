@@ -22,7 +22,7 @@ module.exports = (app) => {
           userAgent: {
             type: 'string'
           },
-          type: {//session or api
+          type: { //session or api
             type: 'string'
           }
         }
@@ -30,7 +30,7 @@ module.exports = (app) => {
     }
 
     create() {
-      this.created = new Date().valueOf();
+      this.created = Date.now();
       return super.create(...arguments);
     }
   }
