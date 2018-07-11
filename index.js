@@ -1,20 +1,15 @@
-module.exports = (input) => {
-  let connect = '';
-  if (input.conf.mongo) {
-    connect = "mongodb://" + input.conf.mongo.host + ":" + input.conf.mongo.port + "/" + input.conf.mongo.db;
-  } else {
-    connect = input.conf.mongoConnect;
-  }
-  require('mongodb').MongoClient.connect(connect).then((db) => {
-    let express = require('express');
-    let app = express();
+const express = require('express');
+const fs = require('fs');
+const mongoConnect = require('./lib/mongoConnect');
 
+module.exports = (input) => {
+  mongoConnect({ mongo: input.conf.mongo }).then(({ db }) => {
+    let app = express();
     app.db = db;
     app.conf = input.conf;
 
     let server;
     if (app.conf.ssl) {
-      let fs = require('fs');
       server = require('https').createServer({
         key: fs.readFileSync(app.conf.ssl.key),
         cert: fs.readFileSync(app.conf.ssl.cert)
@@ -34,42 +29,58 @@ module.exports = (input) => {
     }
     if (app.conf.canAuth) {
       let session = require('express-session');
-      //let SessionStore = require('connect-mongo')(session);
-
       class SessionStore extends session.Store {
         constructor(settings) {
           super(...arguments);
         }
 
         async get(sid, fn) {
-          let [session] = await app.models.Session.read({ sid })
-          fn(null, session && session.data);
+          try {
+            let [session] = await app.models.Session.read({ sid });
+            fn(null, session && session.data);
+          } catch (err) {
+            fn(err);
+          }
         }
 
         async set(sid, data, fn) {
-          let [session] = await app.models.Session.read({ sid });
-          if (session) {
-            await session.updateQuery({ $set: { data } });
-          } else {
-            session = await new app.models.Session({ sid, data }).create();
+          try {
+            let [session] = await app.models.Session.read({ sid });
+            if (session) {
+              await session.updateQuery({ $set: { data } });
+            } else {
+              session = await new app.models.Session({ sid, data }).create();
+            }
+            fn();
+          } catch (err) {
+            fn(err);
           }
-          fn();
         }
 
         async touch(sid, sess, fn) {
-          let [session] = await app.models.Session.read({ sid });
-          await session.updateQuery({ $set: { 'data.cookie': sess.cookie } });
-          fn();
+          try {
+            let [session] = await app.models.Session.read({ sid });
+            await session.updateQuery({ $set: { 'data.cookie': sess.cookie } });
+            fn();
+          } catch (err) {
+            fn(err);
+          }
         }
 
         async destroy(sid, fn) {
-          let [session] = await app.models.Session.read({ sid });
-          await session.delete();
-          fn();
+          try {
+            let [session] = await app.models.Session.read({ sid });
+            await session.delete();
+            fn();
+          } catch (err) {
+            fn(err);
+          }
+
+
         }
       }
 
-      app.sessionStore = new SessionStore({ db: app.db });
+      app.sessionStore = new SessionStore();
 
       let bodyParser = require('body-parser');
       app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
