@@ -34,7 +34,41 @@ module.exports = (input) => {
     }
     if (app.conf.canAuth) {
       let session = require('express-session');
-      let SessionStore = require('connect-mongo')(session);
+      //let SessionStore = require('connect-mongo')(session);
+
+      class SessionStore extends session.Store {
+        constructor(settings) {
+          super(...arguments);
+        }
+
+        async get(sid, fn) {
+          let [session] = await app.models.Session.read({ sid })
+          fn(null, session && session.data);
+        }
+
+        async set(sid, data, fn) {
+          let [session] = await app.models.Session.read({ sid });
+          if (session) {
+            await session.updateQuery({ $set: { data } });
+          } else {
+            session = await new app.models.Session({ sid, data }).create();
+          }
+          fn();
+        }
+
+        async touch(sid, sess, fn) {
+          let [session] = await app.models.Session.read({ sid });
+          await session.updateQuery({ $set: { 'data.cookie': sess.cookie } });
+          fn();
+        }
+
+        async destroy(sid, fn) {
+          let [session] = await app.models.Session.read({ sid });
+          await session.delete();
+          fn();
+        }
+      }
+
       app.sessionStore = new SessionStore({ db: app.db });
 
       let bodyParser = require('body-parser');
@@ -47,7 +81,6 @@ module.exports = (input) => {
       app.passport.serializeUser(auth.serialize);
       app.passport.deserializeUser(auth.deserialize);
 
-      app.use(require('cookie-parser')());
       app.use(session({
         store: app.sessionStore,
         secret: app.conf.session.secret,
