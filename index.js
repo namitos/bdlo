@@ -82,6 +82,7 @@ module.exports = (input) => {
 
       app.sessionStore = new SessionStore();
 
+      app.use(require('cookie-parser')());
       let bodyParser = require('body-parser');
       app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
       app.use(bodyParser.json({ limit: '50mb' }));
