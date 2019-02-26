@@ -12,10 +12,10 @@ module.exports = (settings) => {
   }
 
   function _isBase64File(str) {
-    if (!str || typeof str != 'string') {
+    if (!str || typeof str !== 'string') {
       return false;
     }
-    return str.substr(0, 5).indexOf('data:') != -1;
+    return str.substr(0, 5).indexOf('data:') === 0;
   }
 
   async function _saveFile(schemaPart, obj, key) {
@@ -25,7 +25,7 @@ module.exports = (settings) => {
       let data = matches[1];
       let mime = matches[0].replace('data:', '');
       let storage = settings.storage[schemaPart.storage];
-      if (storage.mime.indexOf(mime) != -1) {
+      if (storage.mime.includes(mime)) {
         let fileName = _fileName(data) + '.' + settings.mime[mime];
         let filePath = [storage.path, fileName].join('/');
         let filePathWrite = [settings.path, storage.path, fileName].join('/');
