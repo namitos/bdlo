@@ -8,6 +8,7 @@
     "express": "^4.16.3",
     "express-session": "^1.15.6",
     "fetchdata": "github:namitos/fetchdata",
+    "gm": "^1.23.1",
     "model-server-mongo": "github:namitos/model-server-mongo#v2",
     "nodemailer": "^4.6.7",
     "nodemailer-direct-transport": "^3.3.2",
