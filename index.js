@@ -40,7 +40,11 @@ module.exports = async (input) => {
       async get(sid, fn) {
         try {
           let [session] = await app.models.Session.read({ sid });
-          fn(null, session && session.data);
+          if (session) {
+            fn(null, session.data);
+          } else {
+            fn('session not found');
+          }
         } catch (err) {
           fn(err);
         }
