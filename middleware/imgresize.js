@@ -34,11 +34,11 @@ module.exports = (settings) => {
   settings.quality = settings.quality || 80;
   return async (req, res, next) => {
     try {
-      let file = req.url.replace(/\.{2}/g, '');
+      let file = req.url.replace(/\.{2}/g, '').replace(/\?.*/, '');
       file = decodeURIComponent(file);
       let origin = path.join(settings.fsPath, file);
+
       let profileName = req.query.profile || 'thumb';
-      //console.log('resizing', settings.fsPath, file, origin, profileName);
       if (settings.profile[profileName]) {
         let profile = settings.profile[profileName];
         try {
