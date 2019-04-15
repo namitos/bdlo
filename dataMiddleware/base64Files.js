@@ -29,7 +29,12 @@ module.exports = (settings) => {
         let fileName = _fileName(data) + '.' + settings.mime[mime];
         let filePath = [storage.path, fileName].join('/');
         let filePathWrite = [settings.path, storage.path, fileName].join('/');
-        await writeFile(filePathWrite, Buffer.from(data, 'base64'));
+        let buf = Buffer.from(data, 'base64');
+        if (schemaPart.processFile instanceof Function) {
+          await schemaPart.processFile({ filePathWrite, buf, writeFile });
+        } else {
+          await writeFile(filePathWrite, buf);
+        }
         obj[key] = filePath;
       } else {
         obj[key] = null;
