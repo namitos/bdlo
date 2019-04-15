@@ -34,7 +34,7 @@ module.exports = (settings) => {
   settings.quality = settings.quality || 80;
   return async (req, res, next) => {
     try {
-      let file = req.url.replace(/\?.*/, '');
+      let file = req.url.replace(/\.{2}/g, '');
       file = decodeURIComponent(file);
       let origin = path.join(settings.fsPath, file);
       let profileName = req.query.profile || 'thumb';
@@ -47,27 +47,28 @@ module.exports = (settings) => {
           return res.status(404).send();
         }
         let resizedFilePath = path.join(settings.fsPath, settings.tmp, profileName, file);
+        let resizedFileUrl = path.join(settings.redirPath, settings.tmp, profileName, file);
         try {
           await util.promisify(fs.stat)(resizedFilePath);
-          return res.redirect(path.join(settings.redirPath, settings.tmp, profileName, file));
+          return res.redirect(resizedFileUrl);
         } catch (err) {
           await util.promisify(mkdirp)(path.dirname(resizedFilePath));
           let image = gm(origin).quality(settings.quality);
           let size = await util.promisify(image.size).bind(image)();
           if (size.width > profile.w || size.height > profile.h) {
             await util.promisify(image.resize(profile.w, profile.h).write).bind(image)(resizedFilePath);
-            return res.redirect(path.join(settings.redirPath, settings.tmp, profileName, file));
+            return res.redirect(resizedFileUrl);
           } else {
             await util.promisify(image.resize(size.width, size.height).write).bind(image)(resizedFilePath);
-            return res.redirect(path.join(settings.redirPath, settings.tmp, profileName, file));
+            return res.redirect(resizedFileUrl);
           }
         }
       } else {
         res.status(404).send();
       }
     } catch (err) {
-      console.error(err)
+      console.error(err);
       res.status(503).send();
     }
-  }
+  };
 };
