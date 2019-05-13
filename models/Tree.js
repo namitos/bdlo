@@ -1,6 +1,7 @@
+const _ = require('lodash');
+
 module.exports = (app) => {
   return class Tree extends app.models.Model {
-
     /**
      * @param parent
      * @param branches
@@ -30,6 +31,35 @@ module.exports = (app) => {
     }
 
     /**
+     * @param parent
+     * @param branches
+     * @param maxDeep
+     * @returns {*} all children branches in tree
+     */
+    static async branchesTree(parent = '', maxDeep = Infinity) {
+      --maxDeep;
+      let branches = await this.read({ parent });
+      if (branches.length === 0) {
+        return [];
+      }
+      let parents = {
+        $in: []
+      };
+      branches.forEach((item) => {
+        parents.$in.push(item._id.toString());
+      });
+      if (maxDeep) {
+        let r = await this.branchesTree(parents, maxDeep);
+        let rK = _.groupBy(r, 'parent');
+        branches.forEach((branch) => {
+          branch.children = rK[branch._id] || [];
+        });
+      }
+
+      return branches;
+    }
+
+    /**
      * @param id
      * @param branches
      * @returns {*} array of breadcrumb branches
@@ -55,7 +85,7 @@ module.exports = (app) => {
 
     /**
      * adds to $in other children ids
-     * @param {Object} val 
+     * @param {Object} val
      * @param {Object} val.$in @required
      */
     static async childrenIn(val) {
@@ -75,10 +105,9 @@ module.exports = (app) => {
         });
         ids = ids.map((branch) => branch._id.toString());
         val.$in = ids.concat(val.$in);
-
       } else {
         return Promise.reject({ type: 'TreeError', text: 'val.$in argument required' });
       }
     }
-  }
+  };
 };
