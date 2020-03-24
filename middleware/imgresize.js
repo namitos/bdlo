@@ -26,8 +26,7 @@
 
 const path = require('path');
 const fs = require('fs');
-const gm = require('gm');
-const mkdirp = require('mkdirp');
+const gm = require('gm'); 
 const util = require('util');
 
 module.exports = (settings) => {
@@ -52,7 +51,7 @@ module.exports = (settings) => {
           await util.promisify(fs.stat)(resizedFilePath);
           return res.redirect(resizedFileUrl);
         } catch (err) {
-          await util.promisify(mkdirp)(path.dirname(resizedFilePath));
+          await util.promisify(fs.mkdir)(path.dirname(resizedFilePath), {recursive: true });
           let image = gm(origin).quality(settings.quality);
           let size = await util.promisify(image.size).bind(image)();
           if (size.width > profile.w || size.height > profile.h) {
