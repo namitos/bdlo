@@ -10,7 +10,7 @@
     "express-session": "1.x",
     "lodash": "4.x",
     "model-server-mongo": "github:namitos/model-server-mongo",
-    "mongodb": "2.x",
+    "mongodb": "3.x",
     "nodemailer": "4.x",
     "nodemailer-direct-transport": "3.x",
     "passport": "0.3.x",
