@@ -31,7 +31,7 @@ module.exports = (settings) => {
         let filePathWrite = [settings.path, storage.path, fileName].join('/');
         let buf = Buffer.from(data, 'base64');
         if (schemaPart.processFile instanceof Function) {
-          await schemaPart.processFile({ filePathWrite, buf, writeFile });
+          await schemaPart.processFile({filePathWrite, buf, writeFile});
         } else {
           await writeFile(filePathWrite, buf);
         }
@@ -62,7 +62,8 @@ module.exports = (settings) => {
             //array of primitives
             fieldSchema.type === 'array' &&
             fieldSchema.items.type === 'string' &&
-            _properSchema(fieldSchema)
+            _properSchema(fieldSchema) &&
+            obj[fieldName] instanceof Array
           ) {
             obj[fieldName] = obj[fieldName].filter((v) => v);
             obj[fieldName].forEach((item, i) => {
@@ -76,7 +77,8 @@ module.exports = (settings) => {
             promises.push(...r);
           } else if (
             //array of objects
-            fieldSchema.type === 'array'
+            fieldSchema.type === 'array' &&
+            obj[fieldName] instanceof Array
           ) {
             obj[fieldName] = obj[fieldName].filter((v) => v);
             obj[fieldName].forEach((item) => {
