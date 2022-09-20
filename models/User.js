@@ -1,7 +1,4 @@
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const nodemailerDirectTransport = require('nodemailer-direct-transport');
-const fetchdata = require('fetchdata');
 
 module.exports = function(app) {
   return class User extends app.models.Model {
@@ -116,75 +113,6 @@ module.exports = function(app) {
           return false;
         }
       })();
-    }
-
-    notifyEmail(subject, message) {
-      return new Promise((resolve, reject) => {
-        try {
-          let transport;
-          if (app.conf.mail.direct) {
-            transport = nodemailerDirectTransport({
-              name: app.conf.domain,
-              from: app.conf.mail.fromName
-            });
-          } else {
-            transport = app.conf.mail;
-          }
-          nodemailer.createTransport(transport).sendMail({
-            from: app.conf.mail.fromName,
-            to: this.username,
-            subject: subject,
-            html: message,
-            dkim: app.conf.mail.dkim
-          }, (err, info) => {
-            if (err) {
-              resolve({ type: 'NotifyEmailError', err });
-            } else {
-              resolve(info);
-            }
-          });
-        } catch (err) {
-          resolve({ type: 'NotifyEmailError', err });
-        }
-      });
-    }
-
-    async notifyPush(subject, message) {
-      let items = await app.models.UserToken.read({
-        user: this._id.toString()
-      });
-
-      let promises = [];
-
-
-      items.forEach((item) => {
-        if (item.subscription) {
-          promises.push(fetchdata({
-            urlFull: "https://fcm.googleapis.com/fcm/send",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `key=${app.conf.firebase.apiServerKey}`
-            },
-            body: JSON.stringify({
-              notification: {
-                title: subject,
-                body: message,
-                sound: 'default'
-                //click_action: "https://blabla.com"
-              },
-              //data: {foo: 'bar'},
-              to: item.subscription
-            }),
-            method: 'POST'
-          }).catch((err) => {
-            return err;
-            //todo remove bad subscriptions
-          }));
-        }
-      })
-
-      let r = await Promise.all(promises);
-      return r;
     }
   }
 };

@@ -21,8 +21,6 @@ module.exports = async (input) => {
     server = require('http').createServer(app);
   }
 
-  app.io = require('socket.io')(server);
-
   if (input.beforeStart) {
     input.beforeStart(app);
   }
