@@ -1,11 +1,8 @@
 const passport = require('passport');
-const express = require('express');
 const apiAw = require('../lib/apiAw');
 
 module.exports = (app) => {
-  const router = express.Router();
-
-  router.post('/login', (req, res, next) => {
+  app.post('/api/auth/login', (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
       if (err) {
         return res.status(500).send({ name: 'AuthError', err });
@@ -23,8 +20,8 @@ module.exports = (app) => {
     })(req, res, next);
   });
 
-  router.post(
-    '/logout',
+  app.post(
+    '/api/auth/logout',
     apiAw(async (req, res) => {
       app.models.UserToken.c
         .deleteMany({
@@ -37,25 +34,4 @@ module.exports = (app) => {
       res.send({});
     }, true)
   );
-
-  router.post(
-    '/register-push',
-    apiAw(async (req, res) => {
-      let { subscription } = req.body;
-      let where = {
-        user: req.user._id.toString(),
-        value: req.session.id.toString(),
-        type: 'session'
-      };
-      let [ut] = await app.models.UserToken.read(where);
-      if (ut) {
-        await app.models.UserToken.c.updateOne(where, { $set: { subscription } });
-      } else {
-        let ut = await new app.models.UserToken(Object.assign(where, { subscription })).create();
-      }
-      res.send({});
-    }, true)
-  );
-
-  app.use('/api/auth', router);
 };
