@@ -2,11 +2,9 @@ const apiAw = require('../lib/apiAw');
 const express = require('express');
 
 module.exports = (app) => {
-  const router = express.Router();
-
   //read
-  router.get(
-    '/:collection',
+  app.get(
+    '/api/crud/:collection',
     apiAw(async (req, res) => {
       let user = req.user;
       let input = JSON.parse(req.query.q);
@@ -30,8 +28,8 @@ module.exports = (app) => {
   );
 
   //read tree breadcrumb
-  router.get(
-    '/:collection/breadcrumb/:id',
+  app.get(
+    '/api/crud/:collection/breadcrumb/:id',
     apiAw(async (req, res) => {
       let user = req.user;
       let input = JSON.parse(req.query.q);
@@ -48,8 +46,8 @@ module.exports = (app) => {
   );
 
   //create
-  router.post(
-    '/:collection',
+  app.post(
+    '/api/crud/:collection',
     apiAw(async (req, res) => {
       let user = req.user;
       let input = { data: req.body };
@@ -78,8 +76,8 @@ module.exports = (app) => {
   );
 
   //update
-  router.put(
-    '/:collection',
+  app.put(
+    '/api/crud/:collection',
     apiAw(async (req, res) => {
       let user = req.user;
       let input = { data: req.body };
@@ -108,8 +106,8 @@ module.exports = (app) => {
   );
 
   //delete
-  router.delete(
-    '/:collection/:id',
+  app.delete(
+    '/api/crud/:collection/:id',
     apiAw(async (req, res) => {
       let user = req.user;
       let id = req.params.id;
@@ -129,6 +127,4 @@ module.exports = (app) => {
       res.send(data.deleted);
     })
   );
-
-  app.use('/api/crud', router);
 };
