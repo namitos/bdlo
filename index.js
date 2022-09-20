@@ -22,7 +22,7 @@ module.exports = async (input) => {
   }
 
   if (input.beforeStart) {
-    input.beforeStart(app);
+    input.beforeStart(app, server);
   }
 
   if (!app.conf.hasOwnProperty('canAuth')) {
