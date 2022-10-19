@@ -70,8 +70,10 @@ module.exports = async (input) => {
 
       async destroy(sid, fn) {
         try {
-          let [session] = await app.models.Session.read({ sid });
-          await session.delete();
+          const [session] = await app.models.Session.read({ sid });
+          if (session) {
+            await session.delete();
+          }
           fn();
         } catch (err) {
           fn(err);
